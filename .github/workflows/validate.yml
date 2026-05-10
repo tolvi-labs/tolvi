@@ -35,4 +35,5 @@ jobs:
       - name: Link checker
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --no-progress --exclude-mail '**/*.md'
+          # mailto: links are excluded by default in current lychee.
+          args: --no-progress '**/*.md'
