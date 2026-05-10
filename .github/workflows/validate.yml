@@ -36,4 +36,5 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           # mailto: links are excluded by default in current lychee.
-          args: --no-progress '**/*.md'
+          # node_modules contains vendored READMEs with stale third-party links — skip them.
+          args: --no-progress --exclude-path node_modules '**/*.md'
