@@ -1,0 +1,18 @@
+{
+  "name": "tolvi",
+  "private": true,
+  "description": "Tooling and CI scripts for the Tolvi monorepo. Application code lives in cli/ and server/ with their own package.json files (Phase 2/3).",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "validate:schemas": "node .github/scripts/validate-schema.js",
+    "validate:brand": ".github/scripts/brand-isolation-check.sh",
+    "validate": "npm run validate:schemas && npm run validate:brand"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  }
+}

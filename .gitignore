@@ -1,0 +1,32 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node / npm
+node_modules/
+npm-debug.log*
+
+# Go
+*.test
+*.out
+/cli/dist/
+/cli/bin/
+
+# Secrets / env (never commit these)
+.env
+.env.*
+!.env.example
+
+# Tolvi local caches
+.tolvi/cache/
+.tolvi-index/
+/examples/sample-vault/.tolvi-index/
+
+# Private working docs (not for the public repo)
+tolvi-build-plan.md
