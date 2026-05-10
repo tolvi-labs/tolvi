@@ -18,6 +18,8 @@ Unresolved design questions. Some carry forward from the work that informed Tolv
 
 8. **CLI ↔ server format-version handshake.** The format spec mentions that implementations declare supported versions. What does the handshake actually look like on the wire — a header, a field on every request, a one-time `/v1/capabilities` exchange? And what happens when the CLI supports a newer format version than the server?
 
+9. **Chunking and embedding-input parity between arms.** The architecture deliberately ships independent Go and TypeScript implementations of `tolvi-format-v1` (see [`./adr/0001-architecture-overview.md`](./adr/0001-architecture-overview.md)). Frontmatter parity is enforced by JSON Schema validation in CI, but chunking heuristics and embedding-input normalization (whitespace handling, link stripping, code-fence treatment) are not currently checked across the boundary. Likely solution: golden-output tests where both arms ingest `/examples/sample-vault/` and a CI step diffs the resulting chunk/text streams.
+
 ---
 
 This file is meant to grow. When you find a non-obvious open question while working on Tolvi, add it here. When a question gets resolved, capture the answer as an Architecture Decision Record under [`./adr/`](./adr/) — the ADR template and existing decisions live there — then remove the question from this file in the same PR.
