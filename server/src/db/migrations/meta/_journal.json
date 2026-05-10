@@ -8,6 +8,13 @@
       "when": 1778452254355,
       "tag": "0000_init_workspaces_repos",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778454335603,
+      "tag": "0001_documents_chunks",
+      "breakpoints": true
     }
   ]
 }
