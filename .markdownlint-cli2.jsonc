@@ -1,0 +1,23 @@
+// Markdownlint configuration for Tolvi.
+// Disables a few overly-strict rules that don't fit prose-heavy public docs,
+// and respects .gitignore so private working docs and vendored content are skipped.
+{
+  "config": {
+    "default": true,
+    // Line-length: prose docs intentionally use long lines (Markdown soft-wraps).
+    "MD013": false,
+    // Fenced-code-language: directory trees and ASCII art don't need a language tag.
+    "MD040": false,
+    // First-line heading: vault files start with YAML frontmatter, not a heading.
+    "MD041": false,
+    // Table column-style: pipe-separator spacing is purely cosmetic; both styles render identically.
+    "MD060": false
+  },
+  "gitignore": true,
+  "ignores": [
+    "node_modules/**",
+    // Engineering-process artifacts (specs, plans) — same allowlist logic as the
+    // brand-isolation guard. They follow informal conventions, not strict public-doc rules.
+    "docs/superpowers/**"
+  ]
+}
