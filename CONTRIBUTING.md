@@ -40,6 +40,7 @@ pre-commit install
 ```
 
 This installs the hooks from `.pre-commit-config.yaml`. They run on every `git commit` and catch:
+
 - Trailing whitespace, missing EOF newlines
 - Invalid JSON
 - Required-frontmatter-fields violations in vault content
