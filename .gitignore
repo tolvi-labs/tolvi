@@ -18,6 +18,11 @@ npm-debug.log*
 /cli/dist/
 /cli/bin/
 
+# Secrets / env (never commit these)
+.env
+.env.*
+!.env.example
+
 # Tolvi local caches
 .tolvi/cache/
 .tolvi-index/
