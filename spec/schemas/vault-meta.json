@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tolvi.dev/spec/schemas/vault-meta.json",
+  "title": "Tolvi vault metadata",
+  "description": "The .vault-meta.json marker file at the root of every Tolvi vault directory.",
+  "type": "object",
+  "required": ["workspace", "embedding_model", "schema_version"],
+  "properties": {
+    "workspace": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
+      "maxLength": 80,
+      "description": "The workspace this vault belongs to. Used by the server for multi-tenant isolation. Slug format: lowercase ASCII alphanumerics with single hyphens between them, never as the first or last character."
+    },
+    "embedding_model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The embedding model used to index this vault locally. Default value SHOULD be `nomic-embed-text` (Ollama)."
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Tolvi vault format version. For tolvi-format-v1, MUST be 1."
+    }
+  },
+  "patternProperties": {
+    "^x-": {}
+  },
+  "additionalProperties": false
+}
