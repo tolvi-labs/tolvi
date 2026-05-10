@@ -15,6 +15,13 @@
       "when": 1778454335603,
       "tag": "0001_documents_chunks",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778454660353,
+      "tag": "0002_api_keys",
+      "breakpoints": true
     }
   ]
 }
