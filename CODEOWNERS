@@ -1,0 +1,5 @@
+# Default owner for everything in the repo
+*       @alator-ta
+
+# Spec changes need extra scrutiny — same owner today, separate line for future delegation
+/spec/  @alator-ta
