@@ -1,0 +1,32 @@
+# Tolvi pre-commit hooks. Install with `pre-commit install` after `brew install pre-commit`
+# (or `pipx install pre-commit`). See CONTRIBUTING.md for details.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        # LICENSE is the canonical Apache 2.0 text — leave whitespace untouched.
+        # Markdown can use trailing whitespace as a meaningful line-break.
+        exclude: '^LICENSE$|\.md$'
+      - id: end-of-file-fixer
+        exclude: '^LICENSE$'
+      - id: check-json
+      - id: check-yaml
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: brand-isolation
+        name: brand-isolation guard
+        entry: .github/scripts/brand-isolation-check.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+
+      - id: validate-vault-schemas
+        name: validate sample vault against JSON Schemas
+        entry: npm run validate:schemas --silent
+        language: system
+        pass_filenames: false
+        # Only re-run when the schemas or the sample vault content change.
+        files: '^(spec/schemas/.*\.json|examples/sample-vault/.*)$'
