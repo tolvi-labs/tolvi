@@ -1,3 +1,5 @@
 export * from './workspaces.js';
 export * from './repos.js';
-// documents, chunks, api-keys added in subsequent tasks
+export * from './documents.js';
+export * from './chunks.js';
+// api-keys added in Task 6
