@@ -6,15 +6,15 @@ labels: bug
 assignees: ''
 ---
 
-### What happened
+## What happened
 
 A clear, minimal description of the bug.
 
-### Expected behavior
+## Expected behavior
 
 What you expected instead.
 
-### Reproduction
+## Reproduction
 
 Steps to reproduce. A minimal example is most useful.
 
@@ -22,13 +22,13 @@ Steps to reproduce. A minimal example is most useful.
 # the command(s) you ran
 ```
 
-### Environment
+## Environment
 
 - Tolvi version: (run `tolvi --version`)
 - OS:
 - Embedding backend (e.g., Ollama):
 
-### Logs
+## Logs
 
 ```
 Paste relevant logs here.
