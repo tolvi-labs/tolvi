@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Tolvi server — multi-tenant Fastify + Postgres + pgvector implementation of tolvi-format-v1.",
   "license": "Apache-2.0",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
@@ -28,6 +30,7 @@
     "ajv-formats": "^3.0.1",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.0.0",
+    "fastify-plugin": "^5.1.0",
     "fastify-type-provider-zod": "^4.0.0",
     "pg": "^8.13.0",
     "pino": "^9.5.0",

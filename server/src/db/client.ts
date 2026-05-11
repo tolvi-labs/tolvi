@@ -4,6 +4,15 @@ import * as schema from './schema/index.js';
 
 export type Db = ReturnType<typeof drizzle<typeof schema>>;
 
+// Type augmentation for Fastify's app.db decorator. Co-located with the Db
+// type itself so a single source owns the contract; plugins that depend on
+// app.db assert via `app.hasDecorator('db')` at register time.
+declare module 'fastify' {
+  interface FastifyInstance {
+    db: Db;
+  }
+}
+
 export function createDb(databaseUrl: string): { db: Db; pool: pg.Pool } {
   const pool = new pg.Pool({ connectionString: databaseUrl });
   const db = drizzle(pool, { schema });
