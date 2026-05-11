@@ -14,6 +14,7 @@ import { authPlugin } from './auth/plugin.js';
 import { healthRoutes } from './routes/health.js';
 import { documentsRoutes } from './routes/documents.js';
 import { reposRoutes } from './routes/repos.js';
+import { syncRoutes } from './routes/sync.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -46,6 +47,7 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
   await app.register(healthRoutes);
   await app.register(documentsRoutes);
   await app.register(reposRoutes);
+  await app.register(syncRoutes);
 
   return app;
 }
