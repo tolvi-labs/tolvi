@@ -13,6 +13,7 @@ import type { EmbeddingProvider } from './embedding/provider.js';
 import { authPlugin } from './auth/plugin.js';
 import { healthRoutes } from './routes/health.js';
 import { documentsRoutes } from './routes/documents.js';
+import { reposRoutes } from './routes/repos.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -44,6 +45,7 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
   await app.register(authPlugin);
   await app.register(healthRoutes);
   await app.register(documentsRoutes);
+  await app.register(reposRoutes);
 
   return app;
 }

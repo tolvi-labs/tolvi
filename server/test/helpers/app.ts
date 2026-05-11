@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { authPlugin } from '../../src/auth/plugin.js';
 import { healthRoutes } from '../../src/routes/health.js';
 import { documentsRoutes } from '../../src/routes/documents.js';
+import { reposRoutes } from '../../src/routes/repos.js';
 import type { Db } from '../../src/db/client.js';
 import type { EmbeddingProvider } from '../../src/embedding/provider.js';
 import type pg from 'pg';
@@ -32,5 +33,6 @@ export async function buildTestApp(deps: {
   await app.register(authPlugin);
   await app.register(healthRoutes);
   await app.register(documentsRoutes);
+  await app.register(reposRoutes);
   return app;
 }
