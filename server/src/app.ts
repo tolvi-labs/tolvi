@@ -4,8 +4,23 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
+import type pg from 'pg';
 import { type Config } from './config.js';
 import { buildLoggerOptions } from './observability/logging.js';
+import { createDb } from './db/client.js';
+import { buildEmbeddingProvider } from './embedding/factory.js';
+import type { EmbeddingProvider } from './embedding/provider.js';
+import { authPlugin } from './auth/plugin.js';
+import { healthRoutes } from './routes/health.js';
+import { documentsRoutes } from './routes/documents.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    config: Config;
+    pool: pg.Pool;
+    embedding: EmbeddingProvider;
+  }
+}
 
 export async function buildApp(cfg: Config): Promise<FastifyInstance> {
   const app = Fastify({
@@ -16,14 +31,19 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
-  // Make config available to routes via app.config
+  const { db, pool } = createDb(cfg.databaseUrl);
+  const embedding = buildEmbeddingProvider(cfg);
+
   app.decorate('config', cfg);
+  app.decorate('db', db);
+  app.decorate('pool', pool);
+  app.decorate('embedding', embedding);
+
+  app.addHook('onClose', async () => { await pool.end(); });
+
+  await app.register(authPlugin);
+  await app.register(healthRoutes);
+  await app.register(documentsRoutes);
 
   return app;
-}
-
-declare module 'fastify' {
-  interface FastifyInstance {
-    config: Config;
-  }
 }
