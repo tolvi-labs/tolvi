@@ -1,0 +1,60 @@
+# Tolvi self-host stack. `docker compose up` brings up Postgres + Ollama + server.
+# Configure ANTHROPIC_API_KEY in .env (see .env.example) before starting.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tolvi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-tolvi}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-tolvi}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        sleep 5
+        ollama pull nomic-embed-text
+        wait
+
+  server:
+    image: tolvilabs/tolvi-server:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tolvi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-tolvi}
+      EMBEDDING_PROVIDER: ollama
+      EMBEDDING_BASE_URL: http://ollama:11434
+      EMBEDDING_MODEL: nomic-embed-text
+      EMBEDDING_DIM: "768"
+      LLM_PROVIDER: anthropic
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?set ANTHROPIC_API_KEY in .env}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-7}
+      PORT: "3000"
+      NODE_ENV: production
+      LOG_LEVEL: info
+    ports:
+      - "3000:3000"
+    command: ["sh", "-c", "npm run migrate && node dist/server.js"]
+
+volumes:
+  pg_data:
+  ollama_models:

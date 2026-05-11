@@ -1,0 +1,45 @@
+# Server dev stack — Postgres + Ollama only.
+# The server itself runs from your IDE / `npm run dev`.
+# For the full self-host stack, use the root docker-compose.yml.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: tolvi-server-postgres
+    environment:
+      POSTGRES_USER: tolvi
+      POSTGRES_PASSWORD: tolvi
+      POSTGRES_DB: tolvi
+    ports:
+      - "5432:5432"
+    volumes:
+      - server_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tolvi"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: tolvi-server-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - server_ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Pull the default model on first start
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        sleep 5
+        ollama pull nomic-embed-text
+        wait
+
+volumes:
+  server_pg_data:
+  server_ollama_models:
