@@ -17,6 +17,13 @@ export default defineConfig({
           environment: 'node',
           testTimeout: 30000,
           hookTimeout: 60000,
+          // Integration tests share a testcontainers Postgres+pgvector instance
+          // declared at module scope in test/helpers/postgres.ts. Running test
+          // files in parallel would spawn N containers concurrently. singleFork
+          // serializes integration files within one process so the singleton
+          // actually behaves as one. Unit + e2e remain unconstrained.
+          pool: 'forks',
+          poolOptions: { forks: { singleFork: true } },
         },
       },
       {
