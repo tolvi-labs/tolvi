@@ -83,7 +83,7 @@ A `tolvi keys create` CLI command lands in Phase 3.
 
 ## API
 
-See [`../spec/openapi.json`](../spec/openapi.json) (committed; generated from the Fastify route schemas) — landing in PR B.
+The OpenAPI spec is generated from the Fastify route schemas and committed to `spec/openapi.json` in PR B (search + ask routes + the OpenAPI generator land together there). For now, see the route definitions under `src/routes/` for request/response shapes.
 
 In dev, Swagger UI will be available at `http://localhost:3000/docs` once PR B's OpenAPI generation lands.
 
