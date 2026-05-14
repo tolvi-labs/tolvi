@@ -1,0 +1,9 @@
+# Build output
+/dist/
+/bin/
+/tolvi
+
+# Go test cache
+*.test
+*.out
+coverage.out
