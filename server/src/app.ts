@@ -1,5 +1,8 @@
 import Fastify, { type FastifyInstance } from 'fastify';
+import fastifySwagger from '@fastify/swagger';
+import fastifySwaggerUi from '@fastify/swagger-ui';
 import {
+  jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
   type ZodTypeProvider,
@@ -49,6 +52,29 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
   app.decorate('llm', llm);
 
   app.addHook('onClose', async () => { await pool.end(); });
+
+  await app.register(fastifySwagger, {
+    openapi: {
+      info: {
+        title: 'Tolvi Server API',
+        description:
+          'HTTP API for the Tolvi server. See spec/tolvi-format-v1.md for the vault format contract.',
+        version: '0.1.0',
+      },
+      servers: [{ url: 'http://localhost:3000', description: 'local dev' }],
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'tlv_<random>' },
+        },
+      },
+      security: [{ bearerAuth: [] }],
+    },
+    transform: jsonSchemaTransform,
+  });
+
+  if (cfg.nodeEnv === 'development') {
+    await app.register(fastifySwaggerUi, { routePrefix: '/docs' });
+  }
 
   await app.register(authPlugin);
   await app.register(healthRoutes);
