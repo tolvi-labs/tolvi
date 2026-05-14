@@ -15,6 +15,7 @@ import { healthRoutes } from './routes/health.js';
 import { documentsRoutes } from './routes/documents.js';
 import { reposRoutes } from './routes/repos.js';
 import { syncRoutes } from './routes/sync.js';
+import { searchRoutes } from './routes/search.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -48,6 +49,7 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
   await app.register(documentsRoutes);
   await app.register(reposRoutes);
   await app.register(syncRoutes);
+  await app.register(searchRoutes);
 
   return app;
 }
