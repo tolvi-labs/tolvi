@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tolvi.dev/spec/schemas/pattern.json",
+  "$id": "https://tolvilabs.com/tolvi/spec/schemas/pattern.json",
   "title": "Tolvi pattern frontmatter",
   "description": "Frontmatter schema for files in vault/patterns/. Patterns are intentionally timeless - no date or repo required.",
   "type": "object",
