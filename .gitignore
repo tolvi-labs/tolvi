@@ -30,3 +30,8 @@ npm-debug.log*
 
 # Private working docs (not for the public repo)
 tolvi-build-plan.md
+
+# Per-repo engineering vault — maintainer-only sessions, decisions, patterns.
+# The PUBLIC synthetic demo vault lives at examples/sample-vault/ and IS
+# committed; this `vault/` is local working notes and must not ship.
+/vault/
