@@ -1,0 +1,59 @@
+name: server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'spec/schemas/**'
+      - '.github/workflows/server.yml'
+  pull_request:
+    paths:
+      - 'server/**'
+      - 'spec/schemas/**'
+      - '.github/workflows/server.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+      - name: Install
+        working-directory: server
+        run: npm ci
+      - name: TypeScript check
+        working-directory: server
+        run: npm run lint
+      - name: Unit tests
+        working-directory: server
+        run: npm run test:unit
+      - name: Integration tests (testcontainers)
+        working-directory: server
+        run: npm run test:integration
+        env:
+          DEBUG: testcontainers
+
+  e2e:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+      - name: Install
+        working-directory: server
+        run: npm ci
+      - name: E2E test (real Ollama via testcontainers)
+        working-directory: server
+        run: npm run test:e2e
+        env:
+          DEBUG: testcontainers
