@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tolvi.dev/spec/schemas/vault-meta.json",
+  "$id": "https://tolvilabs.com/tolvi/spec/schemas/vault-meta.json",
   "title": "Tolvi vault metadata",
   "description": "The .vault-meta.json marker file at the root of every Tolvi vault directory.",
   "type": "object",

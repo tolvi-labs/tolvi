@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tolvi.dev/spec/schemas/decision.json",
+  "$id": "https://tolvilabs.com/tolvi/spec/schemas/decision.json",
   "title": "Tolvi decision frontmatter",
   "description": "Frontmatter schema for files in vault/decisions/.",
   "type": "object",

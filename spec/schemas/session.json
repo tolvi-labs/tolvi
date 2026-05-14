@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tolvi.dev/spec/schemas/session.json",
+  "$id": "https://tolvilabs.com/tolvi/spec/schemas/session.json",
   "title": "Tolvi session frontmatter",
   "description": "Frontmatter schema for files in vault/sessions/. One file per day; multiple session blocks per file.",
   "type": "object",

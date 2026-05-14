@@ -6,7 +6,7 @@ If you discover a security vulnerability in Tolvi, please **do not** open a publ
 
 Instead, report it privately by [opening a security advisory](https://github.com/tolvi-labs/tolvi/security/advisories/new) in this repository. We will acknowledge within 48 hours.
 
-Once `tolvi.dev` is registered, security reports may also be sent to `security@tolvi.dev`.
+Once a mailbox is live, security reports may also be sent to `security@tolvilabs.com`.
 
 ## Scope
 

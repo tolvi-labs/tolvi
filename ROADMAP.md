@@ -44,7 +44,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 ### Phase 5 — TypeScript SDK and docs 📅
 
 - `@tolvi-labs/sdk` on npm
-- Documentation site at `tolvi.dev`
+- Documentation site at `tolvilabs.com/tolvi`
 - API reference auto-generated from OpenAPI
 - Migration guides
 
