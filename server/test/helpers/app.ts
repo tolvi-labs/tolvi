@@ -4,6 +4,7 @@ import { healthRoutes } from '../../src/routes/health.js';
 import { documentsRoutes } from '../../src/routes/documents.js';
 import { reposRoutes } from '../../src/routes/repos.js';
 import { syncRoutes } from '../../src/routes/sync.js';
+import { searchRoutes } from '../../src/routes/search.js';
 import type { Db } from '../../src/db/client.js';
 import type { EmbeddingProvider } from '../../src/embedding/provider.js';
 import type pg from 'pg';
@@ -36,5 +37,6 @@ export async function buildTestApp(deps: {
   await app.register(documentsRoutes);
   await app.register(reposRoutes);
   await app.register(syncRoutes);
+  await app.register(searchRoutes);
   return app;
 }
