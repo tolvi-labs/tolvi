@@ -1,0 +1,65 @@
+version: 2
+
+project_name: tolvi
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: tolvi
+    main: ./cmd/tolvi
+    binary: tolvi
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w -X main.version={{.Tag}}
+
+archives:
+  - id: tolvi
+    builds: [tolvi]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- if eq .Os "darwin" }}macos{{- else }}{{ .Os }}{{ end }}_
+      {{- .Arch }}
+    files:
+      - LICENSE*
+      - README*
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-snapshot"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: tolvi-labs
+    name: tolvi
+  draft: false
+  prerelease: auto
+  name_template: "tolvi CLI {{.Tag}}"

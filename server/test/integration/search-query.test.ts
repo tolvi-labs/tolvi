@@ -45,7 +45,14 @@ describe('search (integration)', () => {
     workspaceId = w!.id;
   });
 
-  it('returns results ranked by similarity', async () => {
+  it('returns results from all ingested docs', async () => {
+    // The DeterministicEmbedding is char-code-positional, not semantic — so
+    // we can't assert that "postgres database" ranks the postgres doc
+    // higher than the redis doc (the synthetic similarity has no semantic
+    // meaning). Instead, verify the SQL pipeline returns BOTH docs and
+    // delivers a properly-shaped SearchResult. Semantic ranking quality is
+    // covered by the e2e test (server/test/e2e/full-stack.test.ts) which
+    // uses a real Ollama embedding.
     await ingestDocument(db, embedding, {
       workspaceId, repoSlug: 'tolvi',
       path: 'decisions/2026-04-12-postgres.md',
@@ -57,8 +64,12 @@ describe('search (integration)', () => {
       content: doc('redis cache', 'cache invalidation is hard for stale reads'),
     });
     const { results } = await search(db, embedding, workspaceId, 'postgres database', { repo: null, docType: null, status: null }, 10);
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0]?.slug).toMatch(/postgres/);
+    expect(results).toHaveLength(2);
+    const slugs = results.map((r) => r.slug).sort();
+    expect(slugs).toEqual(['postgres', 'redis']);
+    // Sanity-check the SearchResult shape on the first hit.
+    expect(results[0]?.score).toBeTypeOf('number');
+    expect(results[0]?.matchedChunk.content).toBeTypeOf('string');
   });
 
   it('excludes superseded by default', async () => {
