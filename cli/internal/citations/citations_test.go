@@ -34,11 +34,11 @@ func TestExtract_SlugShape(t *testing.T) {
 		in   string
 		want []string
 	}{
-		{"[[foo bar]]", nil},       // space disallowed
-		{"[[FOO]]", nil},           // uppercase disallowed
-		{"[[foo-]]", nil},          // trailing hyphen disallowed
+		{"[[foo bar]]", nil}, // space disallowed
+		{"[[FOO]]", nil},     // uppercase disallowed
+		{"[[foo-]]", nil},    // trailing hyphen disallowed
 		{"[[foo-bar]]", []string{"foo-bar"}},
-		{"[[a]]", []string{"a"}},   // single char allowed
+		{"[[a]]", []string{"a"}},             // single char allowed
 		{"[[task-42]]", []string{"task-42"}}, // digits in middle allowed
 	}
 	for _, tt := range tests {

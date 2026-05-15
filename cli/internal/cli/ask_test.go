@@ -27,8 +27,8 @@ func TestRunAsk_HappyPath(t *testing.T) {
 	vaultDir := mkVaultForTest(t)
 	doc := vault.Doc{
 		Type: "decision", Slug: "postgres", Date: "2026-04-12",
-		Path: "decisions/2026-04-12-postgres.md",
-		Body: []byte("# Postgres\n\nbecause pgvector.\n"),
+		Path:        "decisions/2026-04-12-postgres.md",
+		Body:        []byte("# Postgres\n\nbecause pgvector.\n"),
 		Frontmatter: map[string]any{"status": "active", "repo": "test"},
 	}
 
@@ -100,9 +100,9 @@ func TestRunAsk_GuardError(t *testing.T) {
 	var out bytes.Buffer
 	err := RunAsk(AskOpts{
 		VaultPath: vaultDir, Query: "x",
-		Docs: []vault.Doc{doc},
-		Now:  time.Now(),
-		LLM:  &fakeLLM{response: llm.StreamResult{Text: "should not be called"}},
+		Docs:   []vault.Doc{doc},
+		Now:    time.Now(),
+		LLM:    &fakeLLM{response: llm.StreamResult{Text: "should not be called"}},
 		Stdout: &out,
 	})
 	if err == nil {
