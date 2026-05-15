@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	clicmd "github.com/tolvi-labs/tolvi/cli/internal/cli"
+	"github.com/tolvi-labs/tolvi/cli/internal/config"
+	"github.com/tolvi-labs/tolvi/cli/internal/llm"
 	"github.com/tolvi-labs/tolvi/cli/internal/vault"
 )
 
@@ -88,6 +90,87 @@ var syncCmd = &cobra.Command{
 	},
 }
 
+var (
+	askVaultFlag         string
+	askModelFlag         string
+	askIncludeStatusFlag string
+	askExcludeTypeFlag   string
+	askJSONFlag          bool
+	askNoStreamFlag      bool
+)
+
+var askCmd = &cobra.Command{
+	Use:   "ask <query...>",
+	Short: "Ask the vault a question (CAG: whole vault → Anthropic)",
+	Args:  cobra.MinimumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		query := strings.Join(args, " ")
+
+		cwd, _ := os.Getwd()
+		home, _ := os.UserHomeDir()
+		cfg := config.Load(config.LoadOpts{
+			HomeDir: home,
+			Env:     os.Getenv,
+		})
+
+		vaultPath, err := vault.Discover(vault.DiscoverOpts{
+			StartDir:     cwd,
+			HomeDir:      home,
+			ExplicitPath: firstNonEmpty(askVaultFlag, os.Getenv("TOLVI_VAULT")),
+			DefaultVault: cfg.DefaultVault,
+		})
+		if err != nil {
+			return err
+		}
+
+		model := cfg.Model
+		if askModelFlag != "" {
+			model = askModelFlag
+		}
+		client, err := llm.NewClient(llm.ClientOpts{
+			APIKey:  cfg.AnthropicAPIKey,
+			Model:   model,
+			BaseURL: os.Getenv("ANTHROPIC_BASE_URL"),
+		})
+		if err != nil {
+			return err
+		}
+
+		opts := clicmd.AskOpts{
+			VaultPath: vaultPath,
+			Query:     query,
+			LLM:       client,
+			Stdout:    os.Stdout,
+			Stderr:    os.Stderr,
+			JSON:      askJSONFlag,
+			NoStream:  askNoStreamFlag,
+			Model:     model,
+		}
+		if askIncludeStatusFlag != "" {
+			opts.IncludeStatuses = parseCSV(askIncludeStatusFlag)
+		}
+		if askExcludeTypeFlag != "" {
+			opts.ExcludeTypes = parseCSV(askExcludeTypeFlag)
+		}
+		return clicmd.RunAsk(opts)
+	},
+}
+
+func parseCSV(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
 func init() {
 	initCmd.Flags().StringVar(&initWorkspaceFlag, "workspace", "", "workspace name (default: derived from git origin or cwd basename)")
 
@@ -97,6 +180,13 @@ func init() {
 	syncCmd.Flags().BoolVar(&syncNoEditFlag, "no-edit", false, "write skeleton-only file (no $EDITOR)")
 	syncCmd.Flags().BoolVar(&syncPrintFlag, "print-path", false, "print only the resulting path on stdout")
 	syncCmd.Flags().StringVar(&syncVaultFlag, "vault", "", "path to vault dir (default: walk up)")
+
+	askCmd.Flags().StringVar(&askVaultFlag, "vault", "", "path to vault dir (default: walk up)")
+	askCmd.Flags().StringVar(&askModelFlag, "model", "", "override the configured Anthropic model")
+	askCmd.Flags().StringVar(&askIncludeStatusFlag, "include-status", "", "comma-separated statuses to include (default: active,in-progress,historical)")
+	askCmd.Flags().StringVar(&askExcludeTypeFlag, "exclude-type", "", "comma-separated doc types to omit (e.g., session)")
+	askCmd.Flags().BoolVar(&askJSONFlag, "json", false, "emit JSON instead of streaming text")
+	askCmd.Flags().BoolVar(&askNoStreamFlag, "no-stream", false, "buffer output instead of streaming")
 }
 
 func firstNonEmpty(s ...string) string {
@@ -112,6 +202,7 @@ func main() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(syncCmd)
+	rootCmd.AddCommand(askCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "tolvi:", err)
