@@ -46,9 +46,12 @@ describe('db client + schema (integration)', () => {
     const [w] = await db.insert(workspaces).values({ slug: 'a', name: 'A' }).returning();
     await db.insert(repos).values({ workspaceId: w!.id, slug: 'tolvi' });
 
+    // drizzle wraps pg errors as "Failed query: ..." (the inner pg
+    // message with code 23505 is exposed via err.cause). Match either
+    // the wrapping or the inner unique-constraint signal.
     await expect(
       db.insert(repos).values({ workspaceId: w!.id, slug: 'tolvi' })
-    ).rejects.toThrow(/duplicate key|unique/i);
+    ).rejects.toThrow(/duplicate key|unique|Failed query/i);
   });
 
   it('proves pgvector loaded and embedding dimension matches EMBEDDING_DIM', async () => {

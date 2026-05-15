@@ -30,6 +30,17 @@ function pgVectorLiteral(v: number[]): string {
   return `[${v.join(',')}]`;
 }
 
+// pgTextArrayLiteral builds a single-parameter Postgres array literal
+// like `{"active","in-progress","historical"}` so callers can write
+// `ANY(${pgTextArrayLiteral(arr)}::text[])`. drizzle's default
+// `${jsArray}` interpolation unrolls each element into a separate
+// placeholder (`($7, $8, $9)`), which is valid for `IN (...)` but
+// breaks `ANY(...)` — that needs a single array-typed argument.
+function pgTextArrayLiteral(arr: string[]): string {
+  const escaped = arr.map((s) => `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+  return `{${escaped.join(',')}}`;
+}
+
 export async function search(
   db: Db,
   embedding: EmbeddingProvider,
@@ -77,9 +88,9 @@ export async function search(
     JOIN repos r     ON r.id = d.repo_id, q
     WHERE d.workspace_id = ${workspaceId}
       AND d.deleted_at IS NULL
-      AND d.status = ANY(${statusList}::text[])
-      AND (${repoList === null ? sql`true` : sql`r.slug = ANY(${repoList}::text[])`})
-      AND (${docTypeList === null ? sql`true` : sql`d.doc_type = ANY(${docTypeList}::text[])`})
+      AND d.status = ANY(${pgTextArrayLiteral(statusList)}::text[])
+      AND (${repoList === null ? sql`true` : sql`r.slug = ANY(${pgTextArrayLiteral(repoList)}::text[])`})
+      AND (${docTypeList === null ? sql`true` : sql`d.doc_type = ANY(${pgTextArrayLiteral(docTypeList)}::text[])`})
     ORDER BY score DESC
     LIMIT ${limit * 3}
   `);
