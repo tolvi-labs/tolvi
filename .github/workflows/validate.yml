@@ -38,4 +38,6 @@ jobs:
           # mailto: links are excluded by default in current lychee.
           # Skip vendored READMEs (node_modules) and engineering-process artifacts
           # (docs/superpowers/) — same allowlist logic as markdownlint and brand-isolation.
-          args: --no-progress --exclude-path node_modules --exclude-path docs/superpowers '**/*.md'
+          # --max-retries 3 / --retry-wait-time 5: handle transient network blips
+          # (Connection reset by peer, etc.) on otherwise-stable URLs.
+          args: --no-progress --max-retries 3 --retry-wait-time 5 --exclude-path node_modules --exclude-path docs/superpowers '**/*.md'
