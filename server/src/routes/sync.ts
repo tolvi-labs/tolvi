@@ -10,10 +10,25 @@ const SyncRequest = z.object({
   })).min(1).max(500),
 });
 
+const SyncResponse = z.object({
+  results: z.array(z.object({
+    path: z.string(),
+    status: z.string(),
+    document_id: z.string().nullable(),
+    error: z.object({ code: z.string(), message: z.string() }).nullable(),
+  })),
+  summary: z.object({
+    created: z.number().int().nonnegative(),
+    updated: z.number().int().nonnegative(),
+    unchanged: z.number().int().nonnegative(),
+    failed: z.number().int().nonnegative(),
+  }),
+});
+
 export async function syncRoutes(app: FastifyInstance): Promise<void> {
   app.post('/v1/sync', {
     preHandler: app.requireAuth,
-    schema: { body: SyncRequest },
+    schema: { body: SyncRequest, response: { 200: SyncResponse } },
   }, async (req) => {
     const body = req.body as z.infer<typeof SyncRequest>;
     const summary = { created: 0, updated: 0, unchanged: 0, failed: 0 };

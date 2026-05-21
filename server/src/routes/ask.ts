@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { search } from '../search/query.js';
 import { SYSTEM_PROMPT, buildUserMessage } from '../ask/prompt.js';
 import { extractCitations, scrubUnverifiedCitations } from '../ask/citations.js';
+import { ErrorEnvelope, HeadingPath } from './_responses.js';
 
 const AskRequest = z.object({
   query: z.string().min(1).max(2000),
@@ -14,12 +15,50 @@ const AskRequest = z.object({
   model: z.string().nullable().optional(),
 });
 
+const Citation = z.object({
+  slug: z.string(),
+  doc_type: z.string(),
+  document_id: z.string().uuid(),
+});
+
+const AskSearchHit = z.object({
+  document_id: z.string().uuid(),
+  doc_type: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  score: z.number(),
+  raw_similarity: z.number(),
+  matched_chunk: z.object({
+    position: z.number().int().nonnegative(),
+    content: z.string(),
+    heading_path: HeadingPath,
+  }),
+});
+
+const AskResponse = z.object({
+  answer: z.string(),
+  citations: z.array(Citation),
+  search_results: z.array(AskSearchHit),
+  model: z.string(),
+  tokens: z.object({
+    input: z.number().int().nonnegative(),
+    output: z.number().int().nonnegative(),
+    cache_read: z.number().int().nonnegative(),
+  }),
+});
+
 const ASK_SEARCH_LIMIT = 8;
 
 export async function askRoutes(app: FastifyInstance): Promise<void> {
   app.post('/v1/ask', {
     preHandler: app.requireAuth,
-    schema: { body: AskRequest },
+    schema: {
+      body: AskRequest,
+      response: {
+        200: AskResponse,
+        503: ErrorEnvelope,
+      },
+    },
   }, async (req, reply) => {
     const body = req.body as z.infer<typeof AskRequest>;
 
