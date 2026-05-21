@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { search } from '../search/query.js';
+import { ErrorEnvelope, HeadingPath } from './_responses.js';
 
 const SearchRequest = z.object({
   query: z.string().min(1).max(2000),
@@ -12,10 +13,35 @@ const SearchRequest = z.object({
   }).default({}),
 });
 
+const SearchHit = z.object({
+  document_id: z.string().uuid(),
+  doc_type: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  score: z.number(),
+  raw_similarity: z.number(),
+  matched_chunk: z.object({
+    position: z.number().int().nonnegative(),
+    content: z.string(),
+    heading_path: HeadingPath,
+  }),
+});
+
+const SearchResponse = z.object({
+  results: z.array(SearchHit),
+  total: z.number().int().nonnegative(),
+});
+
 export async function searchRoutes(app: FastifyInstance): Promise<void> {
   app.post('/v1/search', {
     preHandler: app.requireAuth,
-    schema: { body: SearchRequest },
+    schema: {
+      body: SearchRequest,
+      response: {
+        200: SearchResponse,
+        503: ErrorEnvelope,
+      },
+    },
   }, async (req, reply) => {
     const body = req.body as z.infer<typeof SearchRequest>;
     try {
