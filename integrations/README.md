@@ -7,7 +7,7 @@ Per-agent configuration files for using a Tolvi vault from your AI coding tool o
 | Integration | Tier | Status | Directory |
 |---|---|---|---|
 | Claude Code | 1 — deep | ✅ shipped | [`claude-code/`](./claude-code/) |
-| Cursor | 2 — light | 📅 planned | `cursor/` |
+| Cursor | 2 — light | ✅ shipped | [`cursor/`](./cursor/) |
 | Aider | 3 — skeleton | 📅 planned | `aider/` |
 | OpenHands | 3 — skeleton | 📅 planned | `openhands/` |
 | Continue | 3 — skeleton | 📅 planned | `continue/` |

@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import {
@@ -40,6 +40,26 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+
+  // Normalize all validation errors (from fastify-type-provider-zod's
+  // body/querystring/params validators) to the canonical ErrorEnvelope
+  // shape — `{ error: { code, message } }` — so the response matches the
+  // `400: ErrorEnvelope` schema declarations on data-plane routes. Without
+  // this normalization, the validator's default 400 envelope is
+  // `{ statusCode, code, error, message }`, which mismatches the declared
+  // schema and surfaces as a 500 during serializer validation.
+  app.setErrorHandler((error: FastifyError, request, reply) => {
+    if (error.validation || error.code === 'FST_ERR_VALIDATION') {
+      return reply.code(400).send({
+        error: {
+          code: 'validation_failed',
+          message: error.message,
+        },
+      });
+    }
+    request.log.error({ err: error }, 'unhandled route error');
+    return reply.send(error);
+  });
 
   const { db, pool } = createDb(cfg.databaseUrl);
   const embedding = buildEmbeddingProvider(cfg);
