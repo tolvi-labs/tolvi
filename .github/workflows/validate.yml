@@ -32,6 +32,9 @@ jobs:
       - name: Brand-isolation guard
         run: npm run validate:brand
 
+      - name: Claude Code skill install smoke test
+        run: bash .github/scripts/test-install-claude-code-skill.sh
+
       - name: Link checker
         uses: lycheeverse/lychee-action@v2
         with:
