@@ -8,9 +8,9 @@ Per-agent configuration files for using a Tolvi vault from your AI coding tool o
 |---|---|---|---|
 | Claude Code | 1 — deep | ✅ shipped | [`claude-code/`](./claude-code/) |
 | Cursor | 2 — light | ✅ shipped | [`cursor/`](./cursor/) |
-| Aider | 3 — skeleton | 📅 planned | `aider/` |
-| OpenHands | 3 — skeleton | 📅 planned | `openhands/` |
-| Continue | 3 — skeleton | 📅 planned | `continue/` |
+| Aider | 3 — skeleton | ✅ shipped | [`aider/`](./aider/) |
+| OpenHands | 3 — skeleton | ✅ shipped | [`openhands/`](./openhands/) |
+| Continue | 3 — skeleton | ✅ shipped | [`continue/`](./continue/) |
 
 **Tier 1 — deep:** Custom skill files with slash commands, format-spec awareness, and CLI orchestration. The agent can read, write, and ask questions of the vault as a first-class workflow.
 

@@ -1,4 +1,4 @@
-import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance } from 'fastify';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import {
@@ -7,6 +7,7 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
+import { ZodError } from 'zod';
 import type pg from 'pg';
 import { type Config } from './config.js';
 import { buildLoggerOptions } from './observability/logging.js';
@@ -45,16 +46,22 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
   // body/querystring/params validators) to the canonical ErrorEnvelope
   // shape — `{ error: { code, message } }` — so the response matches the
   // `400: ErrorEnvelope` schema declarations on data-plane routes. Without
-  // this normalization, the validator's default 400 envelope is
-  // `{ statusCode, code, error, message }`, which mismatches the declared
-  // schema and surfaces as a 500 during serializer validation.
-  app.setErrorHandler((error: FastifyError, request, reply) => {
-    if (error.validation || error.code === 'FST_ERR_VALIDATION') {
+  // this normalization, fastify-type-provider-zod throws a raw ZodError
+  // (which does NOT carry `.validation` or `.code === 'FST_ERR_VALIDATION'`),
+  // the default error handler renders the ZodError as JSON, and the
+  // serializer rejects that shape against the declared 400 schema —
+  // surfacing as a 500 to the client.
+  app.setErrorHandler((error, request, reply) => {
+    const fastifyError = error as { validation?: unknown; code?: string };
+    const isZodError = error instanceof ZodError;
+    if (isZodError || fastifyError.validation || fastifyError.code === 'FST_ERR_VALIDATION') {
+      const message = isZodError
+        ? error.issues
+            .map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`)
+            .join('; ')
+        : (error as Error).message;
       return reply.code(400).send({
-        error: {
-          code: 'validation_failed',
-          message: error.message,
-        },
+        error: { code: 'validation_failed', message },
       });
     }
     request.log.error({ err: error }, 'unhandled route error');
