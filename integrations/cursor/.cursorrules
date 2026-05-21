@@ -1,0 +1,108 @@
+# Tolvi — Cursor rules
+
+This project may use Tolvi: a per-repo engineering knowledge vault of decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. When the user asks about decisions, sessions, patterns, or references `[[some-slug]]`, treat this as a Tolvi vault query and apply the conventions below.
+
+If `<repo>/vault/.vault-meta.json` does not exist in this project, Tolvi is not active here — ignore these rules and use normal tools.
+
+## Vault structure
+
+```
+<repo>/
+└── vault/
+    ├── .vault-meta.json      # workspace + embedding model + schema version
+    ├── decisions/            # YYYY-MM-DD-<slug>.md
+    ├── sessions/             # YYYY-MM-DD.md (one per day; multiple blocks append)
+    └── patterns/             # <slug>.md (no date prefix; timeless)
+```
+
+One workspace per repo. The CLI walks up from `$PWD` to find `.vault-meta.json`.
+
+## Format spec
+
+### Frontmatter per doc type
+
+**Decision** — required fields:
+
+```yaml
+---
+tags: [decision]
+date: 2026-04-12
+repo: my-project
+status: active
+---
+```
+
+Optional decision fields: `ticket`, `user_impact`, `product_area`.
+
+**Session** — required fields:
+
+```yaml
+---
+tags: [session]
+date: 2026-04-12
+status: active
+---
+```
+
+**Pattern** — required (no date, no repo; patterns are timeless):
+
+```yaml
+---
+tags: [pattern]
+status: active
+---
+```
+
+### Slug rules
+
+Regex: `^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$`. Lowercase letters and digits only; hyphens in the middle only; no leading/trailing hyphen; no underscores; no uppercase; no spaces. Max 80 chars. Single-character slugs (`a`, `1`) are allowed.
+
+Auto-derive from a title: NFKD ASCII-fold → lowercase → non-alphanumeric runs to `-` → trim → cap at 80 → re-trim trailing hyphen.
+
+### File paths
+
+- Decision: `vault/decisions/<date>-<slug>.md` (date is YYYY-MM-DD)
+- Session: `vault/sessions/<date>.md` (one file per day; new blocks append)
+- Pattern: `vault/patterns/<slug>.md` (no date prefix)
+
+### Status enum (six values)
+
+- `active` — current, in effect
+- `in-progress` — decided but implementation in flight
+- `superseded` — replaced by a newer decision (point to the replacement in the body)
+- `deprecated` — no longer applies; kept for history
+- `draft` — not finalized; ideas in progress
+- `historical` — older context; valid but archival
+
+Default search surfaces `active | in-progress | historical`; the other three are filtered out unless requested.
+
+### Wiki-link syntax
+
+- `[[slug]]` — references a doc by slug in the same vault. Must resolve to a real file.
+- `[[repo:slug]]` — cross-vault reference; the format spec supports it but the CLI v1 does not surface it in citations. Do not generate `[[repo:slug]]` citations.
+
+## CLI commands
+
+The `tolvi` binary is the substrate. If it is not in `$PATH`, suggest installation; fall back to direct file operations.
+
+- `tolvi ask <query>` — stream a cited answer; prints a `Sources` footer with verified `[[slug]]` references and file paths. Flags: `--no-stream`, `--json`, `--model`, `--include-status`, `--exclude-type`, `--vault`.
+- `tolvi sync <type> <title>` — write a new vault doc; opens `$EDITOR` for the body. Flags: `--body`, `--no-edit`, `--slug`, `--status`, `--print-path`, `--vault`. For sessions on a day that already has a `sessions/<date>.md`, the CLI appends a new block to the existing file.
+- `tolvi init` — provision `vault/{decisions,sessions,patterns}/` and `.vault-meta.json`. Refuses if a vault already exists. Workspace name derived from `git remote get-url origin` or cwd basename; override with `--workspace`.
+
+## Behavioral rules
+
+These are preferences, not hard gates. Use judgment.
+
+- **Reading a specific vault doc**: open the file directly (Cursor's read primitive) rather than shelling out.
+- **Searching the vault semantically** ("what did we decide about X", "any patterns for Y"): prefer `tolvi ask`. The CLI handles CAG (whole vault → Anthropic context) plus citation verification plus streaming.
+- **Writing a new doc**: prefer `tolvi sync`. The CLI handles atomic write, frontmatter validation, slug auto-generation, and session same-day append. Composing the markdown by hand is acceptable when the CLI is missing or the user explicitly asks for direct write.
+- **Cite vault content** with `[[slug]]`. Use exact slugs that exist in the vault — verify by reading the matching file before citing. Don't invent slugs.
+- **Pre-commit nudges live elsewhere**: a separate `tolvi precommit` git-hook subcommand handles proactive "you may have made a decision worth capturing" prompts at commit time. It is not your job to interrupt mid-conversation with the same prompt.
+
+## Escape hatches
+
+- **`tolvi` binary not in `$PATH`**: suggest `go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest` or a release binary from `https://github.com/tolvi-labs/tolvi/releases`. Until installed, fall back to direct file operations.
+- **No vault in this repo**: offer to run `tolvi init` (with `--workspace <name>` if the user proposes one). Confirm before running.
+- **`tolvi ask` reports vault too large** (~180,000 tokens estimated): suggest `--exclude-type session` to drop noisy session logs, or migrate to the server arm.
+- **No `ANTHROPIC_API_KEY`**: `tolvi ask` errors with a pointer to `~/.config/tolvi/config.yaml` and the `ANTHROPIC_API_KEY` env var. Surface that message verbatim.
+- **Vault has invalid frontmatter in a file**: `tolvi ask` prints a warning on stderr and skips the bad file. Offer to help fix it.
