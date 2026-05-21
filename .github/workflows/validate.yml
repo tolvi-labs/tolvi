@@ -43,4 +43,7 @@ jobs:
           # (docs/superpowers/) — same allowlist logic as markdownlint and brand-isolation.
           # --max-retries 3 / --retry-wait-time 5: handle transient network blips
           # (Connection reset by peer, etc.) on otherwise-stable URLs.
-          args: --no-progress --max-retries 3 --retry-wait-time 5 --exclude-path node_modules --exclude-path docs/superpowers '**/*.md'
+          # --exclude 'claude\.ai': claude.ai returns 403 to lychee's User-Agent
+          # despite being a valid URL for human visitors. Exclude rather than
+          # adding 403 to --accept (too permissive).
+          args: --no-progress --max-retries 3 --retry-wait-time 5 --exclude '^https://claude\.ai' --exclude-path node_modules --exclude-path docs/superpowers '**/*.md'
