@@ -52,19 +52,42 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
   // serializer rejects that shape against the declared 400 schema —
   // surfacing as a 500 to the client.
   app.setErrorHandler((error, request, reply) => {
-    const fastifyError = error as { validation?: unknown; code?: string };
+    const e = error as {
+      validation?: unknown;
+      validationContext?: string;
+      code?: string;
+      issues?: unknown;
+      cause?: unknown;
+      statusCode?: number;
+    };
     const isZodError = error instanceof ZodError;
-    if (isZodError || fastifyError.validation || fastifyError.code === 'FST_ERR_VALIDATION') {
+    // Broaden detection: Fastify v5 + fastify-type-provider-zod can surface
+    // validation failures via several shapes. Match any of them.
+    const isValidation =
+      isZodError ||
+      Array.isArray(e.validation) ||
+      e.code === 'FST_ERR_VALIDATION' ||
+      (typeof e.code === 'string' && e.code.startsWith('FST_ERR_VALIDATION')) ||
+      Array.isArray(e.issues) || // raw zod issues array
+      e.cause instanceof ZodError;
+
+    // Log every error that reaches the handler so CI surfaces enough info
+    // to debug shape mismatches. Pino's err serializer handles the rest.
+    request.log.error(
+      { err: error, isValidation, errCode: e.code, errName: (error as Error).name },
+      'error-handler invoked',
+    );
+
+    if (isValidation) {
       const message = isZodError
-        ? error.issues
-            .map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`)
-            .join('; ')
-        : (error as Error).message;
+        ? error.issues.map((i) => `${i.path.join('.') || '<root>'}: ${i.message}`).join('; ')
+        : e.cause instanceof ZodError
+          ? e.cause.issues.map((i) => `${i.path.join('.') || '<root>'}: ${i.message}`).join('; ')
+          : (error as Error).message || 'validation failed';
       return reply.code(400).send({
         error: { code: 'validation_failed', message },
       });
     }
-    request.log.error({ err: error }, 'unhandled route error');
     return reply.send(error);
   });
 
