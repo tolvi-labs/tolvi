@@ -42,6 +42,7 @@ The `tolvi` binary is the substrate. Prefer the CLI over direct file operations 
 - `tolvi ask <query>` — stream a cited answer; prints a `Sources` footer with verified `[[slug]]` references.
 - `tolvi sync <type> <title>` — write a new vault doc with atomic write + frontmatter validation + slug auto-gen. Sessions on a day that already has a file get a new block appended.
 - `tolvi init` — provision `vault/` with the three subdirs and `.vault-meta.json`.
+- `tolvi precommit install` — adds a non-blocking git pre-commit nudge that flags commits touching dependency manifests, infra config, or large diffs. Suggests `tolvi sync decision "..."` when fired.
 
 Cite vault content with `[[slug]]`. Use exact slugs that exist in the vault — verify before citing. Don't invent slugs.
 
