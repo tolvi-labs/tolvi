@@ -7,7 +7,7 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
-import { ZodError } from 'zod';
+import { installErrorHandler } from './errors/handler.js';
 import type pg from 'pg';
 import { type Config } from './config.js';
 import { buildLoggerOptions } from './observability/logging.js';
@@ -41,55 +41,7 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
-
-  // Normalize all validation errors (from fastify-type-provider-zod's
-  // body/querystring/params validators) to the canonical ErrorEnvelope
-  // shape — `{ error: { code, message } }` — so the response matches the
-  // `400: ErrorEnvelope` schema declarations on data-plane routes. Without
-  // this normalization, fastify-type-provider-zod throws a raw ZodError
-  // (which does NOT carry `.validation` or `.code === 'FST_ERR_VALIDATION'`),
-  // the default error handler renders the ZodError as JSON, and the
-  // serializer rejects that shape against the declared 400 schema —
-  // surfacing as a 500 to the client.
-  app.setErrorHandler((error, request, reply) => {
-    const e = error as {
-      validation?: unknown;
-      validationContext?: string;
-      code?: string;
-      issues?: unknown;
-      cause?: unknown;
-      statusCode?: number;
-    };
-    const isZodError = error instanceof ZodError;
-    // Broaden detection: Fastify v5 + fastify-type-provider-zod can surface
-    // validation failures via several shapes. Match any of them.
-    const isValidation =
-      isZodError ||
-      Array.isArray(e.validation) ||
-      e.code === 'FST_ERR_VALIDATION' ||
-      (typeof e.code === 'string' && e.code.startsWith('FST_ERR_VALIDATION')) ||
-      Array.isArray(e.issues) || // raw zod issues array
-      e.cause instanceof ZodError;
-
-    // Log every error that reaches the handler so CI surfaces enough info
-    // to debug shape mismatches. Pino's err serializer handles the rest.
-    request.log.error(
-      { err: error, isValidation, errCode: e.code, errName: (error as Error).name },
-      'error-handler invoked',
-    );
-
-    if (isValidation) {
-      const message = isZodError
-        ? error.issues.map((i) => `${i.path.join('.') || '<root>'}: ${i.message}`).join('; ')
-        : e.cause instanceof ZodError
-          ? e.cause.issues.map((i) => `${i.path.join('.') || '<root>'}: ${i.message}`).join('; ')
-          : (error as Error).message || 'validation failed';
-      return reply.code(400).send({
-        error: { code: 'validation_failed', message },
-      });
-    }
-    return reply.send(error);
-  });
+  installErrorHandler(app);
 
   const { db, pool } = createDb(cfg.databaseUrl);
   const embedding = buildEmbeddingProvider(cfg);
