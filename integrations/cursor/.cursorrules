@@ -97,7 +97,7 @@ These are preferences, not hard gates. Use judgment.
 - **Searching the vault semantically** ("what did we decide about X", "any patterns for Y"): prefer `tolvi ask`. The CLI handles CAG (whole vault → Anthropic context) plus citation verification plus streaming.
 - **Writing a new doc**: prefer `tolvi sync`. The CLI handles atomic write, frontmatter validation, slug auto-generation, and session same-day append. Composing the markdown by hand is acceptable when the CLI is missing or the user explicitly asks for direct write.
 - **Cite vault content** with `[[slug]]`. Use exact slugs that exist in the vault — verify by reading the matching file before citing. Don't invent slugs.
-- **Pre-commit nudges live elsewhere**: a separate `tolvi precommit` git-hook subcommand handles proactive "you may have made a decision worth capturing" prompts at commit time. It is not your job to interrupt mid-conversation with the same prompt.
+- **Pre-commit nudges live elsewhere**: a separate `tolvi precommit` git-hook subcommand handles proactive "you may have made a decision worth capturing" prompts at commit time. Install with `tolvi precommit install` in any Tolvi-enabled repo. It is not your job to interrupt mid-conversation with the same prompt.
 
 ## Escape hatches
 

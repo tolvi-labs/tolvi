@@ -171,7 +171,7 @@ When summarizing or quoting vault content in a response, cite with `[[slug]]`. U
 
 ### Pre-commit nudges live elsewhere
 
-A separate `tolvi precommit` git-hook subcommand handles proactive "you may have made a decision worth capturing" prompts at commit time. It is not part of this skill. If the user asks "should I capture this as a decision?" mid-session, you may suggest `tolvi sync` directly; don't try to invoke the precommit hook from within Claude Code.
+A separate `tolvi precommit` git-hook subcommand handles proactive "you may have made a decision worth capturing" prompts at commit time. Install with `tolvi precommit install` in any Tolvi-enabled repo. It is not part of this skill. If the user asks "should I capture this as a decision?" mid-session, you may suggest `tolvi sync` directly; don't try to invoke the precommit hook from within Claude Code.
 
 ## Escape hatches
 

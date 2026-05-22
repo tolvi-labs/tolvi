@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -156,6 +157,135 @@ var askCmd = &cobra.Command{
 	},
 }
 
+var (
+	precommitForceFlag      bool
+	precommitAppendFlag     bool
+	precommitRepoFlag       string
+	precommitUninstallForce bool
+)
+
+var precommitCmd = &cobra.Command{
+	Use:   "precommit",
+	Short: "Manage the tolvi git pre-commit hook",
+}
+
+var precommitInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Install the tolvi pre-commit hook into the current repo",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		repoRoot, err := resolveRepoRoot(precommitRepoFlag)
+		if err != nil {
+			return err
+		}
+		mode := clicmd.InstallModeDefault
+		switch {
+		case precommitForceFlag && precommitAppendFlag:
+			return fmt.Errorf("--force and --append are mutually exclusive")
+		case precommitForceFlag:
+			mode = clicmd.InstallModeForce
+		case precommitAppendFlag:
+			mode = clicmd.InstallModeAppend
+		}
+		result, err := clicmd.InstallShim(clicmd.InstallOpts{RepoRoot: repoRoot, Mode: mode})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "tolvi: "+err.Error())
+			os.Exit(clicmd.ExitVaultState)
+		}
+		printInstallResult(result, repoRoot)
+		return nil
+	},
+}
+
+var precommitCheckCmd = &cobra.Command{
+	Use:    "check",
+	Short:  "Run the precommit heuristics on the staged diff (called by the hook)",
+	Hidden: true, // rarely run by humans
+	RunE: func(cmd *cobra.Command, args []string) error {
+		repoRoot, err := resolveRepoRoot(precommitRepoFlag)
+		if err != nil {
+			return nil // check NEVER errors externally
+		}
+		quiet := os.Getenv("TOLVI_PRECOMMIT_QUIET") != ""
+		_ = clicmd.RunCheck(clicmd.CheckOpts{RepoRoot: repoRoot, Stderr: os.Stderr, Quiet: quiet})
+		return nil
+	},
+}
+
+var precommitUninstallCmd = &cobra.Command{
+	Use:   "uninstall",
+	Short: "Remove the tolvi pre-commit hook from the current repo",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		repoRoot, err := resolveRepoRoot(precommitRepoFlag)
+		if err != nil {
+			return err
+		}
+		result, err := clicmd.UninstallShim(clicmd.UninstallOpts{RepoRoot: repoRoot, Force: precommitUninstallForce})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "tolvi: "+err.Error())
+			os.Exit(clicmd.ExitVaultState)
+		}
+		printUninstallResult(result)
+		return nil
+	},
+}
+
+// resolveRepoRoot returns the git repo root for the precommit cobra
+// handlers. If flag is non-empty, returns it directly. Otherwise walks
+// up from $PWD looking for a .git directory.
+func resolveRepoRoot(flag string) (string, error) {
+	if flag != "" {
+		return flag, nil
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	dir := cwd
+	for {
+		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+			return dir, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", fmt.Errorf("not inside a git repository (no .git found in any ancestor of %s)", cwd)
+		}
+		dir = parent
+	}
+}
+
+func printInstallResult(r clicmd.InstallResult, repoRoot string) {
+	fmt.Printf("✓ Repo root: %s\n", repoRoot)
+	switch r.Action {
+	case clicmd.InstallActionWrote:
+		fmt.Printf("✓ Wrote %s (4 lines)\n", r.HookPath)
+		fmt.Println("✓ Chmod +x")
+		fmt.Println()
+		fmt.Println("The hook will print a nudge on commits that touch dependency manifests,")
+		fmt.Println("infra config, tooling config, or that add >500 lines.")
+		fmt.Println()
+		fmt.Println("To silence per-shell: export TOLVI_PRECOMMIT_QUIET=1")
+		fmt.Println("To remove: tolvi precommit uninstall")
+	case clicmd.InstallActionAlreadyInstalled:
+		fmt.Printf("✓ Already installed at %s\n", r.HookPath)
+	case clicmd.InstallActionReplaced:
+		prevLines := len(strings.Split(strings.TrimSpace(string(r.PrevContent)), "\n"))
+		fmt.Printf("✓ Replaced existing hook at %s (was %d lines)\n", r.HookPath, prevLines)
+	case clicmd.InstallActionAppended:
+		prevLines := len(strings.Split(strings.TrimSpace(string(r.PrevContent)), "\n"))
+		fmt.Printf("✓ Appended tolvi check to existing %s (was %d lines, now %d)\n",
+			r.HookPath, prevLines, prevLines+2)
+	}
+}
+
+func printUninstallResult(r clicmd.UninstallResult) {
+	switch r.Action {
+	case clicmd.UninstallActionRemoved:
+		fmt.Printf("✓ Removed %s\n", r.HookPath)
+	case clicmd.UninstallActionNoOp:
+		fmt.Printf("✓ No hook installed at %s\n", r.HookPath)
+	}
+}
+
 func parseCSV(s string) []string {
 	if s == "" {
 		return nil
@@ -187,6 +317,13 @@ func init() {
 	askCmd.Flags().StringVar(&askExcludeTypeFlag, "exclude-type", "", "comma-separated doc types to omit (e.g., session)")
 	askCmd.Flags().BoolVar(&askJSONFlag, "json", false, "emit JSON instead of streaming text")
 	askCmd.Flags().BoolVar(&askNoStreamFlag, "no-stream", false, "buffer output instead of streaming")
+
+	precommitInstallCmd.Flags().BoolVar(&precommitForceFlag, "force", false, "overwrite an existing non-tolvi hook")
+	precommitInstallCmd.Flags().BoolVar(&precommitAppendFlag, "append", false, "append tolvi check to an existing hook instead of overwriting")
+	precommitInstallCmd.Flags().StringVar(&precommitRepoFlag, "repo", "", "path to the repo root (default: walk up from cwd)")
+	precommitCheckCmd.Flags().StringVar(&precommitRepoFlag, "repo", "", "path to the repo root (default: walk up from cwd)")
+	precommitUninstallCmd.Flags().StringVar(&precommitRepoFlag, "repo", "", "path to the repo root (default: walk up from cwd)")
+	precommitUninstallCmd.Flags().BoolVar(&precommitUninstallForce, "force", false, "remove the hook even if not installed by tolvi")
 }
 
 func firstNonEmpty(s ...string) string {
@@ -203,6 +340,11 @@ func main() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(askCmd)
+
+	precommitCmd.AddCommand(precommitInstallCmd)
+	precommitCmd.AddCommand(precommitCheckCmd)
+	precommitCmd.AddCommand(precommitUninstallCmd)
+	rootCmd.AddCommand(precommitCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "tolvi:", err)
