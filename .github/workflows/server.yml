@@ -6,11 +6,13 @@ on:
     paths:
       - 'server/**'
       - 'spec/schemas/**'
+      - 'spec/openapi.json'
       - '.github/workflows/server.yml'
   pull_request:
     paths:
       - 'server/**'
       - 'spec/schemas/**'
+      - 'spec/openapi.json'
       - '.github/workflows/server.yml'
   workflow_dispatch:
 
@@ -27,6 +29,16 @@ jobs:
       - name: Install
         working-directory: server
         run: npm ci
+      - name: Regenerate spec/openapi.json from route schemas
+        working-directory: server
+        run: npm run openapi:dump
+      - name: Fail on spec drift
+        run: |
+          if ! git diff --exit-code spec/openapi.json; then
+            echo "::error::spec/openapi.json is out of date with the live server route schemas."
+            echo "Regenerate locally: (cd server && npm run openapi:dump) and commit the result."
+            exit 1
+          fi
       - name: TypeScript check
         working-directory: server
         run: npm run lint

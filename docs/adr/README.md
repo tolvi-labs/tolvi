@@ -32,6 +32,7 @@ What follows from this decision — both positive and negative? What becomes eas
 | 0001 | [Architecture overview](./0001-architecture-overview.md) | accepted |
 | 0002 | [Vault format v1 contract](./0002-vault-format-v1-contract.md) | accepted |
 | 0003 | [Vault index and TL;DR system](./0003-vault-index-and-tldr-system.md) | accepted |
+| 0004 | [Server CI verifies `spec/openapi.json` freshness against route schemas](./0004-server-ci-verifies-openapi-spec-freshness.md) | accepted |
 
 ## Adding a new ADR
 
