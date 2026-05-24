@@ -23,7 +23,7 @@ export type CreateDocumentRequest =
 type CreateDocumentResponseBody =
   paths["/v1/documents"]["post"]["responses"]["200"]["content"]["application/json"];
 export type CreateDocumentResponse = CreateDocumentResponseBody;
-/** The full document shape returned by `documents.create` / `documents.get`. */
+/** Document shape returned by `documents.create` — ingest metadata (content_hash, chunk count, embedded_at). For the full document with `body`/`frontmatter`/full chunks, see `FullDocument`. */
 export type Document = CreateDocumentResponseBody["document"];
 
 export type ListDocumentsQuery = {
@@ -36,6 +36,11 @@ export type ListDocumentsResponse =
   paths["/v1/documents"]["get"]["responses"]["200"]["content"]["application/json"];
 /** Lightweight document shape returned by `documents.list`. */
 export type DocumentListItem = ListDocumentsResponse["documents"][number];
+
+export type GetDocumentResponse =
+  paths["/v1/documents/{id}"]["get"]["responses"]["200"]["content"]["application/json"];
+/** Full document shape returned by `documents.get` — includes `body`, `frontmatter`, `created_at`, `date`, and the complete chunks array. */
+export type FullDocument = GetDocumentResponse["document"];
 
 // ----- Sync -----
 export type SyncBatchRequest =
