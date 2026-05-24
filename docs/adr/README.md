@@ -31,6 +31,7 @@ What follows from this decision — both positive and negative? What becomes eas
 |---|---|---|
 | 0001 | [Architecture overview](./0001-architecture-overview.md) | accepted |
 | 0002 | [Vault format v1 contract](./0002-vault-format-v1-contract.md) | accepted |
+| 0003 | [Vault index and TL;DR system](./0003-vault-index-and-tldr-system.md) | accepted |
 
 ## Adding a new ADR
 
