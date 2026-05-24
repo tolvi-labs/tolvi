@@ -1,0 +1,56 @@
+name: sdk-release
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: sdk/package-lock.json
+      - name: Install
+        working-directory: sdk
+        run: npm ci
+      - name: Verify tag matches package.json version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#sdk-v}"
+          PKG_VERSION=$(node -p "require('./sdk/package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match sdk/package.json version $PKG_VERSION"
+            exit 1
+          fi
+      - name: Regenerate types + drift check
+        working-directory: sdk
+        run: |
+          npm run gen:types
+          git diff --exit-code src/types.gen.ts
+      - name: Typecheck + test + build
+        working-directory: sdk
+        run: |
+          npm run typecheck
+          npm test
+          npm run build
+      - name: Publish to npm
+        working-directory: sdk
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "SDK ${{ github.ref_name }}"
+          body: |
+            See [`sdk/CHANGELOG.md`](./sdk/CHANGELOG.md) for the full changelog.

@@ -49,12 +49,11 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 - Cursor `.cursorrules` template (Tier 2 — light)
 - Aider, OpenHands, Continue skeleton conventions (Tier 3)
 
-### Phase 5 — TypeScript SDK and docs ⏭️
+### Phase 5 — TypeScript SDK and docs 🚧
 
-- `@tolvi-labs/sdk` on npm
-- Documentation site at `tolvilabs.com/tolvi`
-- API reference auto-generated from OpenAPI
-- Migration guides
+- ✅ Phase 5.A: `@tolvi-labs/sdk` — hand-written `Tolvi` client over `openapi-typescript`-generated types covering all v1 data-plane endpoints, typed error hierarchy, vitest + contract coverage tests, CI + release workflows (npm publish with provenance on `sdk-v*` tags). See [`docs/superpowers/specs/2026-05-22-typescript-sdk-design.md`](./docs/superpowers/specs/2026-05-22-typescript-sdk-design.md)
+- ⏭️ Phase 5.B: Documentation site at `tolvilabs.com/tolvi` — framework choice, IA, API reference rendering from `spec/openapi.json`, migration guides
+- ⏭️ Phase 5.C: API reference auto-generated from OpenAPI (folded into the docs site work)
 
 ### Phase 6 — Soft launch 📅
 

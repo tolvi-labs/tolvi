@@ -1,0 +1,47 @@
+name: sdk
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sdk/**'
+      - 'spec/openapi.json'
+      - '.github/workflows/sdk.yml'
+  pull_request:
+    paths:
+      - 'sdk/**'
+      - 'spec/openapi.json'
+      - '.github/workflows/sdk.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: sdk/package-lock.json
+      - name: Install
+        working-directory: sdk
+        run: npm ci
+      - name: Regenerate types from spec
+        working-directory: sdk
+        run: npm run gen:types
+      - name: Fail on type drift
+        run: |
+          if ! git diff --exit-code sdk/src/types.gen.ts; then
+            echo "::error::sdk/src/types.gen.ts is out of date."
+            echo "Regenerate locally: (cd sdk && npm run gen:types) and commit the result."
+            exit 1
+          fi
+      - name: Typecheck
+        working-directory: sdk
+        run: npm run typecheck
+      - name: Test (unit + contract)
+        working-directory: sdk
+        run: npm test
+      - name: Build
+        working-directory: sdk
+        run: npm run build

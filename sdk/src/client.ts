@@ -17,6 +17,19 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
+/**
+ * The Tolvi API client.
+ *
+ * @example
+ *   import { Tolvi } from "@tolvi-labs/sdk";
+ *
+ *   const client = new Tolvi({
+ *     apiKey: process.env.TOLVI_API_KEY!,
+ *     baseUrl: "https://tolvi.example.com"
+ *   });
+ *
+ *   const { answer, citations } = await client.ask({ query: "why postgres?" });
+ */
 export class Tolvi {
   readonly documents: DocumentsResource;
   readonly sync: SyncResource;
@@ -33,6 +46,13 @@ export class Tolvi {
     this.askResource = new AskResource(http);
   }
 
+  /**
+   * Ask a question of the workspace. Returns a synthesized answer grounded
+   * in retrieved documents, plus citations.
+   *
+   * @example
+   *   const { answer, citations } = await client.ask({ query: "why postgres?" });
+   */
   ask(body: AskRequest, opts: RequestOptions = {}): Promise<AskResponse> {
     return this.askResource.ask(body, opts);
   }
