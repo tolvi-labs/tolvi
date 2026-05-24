@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "gen:types": "openapi-typescript ../spec/openapi.json -o src/types.gen.ts --alphabetize",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:unit": "vitest run test/unit",
     "test:contract": "vitest run test/contract",
     "test:watch": "vitest watch",
