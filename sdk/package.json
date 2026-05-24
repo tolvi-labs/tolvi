@@ -1,6 +1,6 @@
 {
   "name": "@tolvi-labs/sdk",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "TypeScript SDK for the Tolvi API",
   "type": "module",
   "engines": {
