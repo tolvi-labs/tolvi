@@ -40,7 +40,8 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 ### Phase 3.x — CLI follow-ups
 
 - ✅ `tolvi precommit install` — non-blocking git pre-commit nudge that flags commits touching dependency manifests, infra config, tooling config, or large diffs
-- 📅 OpenAPI response schemas on data-plane routes (deferred from Phase 5 design; tracked separately)
+- 📅 `tolvi vault-index` — regenerate the per-vault index block in an agent conventions file (`CLAUDE.md`, `.cursorrules`, etc.) from doc frontmatter and titles; idempotent; intended for use as a pre-commit hook or session-end step. Convention is documented in [`docs/CONVENTIONS.md`](./docs/CONVENTIONS.md) Section 7 and [`docs/adr/0003-vault-index-and-tldr-system.md`](./docs/adr/0003-vault-index-and-tldr-system.md)
+- ✅ OpenAPI response schemas on all v1 data-plane routes (`spec/openapi.json` now describes both requests and responses end-to-end; unblocks Phase 5 SDK)
 
 ### Phase 4 — Agent integrations ✅
 

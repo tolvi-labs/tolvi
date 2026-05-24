@@ -133,3 +133,86 @@ ln -s ~/path/to/repo-b/vault repo-b
 Then open `~/tolvi-vault/` in Obsidian (or any markdown editor that follows symlinks). Cross-repo `[[repo:slug]]` links resolve correctly because each linked subdirectory is named after its repo.
 
 A `tolvi unify` command to automate this — including pruning stale links and detecting moved repos — is on the v1.x roadmap. It was deferred from v1 because the manual recipe works and exercising it informs the eventual command's design.
+
+## 7. Optimizing vaults for agents (recommended)
+
+Vault content exists so coding agents can answer decision-rationale questions cheaply and accurately. Two conventions, both additive to the format and both optional, make a measurable difference on agent token cost and answer quality. See [`adr/0003-vault-index-and-tldr-system.md`](./adr/0003-vault-index-and-tldr-system.md) for the architectural decision and the benchmark behind these recommendations.
+
+### TL;DR block on long decision docs
+
+Decision docs over roughly 5 KB SHOULD carry a `## TL;DR` block placed immediately after the frontmatter and before the body. Below 5 KB the block is optional — small docs are already cheap to read in full.
+
+```markdown
+---
+tags: [decision, ...]
+status: active
+date: 2026-05-22
+repo: <repo-slug>
+---
+
+## TL;DR
+
+<Decision in one sentence>. <Why, ≤120 chars>. Rejected: <alternative(s), ≤120 chars>.
+
+## Why
+...
+```
+
+Budget the entire block, including the `## TL;DR` heading, to **≤500 bytes** (roughly 125 tokens). The discipline is the point: a TL;DR that won't fit in 500 bytes usually signals a decision whose rationale needs sharpening.
+
+When the decision considered no alternatives — or considered them implicitly without writing them down — end the block with the literal marker:
+
+```
+Rejected: (none documented).
+```
+
+The marker makes the absence visible to both readers and tooling. Silent omission is non-conformant with the convention because a missing `Rejected:` line is indistinguishable from a forgotten one.
+
+**Example (≤500 bytes):**
+
+```markdown
+## TL;DR
+
+Adopt PASETO v4 (public, Ed25519) for service-to-service tokens. Removes the JWT `alg:` confusion class of bugs and verifies ~60% faster than RS256 in load tests. Rejected: stay on JWT with allow-listed algorithms (brittle); custom token format (NIH, security review tax).
+```
+
+### Vault index in agent conventions files
+
+Every agent integration loads a per-tool conventions file at session start — `CLAUDE.md` for Claude Code, `.cursorrules` for Cursor, `CONVENTIONS.md` for Aider, `.openhands_instructions` for OpenHands, `.continuerules` for Continue. Injecting a generated index of vault docs into that file lets the agent resolve "where is the decision about X" to an exact filename without filesystem search.
+
+The index is a delimited block within the conventions file:
+
+```markdown
+<!-- VAULT-INDEX:START repo=<name> generated=YYYY-MM-DD -->
+## Vault Index
+
+*Auto-generated. Re-run the index generator to refresh.*
+
+### Decisions
+
+- `2026-05-09-vault-format-v1-contract.md` — Vault format v1 contract
+- `2026-05-22-vault-index-and-tldr-system.md` — Vault index and TL;DR system
+
+### Patterns
+
+- `pattern-slug.md` — Title extracted from the doc
+
+<!-- VAULT-INDEX:END -->
+```
+
+Recommended rules for generators:
+
+- Extract each line's title from the doc's H1 if present; otherwise the first H2; otherwise fall back to the filename slug with hyphens replaced by spaces.
+- Sort decisions by filename descending (which, given the `YYYY-MM-DD-slug.md` naming rule in Section 1, sorts newest-first).
+- Sort patterns by filename ascending (patterns are timeless; alphabetical is the natural order).
+- Apply the default status filter from `spec/tolvi-format-v1.md` Section 9: exclude `superseded`, `deprecated`, and `draft` from the index.
+- Be idempotent — replace the content between the `VAULT-INDEX:START` and `VAULT-INDEX:END` markers in place; append the block at the end of the file if no markers exist.
+
+When to skip the index:
+
+- Vaults under roughly 10 decision docs — the ~1–2 KB the index loads into every agent session is not worth the lookup speedup at that scale.
+- Conventions files that are already at risk of exceeding the agent's context budget for system content — measure first.
+
+### Regeneration
+
+The index rots the moment a new doc lands. Wire regeneration into one of: a `pre-commit` hook, a session-end skill, or a CI job that opens a PR when drift is detected. A future `tolvi vault-index` CLI subcommand (see ROADMAP) is intended to be a one-line hook that adopters can wire into any of these triggers without depending on a specific agent platform.
