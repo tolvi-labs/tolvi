@@ -1,2 +1,2 @@
-// Public API entry. Populated in later tasks.
-export const VERSION = "0.0.0"; // overwritten in Task 2
+// Public API entry. Populated by later tasks (errors, client, type aliases).
+export { VERSION } from "./version.js";
