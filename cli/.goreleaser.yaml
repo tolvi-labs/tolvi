@@ -27,7 +27,7 @@ builds:
 
 archives:
   - id: tolvi
-    builds: [tolvi]
+    ids: [tolvi]
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_
       {{- if eq .Os "darwin" }}macos{{- else }}{{ .Os }}{{ end }}_
@@ -37,13 +37,13 @@ archives:
       - README*
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
 
 checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-snapshot"
+  version_template: "{{ incpatch .Version }}-snapshot"
 
 changelog:
   sort: asc
