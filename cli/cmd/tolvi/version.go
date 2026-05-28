@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// version is baked at release time via -ldflags "-X main.version=cli-v0.1.0".
+// version is baked at release time via -ldflags "-X main.version=v0.1.0".
 var version = "dev"
 
 var versionCmd = &cobra.Command{
