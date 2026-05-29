@@ -8,6 +8,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# MCP browser-tool session artifacts (screenshots, page snapshots, console logs)
+.playwright-mcp/
+
 # Node / npm
 node_modules/
 npm-debug.log*
