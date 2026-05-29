@@ -30,6 +30,9 @@ npm-debug.log*
 
 # Private working docs (not for the public repo)
 tolvi-build-plan.md
+# Engineering-process artifacts (implementation plans/specs) — maintainer-only;
+# contain local paths and internal process, kept out of the public repo.
+docs/superpowers/
 
 # Per-repo engineering vault — maintainer-only sessions, decisions, patterns.
 # The PUBLIC synthetic demo vault lives at examples/sample-vault/ and IS
