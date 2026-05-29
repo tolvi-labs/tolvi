@@ -52,14 +52,14 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 ### Phase 5 — TypeScript SDK and docs ✅
 
 - ✅ Phase 5.A: `@tolvi-labs/sdk` — hand-written `Tolvi` client over `openapi-typescript`-generated types covering all v1 data-plane endpoints, typed error hierarchy, vitest + contract coverage tests, CI + release workflows (npm publish with provenance on `sdk-v*` tags).
-- ✅ Phase 5.B: Documentation site authored (Tier 1 narrative pages, served at `tolvilabs.com/tolvi`); deployment is gated behind the launch flag and goes live at the Phase 6 soft launch.
+- ✅ Phase 5.B: Documentation site live at `tolvilabs.com/docs` — Tier 1 narrative pages (quickstart, install, CLI, SDK, vault format, agent integrations).
 - ✅ Phase 5.C: folded into the docs site — the SDK page documents the typed client and `spec/openapi.json` is the API contract (no separate generated reference renderer).
 
 ### Phase 6 — Soft launch 🚧
 
 - ✅ `v0.1.0` tagged release on GitHub — cross-platform CLI binaries (macOS / Linux / Windows) + checksums
 - 📅 Public repository (Apache 2.0)
-- 📅 Hosted docs site goes live
+- ✅ Hosted docs site live at `tolvilabs.com/docs`
 - 📅 Homebrew tap, npm/PyPI publishes, Docker Hub image
 - 📅 5–15 friendly users from the maintainer's network
 - 📅 Daily metric tracking
