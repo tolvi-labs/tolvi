@@ -2,7 +2,7 @@
 
 Capture engineering decisions where they happen. Query them later in plain English.
 
-> **Status:** Pre-1.0 — code shipped through Phase 4, no official release tagged yet. CLI + server + agent integrations are functional on `main`; TypeScript SDK and docs site (Phase 5) and launch ops (Phase 6) remain. See [`ROADMAP.md`](./ROADMAP.md).
+> **Status:** Pre-1.0 — `v0.1.0` released. The CLI, server, TypeScript SDK, and agent integrations are shipped and functional on `main`; the hosted docs site and packaged distribution (Homebrew / npm / Docker) are still in progress. See [`ROADMAP.md`](./ROADMAP.md).
 
 ## What Tolvi is
 
@@ -47,6 +47,7 @@ tolvi precommit install
 | **Format spec** `tolvi-format-v1` | [`spec/tolvi-format-v1.md`](./spec/tolvi-format-v1.md), [`spec/schemas/`](./spec/schemas/) | ✅ |
 | **CLI** (`init`, `sync`, `ask`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
 | **Server** (Fastify + Postgres + pgvector, multi-tenant, OpenAPI) | [`server/`](./server/), [`spec/openapi.json`](./spec/openapi.json) | ✅ Phase 2 |
+| **TypeScript SDK** `@tolvi-labs/sdk` (typed client over the server's HTTP API) | [`sdk/`](./sdk/) | ✅ Phase 5.A |
 | **Claude Code skill** (Tier 1 — `/tolvi` slash command) | [`integrations/claude-code/`](./integrations/claude-code/) | ✅ Phase 4 |
 | **Cursor `.cursorrules`** (Tier 2) | [`integrations/cursor/`](./integrations/cursor/) | ✅ Phase 4 |
 | **Aider / OpenHands / Continue** skeletons (Tier 3) | [`integrations/aider/`](./integrations/aider/), [`integrations/openhands/`](./integrations/openhands/), [`integrations/continue/`](./integrations/continue/) | ✅ Phase 4 |
@@ -54,9 +55,7 @@ tolvi precommit install
 
 ## What's coming
 
-- **TypeScript SDK** for the server's HTTP API (auto-generated from `spec/openapi.json`)
-- **Docs site** at [`tolvilabs.com/tolvi`](https://tolvilabs.com/tolvi) (not live yet)
-- **First tagged release** — `cli-v0.1.0`, `server-v0.1.0` — once Phase 5 lands
+- **Hosted docs site** at [`tolvilabs.com/tolvi`](https://tolvilabs.com/tolvi) — authored, not live yet (currently a coming-soon page)
 - **Distribution channels** — Homebrew tap, npm publish, Docker Hub image (Phase 6)
 
 ## Repository layout
@@ -76,7 +75,7 @@ Each subdirectory has its own README with detailed install and usage notes.
 
 ## Architecture
 
-See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) (note: some sections describe the original v1 plan; the CAG-vs-RAG split and Phase 5+ details aren't there yet — slated for the docs site work).
+See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) (note: some sections describe the original v1 plan; the fuller CAG-vs-RAG treatment lives in the docs site).
 
 ## License
 
