@@ -1,6 +1,6 @@
 package cli
 
-// Exit codes per docs/superpowers/specs/2026-05-14-phase-3-cli-design.md §6.
+// Exit codes for the tolvi CLI.
 const (
 	ExitOK         = 0
 	ExitInternal   = 1

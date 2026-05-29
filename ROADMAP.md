@@ -35,7 +35,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 - `tolvi init`, `sync`, `ask`, `version`
 - CAG architecture for local use (whole vault → Anthropic context via prompt caching)
 - GoReleaser-driven distribution
-- `recall`, `doctor`, `unify`, `publish`, `status` deferred from the original plan; see [`docs/superpowers/specs/2026-05-14-phase-3-cli-design.md`](./docs/superpowers/specs/2026-05-14-phase-3-cli-design.md) for the locked v1 scope
+- `recall`, `doctor`, `unify`, `publish`, `status` were deferred from the original plan; the v1 CLI scope is locked to `init`, `sync`, `ask`, and `version`
 
 ### Phase 3.x — CLI follow-ups
 
@@ -51,7 +51,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 
 ### Phase 5 — TypeScript SDK and docs 🚧
 
-- ✅ Phase 5.A: `@tolvi-labs/sdk` — hand-written `Tolvi` client over `openapi-typescript`-generated types covering all v1 data-plane endpoints, typed error hierarchy, vitest + contract coverage tests, CI + release workflows (npm publish with provenance on `sdk-v*` tags). See [`docs/superpowers/specs/2026-05-22-typescript-sdk-design.md`](./docs/superpowers/specs/2026-05-22-typescript-sdk-design.md)
+- ✅ Phase 5.A: `@tolvi-labs/sdk` — hand-written `Tolvi` client over `openapi-typescript`-generated types covering all v1 data-plane endpoints, typed error hierarchy, vitest + contract coverage tests, CI + release workflows (npm publish with provenance on `sdk-v*` tags).
 - ⏭️ Phase 5.B: Documentation site at `tolvilabs.com/tolvi` — framework choice, IA, API reference rendering from `spec/openapi.json`, migration guides
 - ⏭️ Phase 5.C: API reference auto-generated from OpenAPI (folded into the docs site work)
 
