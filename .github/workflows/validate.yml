@@ -31,6 +31,8 @@ jobs:
 
       - name: Brand-isolation guard
         run: npm run validate:brand
+        env:
+          BRAND_BLOCKLIST: ${{ vars.BRAND_BLOCKLIST }}
 
       - name: Claude Code skill install smoke test
         run: bash .github/scripts/test-install-claude-code-skill.sh
