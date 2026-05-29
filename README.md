@@ -2,7 +2,7 @@
 
 Capture engineering decisions where they happen. Query them later in plain English.
 
-> **Status:** Pre-1.0 — `v0.1.0` released. The CLI, server, TypeScript SDK, and agent integrations are shipped and functional on `main`; the hosted docs site and packaged distribution (Homebrew / npm / Docker) are still in progress. See [`ROADMAP.md`](./ROADMAP.md).
+> **Status:** Pre-1.0 — `v0.1.0` released. The CLI, server, TypeScript SDK, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; packaged distribution (Homebrew / npm / Docker) is still in progress. See [`ROADMAP.md`](./ROADMAP.md).
 
 ## What Tolvi is
 
@@ -52,10 +52,10 @@ tolvi precommit install
 | **Cursor `.cursorrules`** (Tier 2) | [`integrations/cursor/`](./integrations/cursor/) | ✅ Phase 4 |
 | **Aider / OpenHands / Continue** skeletons (Tier 3) | [`integrations/aider/`](./integrations/aider/), [`integrations/openhands/`](./integrations/openhands/), [`integrations/continue/`](./integrations/continue/) | ✅ Phase 4 |
 | **Sample vault** (synthetic, validates against the format spec) | [`examples/sample-vault/`](./examples/sample-vault/) | ✅ |
+| **Docs site** (narrative guides + reference) | [`tolvilabs.com/docs`](https://tolvilabs.com/docs) | ✅ Phase 5.B |
 
 ## What's coming
 
-- **Hosted docs site** at [`tolvilabs.com/tolvi`](https://tolvilabs.com/tolvi) — authored, not live yet (currently a coming-soon page)
 - **Distribution channels** — Homebrew tap, npm publish, Docker Hub image (Phase 6)
 
 ## Repository layout
