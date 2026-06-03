@@ -139,6 +139,35 @@ Key flags:
 
 **Session same-day behavior:** if `vault/sessions/<date>.md` already exists, `tolvi sync session` appends a new session block to the existing file rather than refusing or overwriting. The new block uses an HH:MM-prefixed `## [HH:MM] Session — ...` heading.
 
+### `tolvi recall`
+
+Emit a session-resumption summary — recent sessions and decisions — without making any API call. Pure file-read; fast enough for use in Claude Code hooks (< 500 ms budget). Patterns are excluded by default because they are timeless reference, not session-resumption context.
+
+Key flags:
+
+- `--format human|hook-json` — output format:
+  - `human` (default): plain-text `RECALL SUMMARY` block matching the `/recall` skill's output
+  - `hook-json`: Claude Code `SessionStart` hook blob (`{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`)
+- `--session-count <n>` — number of recent sessions to surface (default: 3)
+- `--decision-count <n>` — max recent active decisions to surface (default: 10)
+- `--max-bytes <n>` — hard cap on the `additionalContext` string in hook-json output; content is truncated with a notice when the vault is large (default: 8000)
+- `--include-patterns` — also surface pattern names (off by default)
+- `--vault <path>` — override walk-up discovery
+
+**Config-file defaults** (`~/.config/tolvi/config.yaml`):
+
+```yaml
+recall:
+  session_count: 3
+  decision_count: 10
+  max_bytes: 8000
+  include_patterns: false
+```
+
+Flag values override config-file values. Config-file values override compiled-in defaults.
+
+**Used by session hooks** — `integrations/claude-code/hooks/session-recall.sh` calls `tolvi recall --format hook-json` on every Claude Code `SessionStart`. Install with `bash install.sh --with-hooks`.
+
 ### `tolvi init`
 
 One-time provision: creates `vault/decisions/`, `vault/sessions/`, `vault/patterns/`, and `vault/.vault-meta.json`. Refuses if the vault already exists. Workspace name derived from `git remote get-url origin` parse, falling back to `basename $PWD`. Override with `--workspace <name>`.
@@ -169,9 +198,9 @@ When using direct Write, validate the frontmatter mentally against the rules abo
 
 When summarizing or quoting vault content in a response, cite with `[[slug]]`. Use exact slugs that exist in the vault — verify by reading the matching file before citing. Don't invent slugs.
 
-### Pre-commit nudges live elsewhere
+### Post-commit sync nudge
 
-A separate `tolvi precommit` git-hook subcommand handles proactive "you may have made a decision worth capturing" prompts at commit time. Install with `tolvi precommit install` in any Tolvi-enabled repo. It is not part of this skill. If the user asks "should I capture this as a decision?" mid-session, you may suggest `tolvi sync` directly; don't try to invoke the precommit hook from within Claude Code.
+After every `git commit` in a Tolvi-vaulted repo, the `commit-sync-nudge` Claude Code hook injects a brief note into your context: "A git commit was just made. When the current task is complete, offer to run /sync-session." This happens automatically when hooks are installed (`bash install.sh --with-hooks`). You should mention sync at a natural break point — not mid-task, not repeatedly. If the user asks "should I capture this as a decision?" mid-session, suggest `tolvi sync` directly.
 
 ## Escape hatches
 
