@@ -19,11 +19,22 @@ jobs:
         with:
           go-version-file: cli/go.mod
           cache-dependency-path: cli/go.sum
+      - name: Compute release flags
+        id: flags
+        env:
+          HAS_HOMEBREW_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+        run: |
+          ARGS="release --clean"
+          if [ "$HAS_HOMEBREW_TOKEN" = "false" ]; then
+            ARGS="$ARGS --skip homebrew-casks"
+            echo "Homebrew tap token not set — skipping cask push"
+          fi
+          echo "args=$ARGS" >> $GITHUB_OUTPUT
       - uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: '~> v2'
-          args: release --clean
+          args: ${{ steps.flags.outputs.args }}
           workdir: cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
