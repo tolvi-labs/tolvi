@@ -45,6 +45,21 @@ checksum:
 snapshot:
   version_template: "{{ incpatch .Version }}-snapshot"
 
+homebrew_casks:
+  - name: tolvi
+    ids: [tolvi]
+    directory: Casks
+    repository:
+      owner: tolvi-labs
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_author:
+      name: tolvi-bot
+      email: bot@tolvilabs.com
+    commit_msg_template: "chore: bump tolvi to {{ .Tag }}"
+    homepage: "https://tolvilabs.com"
+    description: "Engineering knowledge vault CLI — capture decisions, sessions, and patterns as Markdown."
+
 changelog:
   sort: asc
   use: github
