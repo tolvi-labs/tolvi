@@ -2,7 +2,7 @@
 
 Capture engineering decisions where they happen. Query them later in plain English.
 
-> **Status:** Pre-1.0 — `v0.1.0` released. The CLI, server, TypeScript SDK, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; packaged distribution (Homebrew / npm / Docker) is still in progress. See [`ROADMAP.md`](./ROADMAP.md).
+> **Status:** Pre-1.0 — `v0.1.1` released. The CLI, server, TypeScript SDK, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; Homebrew tap and npm SDK publish are in progress. See [`ROADMAP.md`](./ROADMAP.md).
 
 ## What Tolvi is
 
@@ -45,7 +45,7 @@ tolvi precommit install
 | Surface | Where | Status |
 |---|---|---|
 | **Format spec** `tolvi-format-v1` | [`spec/tolvi-format-v1.md`](./spec/tolvi-format-v1.md), [`spec/schemas/`](./spec/schemas/) | ✅ |
-| **CLI** (`init`, `sync`, `ask`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
+| **CLI** (`init`, `sync`, `ask`, `recall`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
 | **Server** (Fastify + Postgres + pgvector, multi-tenant, OpenAPI) | [`server/`](./server/), [`spec/openapi.json`](./spec/openapi.json) | ✅ Phase 2 |
 | **TypeScript SDK** `@tolvi-labs/sdk` (typed client over the server's HTTP API) | [`sdk/`](./sdk/) | ✅ Phase 5.A |
 | **Claude Code skill** (Tier 1 — `/tolvi` slash command) | [`integrations/claude-code/`](./integrations/claude-code/) | ✅ Phase 4 |
@@ -56,7 +56,7 @@ tolvi precommit install
 
 ## What's coming
 
-- **Distribution channels** — Homebrew tap, npm publish, Docker Hub image (Phase 6)
+- **Distribution channels** — Homebrew tap (token pending), npm SDK publish, Docker Hub image (Phase 6)
 
 ## Repository layout
 

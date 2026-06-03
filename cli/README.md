@@ -35,6 +35,35 @@ Stream a cited answer to the query. CAG-based: whole vault → Anthropic context
 
 Key flags: `--no-stream`, `--json`, `--model`, `--include-status`, `--exclude-type`, `--vault`.
 
+### `tolvi recall`
+
+Emit a session-resumption summary — recent sessions and active decisions — without making any API call. Pure file-read; designed for use in Claude Code session hooks.
+
+```bash
+tolvi recall [flags]
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--format` | `human` | Output format: `human` (plain-text summary) or `hook-json` (Claude Code `SessionStart` hook blob) |
+| `--session-count` | 3 | Number of recent sessions to surface |
+| `--decision-count` | 10 | Max active decisions to surface |
+| `--max-bytes` | 8000 | Hard cap on `additionalContext` length in `hook-json` mode |
+| `--include-patterns` | false | Also surface pattern names (off by default — patterns are timeless reference, not session-resumption context) |
+| `--vault` | walks up from cwd | Path to vault dir |
+
+Config-file defaults (`~/.config/tolvi/config.yaml`):
+
+```yaml
+recall:
+  session_count: 3
+  decision_count: 10
+  max_bytes: 8000
+  include_patterns: false
+```
+
+See [`integrations/claude-code/`](../integrations/claude-code/) for the Claude Code session hook that calls `tolvi recall --format hook-json` automatically on every session start.
+
 ### Pre-commit hook
 
 Tolvi includes an optional git pre-commit hook that prints a non-blocking nudge when staged changes match decision-likely patterns (dependency manifests, infra config, tooling config, or large diffs).
