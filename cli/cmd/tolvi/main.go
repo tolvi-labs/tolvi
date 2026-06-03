@@ -158,11 +158,11 @@ var askCmd = &cobra.Command{
 }
 
 var (
-	recallVaultFlag          string
-	recallFormatFlag         string
-	recallSessionCountFlag   int
-	recallDecisionCountFlag  int
-	recallMaxBytesFlag       int
+	recallVaultFlag           string
+	recallFormatFlag          string
+	recallSessionCountFlag    int
+	recallDecisionCountFlag   int
+	recallMaxBytesFlag        int
 	recallIncludePatternsFlag bool
 )
 

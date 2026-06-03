@@ -18,8 +18,8 @@ const DefaultModel = "claude-sonnet-4-7"
 // the compiled-in default" — RunRecall applies defaults at call time so
 // the presence/absence of a config block is transparent to callers.
 type RecallConfig struct {
-	SessionCount    int  `yaml:"session_count"`   // default: 3
-	DecisionCount   int  `yaml:"decision_count"`  // default: 10
+	SessionCount    int  `yaml:"session_count"`    // default: 3
+	DecisionCount   int  `yaml:"decision_count"`   // default: 10
 	MaxBytes        int  `yaml:"max_bytes"`        // default: 8000 (0 = unlimited)
 	IncludePatterns bool `yaml:"include_patterns"` // default: false
 }
