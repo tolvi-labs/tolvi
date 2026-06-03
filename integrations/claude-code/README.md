@@ -33,6 +33,8 @@ Default mode is **symlink**, so `git pull` on this repo updates the skill automa
 - `--copy` — Deep-copy `SKILL.md` instead of symlinking. Use when you want isolation from `git pull` updates.
 - `--path <dir>` — Override the install destination (default: `$HOME/.claude/skills`). The `tolvi/` subdirectory is created under this path.
 - `--force` — Overwrite an existing install. Refuses by default to avoid clobbering customizations.
+- `--with-hooks` — Also install Claude Code session hooks (see [Session hooks](#session-hooks) below).
+- `--hooks-scope user|project` — Where to wire the hooks. `user` (default) writes to `~/.claude/settings.json` and activates in any repo with a vault. `project` writes to `.claude/settings.json` in the current repo only. Omit to be prompted interactively.
 
 ### Manual install (no script)
 
@@ -58,6 +60,37 @@ Claude loads the skill content and acknowledges briefly. Then ask in natural lan
 - "This repo doesn't have a vault yet — set one up."
 
 Claude shells out to `tolvi ask`, `tolvi sync`, or `tolvi init` as appropriate.
+
+## Session hooks
+
+Install Claude Code hooks to automate the session bookends:
+
+```bash
+cd integrations/claude-code
+bash install.sh --with-hooks
+```
+
+Two hooks are installed:
+
+**`SessionStart` → `session-recall.sh`** — runs `tolvi recall --format hook-json` before every session. Claude receives your recent sessions and decisions as context before your first message, so you never have to re-explain where things stand.
+
+**`PostToolUse(git commit)` → `commit-sync-nudge.sh`** — after any `git commit` in a Tolvi-vaulted repo, nudges Claude to offer `/sync-session` when the current task wraps up. One mention per commit; never mid-task.
+
+### Scope
+
+By default the script prompts you to choose scope. You can also pass it directly:
+
+```bash
+bash install.sh --with-hooks --hooks-scope user     # ~/.claude/settings.json (all Tolvi repos)
+bash install.sh --with-hooks --hooks-scope project  # .claude/settings.json  (this repo only)
+```
+
+User scope is recommended: recall fires in any repo with a vault without any per-repo setup.
+
+### Requirements
+
+- `tolvi` in `$PATH` (hooks exit 0 silently when the binary is missing)
+- Python 3 for the `settings.json` merge step (`python3` must be in `$PATH`)
 
 ## Update
 
@@ -101,8 +134,8 @@ See the [CLI README](../../cli/) for the full config reference.
 The skill is a single file: `SKILL.md`. It contains:
 
 - The Tolvi format spec (frontmatter, slug rules, status enum, wiki-link syntax)
-- The CLI command reference (`tolvi ask`, `sync`, `init` with their flags)
+- The CLI command reference (`tolvi ask`, `sync`, `recall`, `init` with their flags)
 - Behavioral rules — when to prefer the CLI versus direct file ops, when to cite, when to refuse
 - Escape hatches — what to do when the CLI is missing, the vault doesn't exist, the API key isn't set, the vault is too large
 
-The skill is **read-only context**. It doesn't auto-run anything, doesn't store state, and doesn't proactively interrupt your conversations. Proactive nudges live in the separate `tolvi precommit` git-hook subcommand (planned).
+The skill is **read-only context**. It doesn't auto-run anything, doesn't store state, and doesn't proactively interrupt your conversations. Proactive nudges are handled by the session hooks in `hooks/` (installed separately via `bash install.sh --with-hooks`).

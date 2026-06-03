@@ -158,6 +158,68 @@ var askCmd = &cobra.Command{
 }
 
 var (
+	recallVaultFlag          string
+	recallFormatFlag         string
+	recallSessionCountFlag   int
+	recallDecisionCountFlag  int
+	recallMaxBytesFlag       int
+	recallIncludePatternsFlag bool
+)
+
+var recallCmd = &cobra.Command{
+	Use:   "recall",
+	Short: "Surface recent sessions and active decisions from the vault",
+	Long: `recall reads the vault directly (no API call) and prints a structured
+summary of recent sessions and active decisions.
+
+Use --format hook-json to emit the Claude Code SessionStart hook JSON blob,
+suitable for piping from a hooks/session-recall.sh script.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cwd, _ := os.Getwd()
+		home, _ := os.UserHomeDir()
+		cfg := config.Load(config.LoadOpts{
+			HomeDir: home,
+			Env:     os.Getenv,
+		})
+
+		vaultPath, err := vault.Discover(vault.DiscoverOpts{
+			StartDir:     cwd,
+			HomeDir:      home,
+			ExplicitPath: firstNonEmpty(recallVaultFlag, os.Getenv("TOLVI_VAULT")),
+			DefaultVault: cfg.DefaultVault,
+		})
+		if err != nil {
+			return err
+		}
+
+		// Flag > config > compiled-in default. Zero values mean "use default"
+		// (applied inside RunRecall).
+		sessionCount := recallSessionCountFlag
+		if sessionCount == 0 {
+			sessionCount = cfg.Recall.SessionCount
+		}
+		decisionCount := recallDecisionCountFlag
+		if decisionCount == 0 {
+			decisionCount = cfg.Recall.DecisionCount
+		}
+		maxBytes := recallMaxBytesFlag
+		if maxBytes == 0 {
+			maxBytes = cfg.Recall.MaxBytes
+		}
+
+		return clicmd.RunRecall(clicmd.RecallOpts{
+			VaultPath:       vaultPath,
+			SessionCount:    sessionCount,
+			DecisionCount:   decisionCount,
+			MaxBytes:        maxBytes,
+			IncludePatterns: recallIncludePatternsFlag || cfg.Recall.IncludePatterns,
+			Format:          firstNonEmpty(recallFormatFlag),
+			Stdout:          os.Stdout,
+		})
+	},
+}
+
+var (
 	precommitForceFlag      bool
 	precommitAppendFlag     bool
 	precommitRepoFlag       string
@@ -318,6 +380,13 @@ func init() {
 	askCmd.Flags().BoolVar(&askJSONFlag, "json", false, "emit JSON instead of streaming text")
 	askCmd.Flags().BoolVar(&askNoStreamFlag, "no-stream", false, "buffer output instead of streaming")
 
+	recallCmd.Flags().StringVar(&recallVaultFlag, "vault", "", "path to vault dir (default: walk up)")
+	recallCmd.Flags().StringVar(&recallFormatFlag, "format", "", "output format: human (default) | hook-json")
+	recallCmd.Flags().IntVar(&recallSessionCountFlag, "session-count", 0, "number of recent sessions to surface (default: 3)")
+	recallCmd.Flags().IntVar(&recallDecisionCountFlag, "decision-count", 0, "max decisions to surface (default: 10)")
+	recallCmd.Flags().IntVar(&recallMaxBytesFlag, "max-bytes", 0, "byte budget for hook-json additionalContext (0 = unlimited)")
+	recallCmd.Flags().BoolVar(&recallIncludePatternsFlag, "include-patterns", false, "include patterns in output (default: false)")
+
 	precommitInstallCmd.Flags().BoolVar(&precommitForceFlag, "force", false, "overwrite an existing non-tolvi hook")
 	precommitInstallCmd.Flags().BoolVar(&precommitAppendFlag, "append", false, "append tolvi check to an existing hook instead of overwriting")
 	precommitInstallCmd.Flags().StringVar(&precommitRepoFlag, "repo", "", "path to the repo root (default: walk up from cwd)")
@@ -340,6 +409,7 @@ func main() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(askCmd)
+	rootCmd.AddCommand(recallCmd)
 
 	precommitCmd.AddCommand(precommitInstallCmd)
 	precommitCmd.AddCommand(precommitCheckCmd)
