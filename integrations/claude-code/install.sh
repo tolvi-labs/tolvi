@@ -9,7 +9,7 @@
 #   --uninstall             Remove the installed skill file + directory
 #   --path <dir>            Override install destination (default: ~/.claude/skills)
 #   --force                 Overwrite an existing install (refuses by default)
-#   --with-hooks            Also install session-recall + commit-sync hooks
+#   --with-hooks            Also install tolvi-recall + tolvi-sync hooks
 #   --hooks-scope <scope>   user (default) | project  — where hooks are wired:
 #                             user:    ~/.claude/settings.json (all Tolvi repos)
 #                             project: .claude/settings.json  (this repo only)
@@ -47,8 +47,8 @@ Flags:
   --force                 Overwrite an existing install. Refuses by default to
                           avoid clobbering user customizations.
   --with-hooks            Also install Claude Code session hooks:
-                            • SessionStart  → runs 'tolvi recall' before each session
-                            • PostToolUse   → nudges /sync-session after git commits
+                            • SessionStart  → tolvi-recall fires before each session
+                            • PreToolUse    → tolvi-sync blocks git commit until vault is synced
   --hooks-scope <scope>   Where to wire the hooks:
                             user    — \$HOME/.claude/settings.json (activates in all
                                       repos with a vault — recommended)
@@ -113,7 +113,7 @@ if [[ "$ACTION" == "uninstall" ]]; then
 fi
 
 # --- hook install function ---
-# Installs session-recall.sh + commit-sync-nudge.sh and wires them into
+# Installs tolvi-recall + tolvi-sync and wires them into
 # the Claude Code settings.json at the chosen scope.
 install_hooks() {
   local scope="$HOOKS_SCOPE"
@@ -170,9 +170,9 @@ install_hooks() {
 
   # Copy hook scripts to destination.
   mkdir -p "$hooks_dest"
-  cp "$SCRIPT_DIR/hooks/session-recall.sh"    "$hooks_dest/session-recall.sh"
-  cp "$SCRIPT_DIR/hooks/commit-sync-nudge.sh" "$hooks_dest/commit-sync-nudge.sh"
-  chmod +x "$hooks_dest/session-recall.sh" "$hooks_dest/commit-sync-nudge.sh"
+  cp "$SCRIPT_DIR/hooks/tolvi-recall" "$hooks_dest/tolvi-recall"
+  cp "$SCRIPT_DIR/hooks/tolvi-sync"   "$hooks_dest/tolvi-sync"
+  chmod +x "$hooks_dest/tolvi-recall" "$hooks_dest/tolvi-sync"
   echo "✓ Installed hook scripts → $hooks_dest/"
 
   # Merge hooks.json (with __HOOKS_DIR__ substituted) into settings.json.
@@ -219,10 +219,10 @@ PYEOF
   echo ""
   echo "Hooks installed ($scope scope)."
   if [[ "$scope" == "user" ]]; then
-    echo "  Recall fires on every session start in any repo with a vault/."
-    echo "  Sync nudge fires after every git commit in any repo with a vault/."
+    echo "  tolvi-recall fires on every session start in any repo with a vault/."
+    echo "  tolvi-sync blocks git commit until a session note exists for today."
   else
-    echo "  Recall and sync-nudge fire in this project only."
+    echo "  tolvi-recall and tolvi-sync fire in this project only."
     echo "  Commit $settings_file to share with teammates."
   fi
 }

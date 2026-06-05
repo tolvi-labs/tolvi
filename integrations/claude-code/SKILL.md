@@ -166,7 +166,7 @@ recall:
 
 Flag values override config-file values. Config-file values override compiled-in defaults.
 
-**Used by session hooks** — `integrations/claude-code/hooks/session-recall.sh` calls `tolvi recall --format hook-json` on every Claude Code `SessionStart`. Install with `bash install.sh --with-hooks`.
+**Used by session hooks** — `integrations/claude-code/hooks/tolvi-recall` calls `tolvi recall --format hook-json` on every Claude Code `SessionStart`. Install with `bash install.sh --with-hooks`.
 
 ### `tolvi init`
 
@@ -198,9 +198,9 @@ When using direct Write, validate the frontmatter mentally against the rules abo
 
 When summarizing or quoting vault content in a response, cite with `[[slug]]`. Use exact slugs that exist in the vault — verify by reading the matching file before citing. Don't invent slugs.
 
-### Post-commit sync nudge
+### Pre-commit vault sync
 
-After every `git commit` in a Tolvi-vaulted repo, the `commit-sync-nudge` Claude Code hook injects a brief note into your context: "A git commit was just made. When the current task is complete, offer to run /sync-session." This happens automatically when hooks are installed (`bash install.sh --with-hooks`). You should mention sync at a natural break point — not mid-task, not repeatedly. If the user asks "should I capture this as a decision?" mid-session, suggest `tolvi sync` directly.
+Before every `git commit` in a Tolvi-vaulted repo, the `tolvi-sync` Claude Code `PreToolUse` hook fires. It auto-stages any modified `vault/` files so they land in the commit. If no session note exists for today, it blocks the commit and instructs you to write one first. This happens automatically when hooks are installed (`bash install.sh --with-hooks`). Write the session note to `vault/sessions/YYYY-MM-DD.md` using the template, stage it, then re-run the commit — the vault will be included automatically.
 
 ## Escape hatches
 

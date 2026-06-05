@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# PreToolUse(Bash(git commit*)) hook — enforce vault sync before every commit.
+#
+# Behavior:
+#   1. Auto-stages any modified vault/ files so they're always in the commit.
+#   2. Blocks the commit if no session note exists for today, instructing Claude
+#      to write one first.
+#   3. Allows the commit once a session note is present.
+set -euo pipefail
+
+TODAY="$(date +%Y-%m-%d)"
+
+find_vault() {
+  local dir="${1:-$PWD}"
+  while [[ "$dir" != "/" ]]; do
+    [[ -f "$dir/vault/.vault-meta.json" ]] && echo "$dir/vault" && return
+    dir="$(dirname "$dir")"
+  done
+  return 1
+}
+
+VAULT="$(find_vault "$PWD" 2>/dev/null)" || exit 0
+REPO_ROOT="$(dirname "$VAULT")"
+
+# Auto-stage any unstaged vault changes so they land in this commit
+cd "$REPO_ROOT"
+UNSTAGED="$(git diff --name-only -- vault/ 2>/dev/null || true)"
+UNTRACKED="$(git ls-files --others --exclude-standard vault/ 2>/dev/null || true)"
+if [[ -n "$UNSTAGED" || -n "$UNTRACKED" ]]; then
+  git add vault/
+fi
+
+# Block if no session note for today
+SESSION_FILE="$VAULT/sessions/$TODAY.md"
+if [[ ! -f "$SESSION_FILE" ]] || ! grep -q "^## " "$SESSION_FILE" 2>/dev/null; then
+  printf '{"decision":"block","reason":"No session note for %s. Write a brief session entry to vault/sessions/%s.md (use `tolvi sync session` or the template at vault/templates/session.md — what changed, what is left open), stage it, then commit. The vault will be included in the commit automatically."}' \
+    "$TODAY" "$TODAY"
+  exit 0
+fi
+
+printf '{"decision":"allow","additionalContext":"Vault synced for %s — session note present, vault changes staged."}' "$TODAY"
