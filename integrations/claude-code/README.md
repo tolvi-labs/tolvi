@@ -72,9 +72,9 @@ bash install.sh --with-hooks
 
 Two hooks are installed:
 
-**`SessionStart` → `session-recall.sh`** — runs `tolvi recall --format hook-json` before every session. Claude receives your recent sessions and decisions as context before your first message, so you never have to re-explain where things stand.
+**`SessionStart` → `tolvi-recall`** — runs `tolvi recall --format hook-json` before every session. Claude receives your recent sessions and decisions as context before your first message, so you never have to re-explain where things stand.
 
-**`PostToolUse(git commit)` → `commit-sync-nudge.sh`** — after any `git commit` in a Tolvi-vaulted repo, nudges Claude to offer `/sync-session` when the current task wraps up. One mention per commit; never mid-task.
+**`PreToolUse(git commit)` → `tolvi-sync`** — fires before every `git commit`. Auto-stages any modified `vault/` files so they land in the commit. Blocks the commit if no session note exists for today, instructing Claude to write one first. The vault is always in sync with the code.
 
 ### Scope
 

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# SessionStart hook — surface vault context before the first message.
+# Uses `tolvi recall` if the CLI is available; falls back to a direct vault read.
+set -euo pipefail
+
+find_vault() {
+  local dir="${1:-$PWD}"
+  while [[ "$dir" != "/" ]]; do
+    [[ -f "$dir/vault/.vault-meta.json" ]] && echo "$dir/vault" && return
+    dir="$(dirname "$dir")"
+  done
+  return 1
+}
+
+VAULT="$(find_vault "$PWD" 2>/dev/null)" || exit 0
+
+if command -v tolvi &>/dev/null; then
+  exec tolvi recall --format hook-json --vault "$VAULT"
+fi
+
+# Fallback: build a minimal hook-json summary from raw vault files
+SESSIONS_DIR="$VAULT/sessions"
+DECISIONS_DIR="$VAULT/decisions"
+
+recent_sessions=""
+if [[ -d "$SESSIONS_DIR" ]]; then
+  recent_sessions="$(ls -1 "$SESSIONS_DIR"/*.md 2>/dev/null | sort -r | head -3 | while read -r f; do
+    echo "- $(basename "$f" .md)"
+  done)"
+fi
+
+active_decisions=""
+if [[ -d "$DECISIONS_DIR" ]]; then
+  active_decisions="$(ls -1 "$DECISIONS_DIR"/*.md 2>/dev/null | grep -v '.gitkeep' | sort -r | head -10 | while read -r f; do
+    title="$(grep -m1 '^# ' "$f" 2>/dev/null | sed 's/^# //' || basename "$f" .md)"
+    echo "- $title"
+  done)"
+fi
+
+context=""
+[[ -n "$recent_sessions" ]] && context="Recent sessions:\n$recent_sessions\n"
+[[ -n "$active_decisions" ]] && context="${context}Active decisions:\n$active_decisions\n"
+
+[[ -z "$context" ]] && exit 0
+
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}' \
+  "$(echo -e "$context" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])')"

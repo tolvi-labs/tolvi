@@ -6,20 +6,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "__HOOKS_DIR__/session-recall.sh",
+            "command": "__HOOKS_DIR__/tolvi-recall",
             "timeout": 10
           }
         ]
       }
     ],
-    "PostToolUse": [
+    "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "if": "Bash(git commit*)",
-            "command": "__HOOKS_DIR__/commit-sync-nudge.sh"
+            "command": "__HOOKS_DIR__/tolvi-sync"
           }
         ]
       }
