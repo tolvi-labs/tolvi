@@ -2,16 +2,16 @@
 
 Capture engineering decisions where they happen. Query them later in plain English.
 
-> **Status:** Pre-1.0 — `v0.1.1` released. The CLI, server, TypeScript SDK, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; Homebrew tap and npm SDK publish are in progress. See [`ROADMAP.md`](./ROADMAP.md).
+> **Status:** Pre-1.0 - `v0.1.1` released. The CLI, server, TypeScript SDK, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; Homebrew tap and npm SDK publish are in progress. See [`ROADMAP.md`](./ROADMAP.md).
 
 ## What Tolvi is
 
-A per-repo engineering knowledge vault — decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. A CLI lets you write and read it from the terminal; a server lets a team share an indexed view; agent integrations (Claude Code, Cursor, Aider, OpenHands, Continue) teach AI tools to use the vault first-class.
+A per-repo engineering knowledge vault - decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. A CLI lets you write and read it from the terminal; a server lets a team share an indexed view; agent integrations (Claude Code, Cursor, Aider, OpenHands, Continue) teach AI tools to use the vault first-class.
 
 Two architectures, one format:
 
-- **Local arm (CLI)** uses CAG — whole vault → Anthropic context via prompt caching. Zero infrastructure beyond an API key.
-- **Server arm** uses RAG — pgvector + Ollama embeddings, multi-tenant, self-hostable via Docker Compose. For teams who outgrow the local context window or want a shared index.
+- **Local arm (CLI)** uses CAG - whole vault → Anthropic context via prompt caching. Zero infrastructure beyond an API key.
+- **Server arm** uses RAG - pgvector + Ollama embeddings, multi-tenant, self-hostable via Docker Compose. For teams who outgrow the local context window or want a shared index.
 
 The vault format (`tolvi-format-v1`) is the contract between the two arms and the only thing agents need to learn.
 
@@ -48,7 +48,7 @@ tolvi precommit install
 | **CLI** (`init`, `sync`, `ask`, `recall`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
 | **Server** (Fastify + Postgres + pgvector, multi-tenant, OpenAPI) | [`server/`](./server/), [`spec/openapi.json`](./spec/openapi.json) | ✅ Phase 2 |
 | **TypeScript SDK** `@tolvi-labs/sdk` (typed client over the server's HTTP API) | [`sdk/`](./sdk/) | ✅ Phase 5.A |
-| **Claude Code skill** (Tier 1 — `/tolvi` slash command) | [`integrations/claude-code/`](./integrations/claude-code/) | ✅ Phase 4 |
+| **Claude Code skill** (Tier 1 - `/tolvi` slash command) | [`integrations/claude-code/`](./integrations/claude-code/) | ✅ Phase 4 |
 | **Cursor `.cursorrules`** (Tier 2) | [`integrations/cursor/`](./integrations/cursor/) | ✅ Phase 4 |
 | **Aider / OpenHands / Continue** skeletons (Tier 3) | [`integrations/aider/`](./integrations/aider/), [`integrations/openhands/`](./integrations/openhands/), [`integrations/continue/`](./integrations/continue/) | ✅ Phase 4 |
 | **Sample vault** (synthetic, validates against the format spec) | [`examples/sample-vault/`](./examples/sample-vault/) | ✅ |
@@ -56,7 +56,7 @@ tolvi precommit install
 
 ## What's coming
 
-- **Distribution channels** — Homebrew tap (token pending), npm SDK publish, Docker Hub image (Phase 6)
+- **Distribution channels** - Homebrew tap (token pending), npm SDK publish, Docker Hub image (Phase 6)
 
 ## Repository layout
 
