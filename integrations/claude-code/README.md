@@ -61,6 +61,26 @@ Claude loads the skill content and acknowledges briefly. Then ask in natural lan
 
 Claude shells out to `tolvi ask`, `tolvi sync`, or `tolvi init` as appropriate.
 
+## Slash commands
+
+`bash install.sh` also installs three slash commands into `~/.claude/commands/` (symlinked by default, so `git pull` updates them):
+
+- **`/tolvi-recall`** — surface recent sessions and active decisions before you start. Mirrors the `tolvi recall` output; works with or without the CLI.
+- **`/tolvi-sync`** — synthesize the *whole* working session into decisions, patterns, and a session log, following the format spec and the authority gate (capture what was tried or considered in the session, including reasoned rejections; exclude unqualified outside chatter).
+- **`/tolvi-commit`** — run the `/tolvi-sync` synthesis, then stage and commit (vault + work) in one step.
+
+### Mechanical vs synthesized — two ways to commit
+
+These commands sit at the opposite end of a control/comprehensiveness tradeoff from the CLI:
+
+| | `tolvi commit` (CLI) | `/tolvi-commit` (skill) |
+|---|---|---|
+| Driver | Deterministic, no LLM | Agent reconstructs the session |
+| You get | Exactly what's there; vault auto-staged | The whole session synthesized, then committed |
+| Best for | CI, scripts, controlled commits | End of a real working session |
+
+Use the CLI command for controlled, known capture; use the skill to synthesize the messy reality of a session. The CLI `tolvi commit` gates on a session note existing for today (and points you at the skill if one doesn't).
+
 ## Session hooks
 
 Install Claude Code hooks to automate the session bookends:

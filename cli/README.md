@@ -64,6 +64,21 @@ recall:
 
 See [`integrations/claude-code/`](../integrations/claude-code/) for the Claude Code session hook that calls `tolvi recall --format hook-json` automatically on every session start.
 
+### `tolvi commit`
+
+Stage `vault/` and run `git commit`, gated on a session note existing for today. This is the controlled, deterministic capture path — no LLM, no synthesis. For comprehensive capture, use the `/tolvi-commit` skill in a working session instead (it synthesizes the whole session, then commits).
+
+```bash
+tolvi commit [flags]
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `-m`, `--message` | none | Commit message; if omitted, git opens `$EDITOR` |
+| `--vault` | walks up from cwd | Path to vault dir |
+
+If a session note exists for today (`vault/sessions/<today>.md` with a `## ` block), `tolvi commit` auto-stages `vault/` and commits it alongside whatever you already staged. It never runs `git add -A`. If no note exists, it refuses (exit code 3) and points you at `tolvi sync session` or the `/tolvi-commit` skill.
+
 ### Pre-commit hook
 
 Tolvi includes an optional git pre-commit hook that prints a non-blocking nudge when staged changes match decision-likely patterns (dependency manifests, infra config, tooling config, or large diffs).
