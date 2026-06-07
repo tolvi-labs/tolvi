@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -220,6 +221,58 @@ suitable for piping from a hooks/session-recall.sh script.`,
 }
 
 var (
+	commitMessageFlag string
+	commitVaultFlag   string
+)
+
+var commitCmd = &cobra.Command{
+	Use:   "commit",
+	Short: "Stage vault/ and commit — gated on a session note for today (mechanical; no synthesis)",
+	Long: `commit is the controlled, deterministic capture path: it requires a
+session note for today to already exist, auto-stages vault/ so the vault
+always lands in the commit, then runs git commit. It does NO synthesis and
+runs no LLM — what you commit is exactly what is there.
+
+Use this for scripted, CI, or precision commits where you want no surprises.
+For comprehensive capture, run the /tolvi-commit skill inside a working
+session instead: it synthesizes the whole session (decisions, patterns, log)
+from the conversation, then commits. Mechanical for known capture; the skill
+for synthesizing messy reality.
+
+If no session note exists for today, commit refuses and points you at
+'tolvi sync session' (controlled) or the /tolvi-commit skill (synthesized).`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		repoRoot, err := resolveRepoRoot("")
+		if err != nil {
+			return err
+		}
+		cwd, _ := os.Getwd()
+		home, _ := os.UserHomeDir()
+		vaultPath, err := vault.Discover(vault.DiscoverOpts{
+			StartDir:     cwd,
+			HomeDir:      home,
+			ExplicitPath: firstNonEmpty(commitVaultFlag, os.Getenv("TOLVI_VAULT")),
+		})
+		if err != nil {
+			return err
+		}
+
+		err = clicmd.RunCommit(clicmd.CommitOpts{
+			RepoRoot:  repoRoot,
+			VaultPath: vaultPath,
+			Message:   commitMessageFlag,
+			Stdin:     os.Stdin,
+			Stdout:    os.Stdout,
+			Stderr:    os.Stderr,
+		})
+		if errors.Is(err, clicmd.ErrNoSessionNote) {
+			os.Exit(clicmd.ExitVaultState)
+		}
+		return err
+	},
+}
+
+var (
 	precommitForceFlag      bool
 	precommitAppendFlag     bool
 	precommitRepoFlag       string
@@ -387,6 +440,9 @@ func init() {
 	recallCmd.Flags().IntVar(&recallMaxBytesFlag, "max-bytes", 0, "byte budget for hook-json additionalContext (0 = unlimited)")
 	recallCmd.Flags().BoolVar(&recallIncludePatternsFlag, "include-patterns", false, "include patterns in output (default: false)")
 
+	commitCmd.Flags().StringVarP(&commitMessageFlag, "message", "m", "", "commit message (if omitted, git opens $EDITOR)")
+	commitCmd.Flags().StringVar(&commitVaultFlag, "vault", "", "path to vault dir (default: walk up)")
+
 	precommitInstallCmd.Flags().BoolVar(&precommitForceFlag, "force", false, "overwrite an existing non-tolvi hook")
 	precommitInstallCmd.Flags().BoolVar(&precommitAppendFlag, "append", false, "append tolvi check to an existing hook instead of overwriting")
 	precommitInstallCmd.Flags().StringVar(&precommitRepoFlag, "repo", "", "path to the repo root (default: walk up from cwd)")
@@ -410,6 +466,7 @@ func main() {
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(askCmd)
 	rootCmd.AddCommand(recallCmd)
+	rootCmd.AddCommand(commitCmd)
 
 	precommitCmd.AddCommand(precommitInstallCmd)
 	precommitCmd.AddCommand(precommitCheckCmd)

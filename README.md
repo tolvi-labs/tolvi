@@ -40,12 +40,21 @@ For optional pre-commit nudges that flag commits touching decision-likely files 
 tolvi precommit install
 ```
 
+## Two ways to capture
+
+Tolvi captures at two altitudes, on purpose — they are complementary, not redundant:
+
+- **Mechanical (CLI)** — `tolvi sync` writes a single note you already have in mind; `tolvi commit` stages `vault/` and runs `git commit`, gated on a session note existing for today. Deterministic, no LLM, scriptable — what you commit is exactly what is there. Use it in CI, in hooks, or when you want control and no surprises.
+- **Synthesized (skill)** — inside a Claude Code or Cursor session, `/tolvi-sync` reconstructs the *whole* working session into decisions, patterns, and a session log, and `/tolvi-commit` does that and then commits. Comprehensive and near-zero effort, but it needs an agent in the loop and is non-deterministic.
+
+Rule of thumb: **mechanical for known, controlled capture; the skill for synthesizing the messy reality of a working session.** The skill captures what a qualified actor tried or considered (including reasoned rejections) — the high-signal record a Slack thread or ticket can't give you.
+
 ## What's shipped
 
 | Surface | Where | Status |
 |---|---|---|
 | **Format spec** `tolvi-format-v1` | [`spec/tolvi-format-v1.md`](./spec/tolvi-format-v1.md), [`spec/schemas/`](./spec/schemas/) | ✅ |
-| **CLI** (`init`, `sync`, `ask`, `recall`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
+| **CLI** (`init`, `sync`, `ask`, `recall`, `commit`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
 | **Server** (Fastify + Postgres + pgvector, multi-tenant, OpenAPI) | [`server/`](./server/), [`spec/openapi.json`](./spec/openapi.json) | ✅ Phase 2 |
 | **TypeScript SDK** `@tolvi-labs/sdk` (typed client over the server's HTTP API) | [`sdk/`](./sdk/) | ✅ Phase 5.A |
 | **Claude Code skill** (Tier 1 - `/tolvi` slash command) | [`integrations/claude-code/`](./integrations/claude-code/) | ✅ Phase 4 |

@@ -109,8 +109,46 @@ if [[ "$ACTION" == "uninstall" ]]; then
       echo "install.sh: $DEST_DIR is not empty (contains user-added files); leaving in place" >&2
     fi
   fi
+
+  # Remove installed slash commands (only our own files).
+  if [[ -d "$SCRIPT_DIR/commands" ]]; then
+    for src in "$SCRIPT_DIR/commands"/*.md; do
+      cmd_dest="${HOME}/.claude/commands/$(basename "$src")"
+      if [[ -L "$cmd_dest" || -f "$cmd_dest" ]]; then
+        rm "$cmd_dest" && echo "✓ Removed command: /$(basename "${cmd_dest%.md}")"
+      fi
+    done
+  fi
   exit 0
 fi
+
+# --- command install function ---
+# Symlinks (or copies, with --copy) the tolvi slash commands into
+# ~/.claude/commands/ so /tolvi-recall, /tolvi-sync, /tolvi-commit are available.
+install_commands() {
+  local src_dir="$SCRIPT_DIR/commands"
+  local dest_dir="${HOME}/.claude/commands"
+  [[ -d "$src_dir" ]] || return 0
+  mkdir -p "$dest_dir"
+  local f name dest
+  for f in "$src_dir"/*.md; do
+    name="$(basename "$f")"
+    dest="$dest_dir/$name"
+    if [[ -e "$dest" || -L "$dest" ]]; then
+      if [[ "$FORCE" != "true" ]]; then
+        echo "  ⚠ $dest exists — skipping (re-run with --force to overwrite)"
+        continue
+      fi
+      rm "$dest"
+    fi
+    if [[ "$MODE" == "symlink" ]]; then
+      ln -s "$f" "$dest"
+    else
+      cp "$f" "$dest"
+    fi
+    echo "✓ Installed command: /${name%.md}"
+  done
+}
 
 # --- hook install function ---
 # Installs tolvi-recall + tolvi-sync and wires them into
@@ -258,6 +296,8 @@ if [[ ! -r "$DEST_FILE" ]]; then
   exit 1
 fi
 echo "✓ Verifying: $DEST_FILE is readable ✓"
+
+install_commands
 
 cat <<EOF
 

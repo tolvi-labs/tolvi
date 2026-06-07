@@ -172,6 +172,80 @@ Flag values override config-file values. Config-file values override compiled-in
 
 One-time provision: creates `vault/decisions/`, `vault/sessions/`, `vault/patterns/`, and `vault/.vault-meta.json`. Refuses if the vault already exists. Workspace name derived from `git remote get-url origin` parse, falling back to `basename $PWD`. Override with `--workspace <name>`.
 
+## Synthesizing a working session
+
+The highest-value thing this skill does is turn a finished working session into durable, schema-conformant vault docs — decisions, patterns, and a session log — without the user hand-writing them. This is distinct from `tolvi sync <type> <title>`, which captures a single note you already have in mind. Synthesis reconstructs the whole session and writes the records for it. Run it at the end of a meaningful session (or when the user asks to "sync the session").
+
+### What to capture — the authority gate
+
+Capture what a qualified actor **tried or considered inside this working session**, including reasoned rejections ("we tried X, Y broke, so we shipped Z"). A road not taken *for a stated reason* is some of the most valuable content — it stops the next person re-walking a dead end. Do **not** import unqualified chatter from outside the session (a passing suggestion that was never weighed is noise). The discriminator is not whether an idea was acted on; it is whether it entered the work through the session.
+
+### Step 1 — Reconstruct the session
+
+From the conversation, identify:
+
+- **Files changed** — created, edited, or deleted
+- **Tickets** — any issue IDs referenced or progressed
+- **Decisions made** — non-obvious architectural, product, or implementation choices
+- **Patterns observed** — reusable approaches that emerged
+- **Left open** — anything unfinished, blocked, or deferred
+
+### Step 2 — Discover the vault
+
+Walk up from `$PWD` to the first `vault/.vault-meta.json` (the same discovery the CLI uses). Prefer `tolvi sync`/`tolvi recall`, which do this automatically; pass `--vault <path>` to override. Everything below writes into that single repo's `vault/`.
+
+### Step 3 — Write the session log
+
+Append to `vault/sessions/<date>.md` (one file per day; multiple blocks append). Frontmatter: `tags: [session]`, `date`, `status: active`. Block shape:
+
+```markdown
+## [HH:MM] Session — <one-line summary>
+
+**Tickets:** <list or none>
+
+### What happened
+<3–5 concrete bullets>
+
+### Files touched
+<files with a one-line note each>
+
+### Left open
+<list or none>
+```
+
+### Step 4 — Write decisions (if any)
+
+One file per decision: `vault/decisions/<date>-<slug>.md`. Frontmatter: `tags: [decision]`, `date`, `repo`, `status` (optional: `ticket`, `user_impact`, `product_area`). Use the layered-altitude body so a PM and an engineer each get what they need:
+
+```markdown
+# <Decision title>
+**Date:** <date>
+**Repo:** <repo>
+
+## Why
+<1–2 sentences, business-readable: the problem and who benefits>
+
+## How
+<variable depth — scales with technical weight: mechanism, contracts, rejected alternatives and *why* each was rejected, edge cases, snippets for load-bearing logic>
+
+## Outcome
+<1 sentence: what is now true about the system that was not before>
+```
+
+`## Why` and `## Outcome` stay short regardless of complexity; depth scales only at `## How`.
+
+### Step 5 — Write patterns (if any)
+
+`vault/patterns/<slug>.md` (no date prefix; patterns are timeless). Frontmatter: `tags: [pattern]`, `status: active`. If the file exists, append a new example rather than overwriting.
+
+### Step 6 — Cross-link
+
+Link related docs with `[[slug]]` within the same vault (the `[[repo:slug]]` cross-vault form is not surfaced in v1). Add a `See also: [[...]]` line to the session block for any decisions or patterns written.
+
+### Writing mechanics
+
+Prefer `tolvi sync <type> <title> --body "..."` per doc — it does atomic write, frontmatter validation, slug derivation, and same-day session append for you. Compose markdown with the Write tool directly only when the CLI is unavailable or the user asks; if you do, validate the frontmatter against the rules above before writing.
+
 ## Behavioral rules
 
 These are *preferences*, not hard gates. Use judgment.
