@@ -23,6 +23,11 @@ type SyncOpts struct {
 	Status string // empty → "active"
 	Date   time.Time
 
+	// Public/private routing
+	DocVisibility string // "private" marks a decision/pattern as internal; empty = default
+	ForcePublic   bool   // forces Visibility=="public" behavior (from --open-source/--OS)
+	PrivateVault  string // overrides meta.PrivateVault (from --private-vault)
+
 	// Body capture (precedence: BodyFlag > StdinReader > editor)
 	BodyFlag    string
 	StdinReader io.Reader
@@ -56,6 +61,13 @@ func RunSync(opts SyncOpts) error {
 	if err != nil {
 		return fmt.Errorf("read vault meta: %w", err)
 	}
+	// Flag overrides for public/private routing.
+	if opts.ForcePublic {
+		meta.Visibility = "public"
+	}
+	if opts.PrivateVault != "" {
+		meta.PrivateVault = opts.PrivateVault
+	}
 
 	if opts.Date.IsZero() {
 		opts.Date = time.Now()
@@ -73,8 +85,22 @@ func RunSync(opts SyncOpts) error {
 		slug = opts.Date.Format("2006-01-02")
 	}
 
-	relPath := PathForDoc(opts.DocType, slug, opts.Date.Format("2006-01-02"))
-	absPath := filepath.Join(opts.VaultPath, relPath)
+	// Resolve which vault root this doc belongs in (public vs. private).
+	destRoot, routedToPrivate, err := vault.ResolveDocDestination(opts.VaultPath, meta, opts.DocType, opts.DocVisibility)
+	if err != nil {
+		return err
+	}
+
+	dateStr := opts.Date.Format("2006-01-02")
+	relPath := PathForDoc(opts.DocType, slug, dateStr)
+	if opts.DocType == "session" && routedToPrivate {
+		// Routed sessions are workspace-suffixed to avoid cross-repo collisions.
+		relPath = filepath.ToSlash(filepath.Join("sessions", RoutedSessionFileName(dateStr, meta.Workspace)))
+	}
+	absPath := filepath.Join(destRoot, relPath)
+	if err := os.MkdirAll(filepath.Dir(absPath), 0o755); err != nil {
+		return fmt.Errorf("create %s: %w", filepath.Dir(absPath), err)
+	}
 
 	if _, err := os.Stat(absPath); err == nil {
 		if opts.DocType != "session" {

@@ -3,6 +3,9 @@
 # Uses `tolvi recall` if the CLI is available; falls back to a direct vault read.
 set -euo pipefail
 
+# Capture the hook payload once so we can branch on the SessionStart source.
+HOOK_INPUT="$(cat 2>/dev/null || true)"
+
 find_vault() {
   local dir="${1:-$PWD}"
   while [[ "$dir" != "/" ]]; do
@@ -13,6 +16,19 @@ find_vault() {
 }
 
 VAULT="$(find_vault "$PWD" 2>/dev/null)" || exit 0
+
+# On /clear, don't emit a summary — direct Claude to run the full /tolvi-recall command,
+# so a cleared session gets the rich recall skill output rather than the lightweight digest.
+SESSION_SOURCE="$(printf '%s' "$HOOK_INPUT" | python3 -c 'import json,sys
+try:
+    print(json.load(sys.stdin).get("source",""))
+except Exception:
+    print("")' 2>/dev/null || true)"
+
+if [[ "$SESSION_SOURCE" == "clear" ]]; then
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"The conversation context was just cleared (/clear). Before anything else in your next response, run the /tolvi-recall command in full and present its complete RECALL SUMMARY, not a lightweight summary. If the next user message is already a task, run recall first, then continue with that task."}}'
+  exit 0
+fi
 
 if command -v tolvi &>/dev/null; then
   exec tolvi recall --format hook-json --vault "$VAULT"

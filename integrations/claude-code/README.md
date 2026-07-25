@@ -92,7 +92,7 @@ bash install.sh --with-hooks
 
 Two hooks are installed:
 
-**`SessionStart` → `tolvi-recall`** — runs `tolvi recall --format hook-json` before every session. Claude receives your recent sessions and decisions as context before your first message, so you never have to re-explain where things stand.
+**`SessionStart` → `tolvi-recall`** — runs `tolvi recall --format hook-json` before every session. Claude receives your recent sessions and decisions as context before your first message, so you never have to re-explain where things stand. On a `/clear` (the `clear` SessionStart source) the hook instead directs Claude to run the full `/tolvi-recall` command, so clearing context to reset mid-task reorients you with the complete recall rather than the lightweight digest.
 
 **`PreToolUse(git commit)` → `tolvi-sync`** — fires before every `git commit`. Auto-stages any modified `vault/` files so they land in the commit. Blocks the commit if no session note exists for today, instructing Claude to write one first. The vault is always in sync with the code.
 

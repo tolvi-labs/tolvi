@@ -47,6 +47,60 @@ func TestReadMeta_RoundTrip(t *testing.T) {
 	}
 }
 
+func TestReadMeta_RoundTrip_VisibilityFields(t *testing.T) {
+	dir := t.TempDir()
+	in := Meta{
+		Workspace:      "public-repo",
+		EmbeddingModel: "nomic-embed-text",
+		SchemaVersion:  1,
+		Visibility:     "public",
+		PrivateVault:   "../private/vault",
+	}
+	if err := WriteMeta(dir, in); err != nil {
+		t.Fatalf("WriteMeta: %v", err)
+	}
+	out, err := ReadMeta(dir)
+	if err != nil {
+		t.Fatalf("ReadMeta: %v", err)
+	}
+	if out.Visibility != "public" {
+		t.Errorf("visibility drift: %q", out.Visibility)
+	}
+	if out.PrivateVault != "../private/vault" {
+		t.Errorf("private_vault drift: %q", out.PrivateVault)
+	}
+}
+
+func TestReadMeta_BackwardCompat_NoVisibilityFields(t *testing.T) {
+	dir := t.TempDir()
+	// A meta written before the visibility fields existed must still parse.
+	legacy := `{"workspace":"x","embedding_model":"nomic-embed-text","schema_version":1}`
+	if err := os.WriteFile(filepath.Join(dir, ".vault-meta.json"), []byte(legacy), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := ReadMeta(dir)
+	if err != nil {
+		t.Fatalf("ReadMeta on legacy meta: %v", err)
+	}
+	if out.Visibility != "" {
+		t.Errorf("expected empty visibility, got %q", out.Visibility)
+	}
+	if out.PrivateVault != "" {
+		t.Errorf("expected empty private_vault, got %q", out.PrivateVault)
+	}
+}
+
+func TestWriteMeta_OmitsEmptyVisibilityFields(t *testing.T) {
+	dir := t.TempDir()
+	if err := WriteMeta(dir, Meta{Workspace: "x", EmbeddingModel: "nomic-embed-text", SchemaVersion: 1}); err != nil {
+		t.Fatalf("WriteMeta: %v", err)
+	}
+	data, _ := os.ReadFile(filepath.Join(dir, ".vault-meta.json"))
+	if contains(string(data), "visibility") || contains(string(data), "private_vault") {
+		t.Errorf("empty visibility fields should be omitted: %s", data)
+	}
+}
+
 func TestReadMeta_MissingFile(t *testing.T) {
 	dir := t.TempDir()
 	_, err := ReadMeta(dir)

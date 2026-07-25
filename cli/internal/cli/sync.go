@@ -59,6 +59,14 @@ func PathForDoc(docType, slug, date string) string {
 	return ""
 }
 
+// RoutedSessionFileName is the basename for a session note that has been
+// routed to a private vault. It is workspace-suffixed so that multiple
+// public repos sharing one private vault don't collide on the plain
+// YYYY-MM-DD.md name. Non-routed sessions keep the plain name via PathForDoc.
+func RoutedSessionFileName(date, workspace string) string {
+	return fmt.Sprintf("%s-%s.md", date, workspace)
+}
+
 // ValidateFrontmatter checks that the given frontmatter satisfies the
 // embedded JSON Schema for the given doc type. Returns nil on success;
 // returns a descriptive error listing each violation otherwise.

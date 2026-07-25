@@ -14,6 +14,16 @@ Never add a `Co-Authored-By` trailer, a `Generated with Claude Code` line, the �
 
 Run the full /tolvi-sync flow: reconstruct the session and write the session log, plus any decisions and patterns, to the vault following the schema. Apply the **authority gate** — capture what was tried or considered in this session, including reasoned rejections; exclude unqualified chatter from outside the session.
 
+### Vault routing (public repos with a private vault)
+
+While running that sync flow, before writing any session note or decision, check for a local routing config file `vault/.vault-routing.local.json` in the repo being committed (it is git-ignored and present only on internal-dev checkouts of a public repo). If it exists, read its `private_vault` path and route:
+
+- Session notes ALWAYS go to `<private_vault>/sessions/YYYY-MM-DD-<workspace>.md` (workspace-suffixed to avoid cross-repo collisions) — NEVER into the public repo's own `vault/`.
+- Decisions default to the repo's own `vault/decisions/` (public, contributor-facing). Write a decision to `<private_vault>/decisions/` with `visibility: private` in its frontmatter instead whenever it is internal or strategic — business, cross-repo coordination, unreleased products, or roadmap. When in doubt, write it private.
+- Never write a session note or a `visibility: private` decision into the public repo's `vault/`.
+
+If the config file is absent (an external contributor, or a private repo), behave exactly as before: everything goes to the local `vault/`, so contributor PRs keep feeding the public vault normally. The `tolvi` CLI applies the same split via `tolvi sync|commit --open-source --private-vault <path>`, and `tolvi sync --private` marks a decision private.
+
 ## Step 2 — Stage
 
 From the repo root, stage the vault notes and your work together so they land in one commit:

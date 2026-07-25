@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/tolvi-labs/tolvi/cli/internal/vault"
 )
 
 // ErrNoSessionNote is returned by RunCommit when no session note exists for
@@ -25,13 +27,25 @@ type CommitOpts struct {
 	Stdin     io.Reader // forwarded to git commit (for $EDITOR flows)
 	Stdout    io.Writer
 	Stderr    io.Writer
+
+	// Public/private routing overrides (from --open-source/--OS and
+	// --private-vault). When public, today's session note lives in the
+	// private vault, so the gate looks there instead of the local vault.
+	ForcePublic  bool
+	PrivateVault string
 }
 
 // hasSessionNote reports whether vault/sessions/<date>.md exists and contains
 // at least one "## " session block. This mirrors the tolvi-sync pre-commit
 // hook's gate exactly.
 func hasSessionNote(vaultPath, date string) bool {
-	data, err := os.ReadFile(filepath.Join(vaultPath, "sessions", date+".md"))
+	return hasSessionNoteFile(filepath.Join(vaultPath, "sessions", date+".md"))
+}
+
+// hasSessionNoteFile reports whether the file at path exists and contains at
+// least one "## " session block.
+func hasSessionNoteFile(path string) bool {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return false
 	}
@@ -41,6 +55,22 @@ func hasSessionNote(vaultPath, date string) bool {
 		}
 	}
 	return false
+}
+
+// sessionNotePath returns the absolute path of today's session note that the
+// commit gate must check. Under local (non-public) visibility this is
+// <vaultPath>/sessions/<date>.md. Under public visibility the note lives in
+// the private vault as <private>/sessions/<date>-<workspace>.md.
+func sessionNotePath(vaultPath string, m vault.Meta, date string) (string, error) {
+	root, routed, err := vault.ResolveDocDestination(vaultPath, m, "session", "")
+	if err != nil {
+		return "", err
+	}
+	name := date + ".md"
+	if routed {
+		name = RoutedSessionFileName(date, m.Workspace)
+	}
+	return filepath.Join(root, "sessions", name), nil
 }
 
 // RunCommit is the mechanical, deterministic commit path. It gates on a
@@ -62,7 +92,29 @@ func RunCommit(opts CommitOpts) error {
 		today = time.Now().Format("2006-01-02")
 	}
 
-	if !hasSessionNote(opts.VaultPath, today) {
+	// Resolve where today's session note should live. Under public
+	// visibility it lives in the private vault; otherwise in the local vault.
+	// If meta is unreadable, fall back to legacy local-only behavior.
+	meta, err := vault.ReadMeta(opts.VaultPath)
+	if err != nil {
+		meta = vault.Meta{}
+	}
+	if opts.ForcePublic {
+		meta.Visibility = "public"
+	}
+	if opts.PrivateVault != "" {
+		meta.PrivateVault = opts.PrivateVault
+	}
+	notePath, err := sessionNotePath(opts.VaultPath, meta, today)
+	if err != nil {
+		fmt.Fprintf(opts.Stderr,
+			"tolvi: %v.\n"+
+				"  Set private_vault in .vault-meta.json or pass --private-vault <path>.\n",
+			err)
+		return ErrNoSessionNote
+	}
+
+	if !hasSessionNoteFile(notePath) {
 		fmt.Fprintf(opts.Stderr,
 			"tolvi: no session note for %s.\n"+
 				"  Capture one first, then commit:\n"+
