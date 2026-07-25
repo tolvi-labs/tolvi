@@ -97,6 +97,135 @@ func TestRunSync_RefusesOverwrite(t *testing.T) {
 	}
 }
 
+// mkPublicVaultForTest creates a public vault whose meta declares
+// visibility=public and points private_vault at a sibling private vault.
+// Returns (publicVault, privateVault).
+func mkPublicVaultForTest(t *testing.T, workspace string) (string, string) {
+	t.Helper()
+	root := t.TempDir()
+	pub := filepath.Join(root, "public", "vault")
+	priv := filepath.Join(root, "private", "vault")
+	for _, base := range []string{pub, priv} {
+		for _, sub := range []string{"decisions", "sessions", "patterns"} {
+			_ = os.MkdirAll(filepath.Join(base, sub), 0o755)
+		}
+	}
+	_ = vault.WriteMeta(pub, vault.Meta{
+		Workspace: workspace, EmbeddingModel: "nomic-embed-text", SchemaVersion: 1,
+		Visibility: "public", PrivateVault: priv,
+	})
+	return pub, priv
+}
+
+func TestRunSync_PublicSession_RoutesToPrivateWithWorkspaceName(t *testing.T) {
+	pub, priv := mkPublicVaultForTest(t, "acme")
+	var out bytes.Buffer
+	err := RunSync(SyncOpts{
+		VaultPath: pub,
+		DocType:   "session",
+		Date:      time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC),
+		BodyFlag:  "## [10:00] Session — did stuff\n",
+		Stdout:    &out,
+	})
+	if err != nil {
+		t.Fatalf("RunSync: %v", err)
+	}
+	// Session must land in the private vault under a workspace-suffixed name.
+	routed := filepath.Join(priv, "sessions", "2026-07-25-acme.md")
+	if _, err := os.ReadFile(routed); err != nil {
+		t.Fatalf("routed session not written to private vault: %v", err)
+	}
+	// And must NOT appear in the public vault at all.
+	if _, err := os.Stat(filepath.Join(pub, "sessions", "2026-07-25.md")); err == nil {
+		t.Error("session leaked into the public vault")
+	}
+	if _, err := os.Stat(filepath.Join(pub, "sessions", "2026-07-25-acme.md")); err == nil {
+		t.Error("session leaked into the public vault (suffixed name)")
+	}
+}
+
+func TestRunSync_PublicDecision_StaysPublic(t *testing.T) {
+	pub, priv := mkPublicVaultForTest(t, "acme")
+	var out bytes.Buffer
+	err := RunSync(SyncOpts{
+		VaultPath: pub,
+		DocType:   "decision",
+		Title:     "Chose Postgres",
+		Date:      time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC),
+		BodyFlag:  "# Postgres\n\nbecause pgvector.\n",
+		Stdout:    &out,
+	})
+	if err != nil {
+		t.Fatalf("RunSync: %v", err)
+	}
+	if _, err := os.ReadFile(filepath.Join(pub, "decisions", "2026-07-25-chose-postgres.md")); err != nil {
+		t.Fatalf("public decision should stay in the public vault: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(priv, "decisions", "2026-07-25-chose-postgres.md")); err == nil {
+		t.Error("public decision should not be routed to the private vault")
+	}
+}
+
+func TestRunSync_PublicPrivateDecision_RoutesToPrivate(t *testing.T) {
+	pub, priv := mkPublicVaultForTest(t, "acme")
+	var out bytes.Buffer
+	err := RunSync(SyncOpts{
+		VaultPath:     pub,
+		DocType:       "decision",
+		Title:         "Secret sauce",
+		DocVisibility: "private",
+		Date:          time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC),
+		BodyFlag:      "# Secret\n\nhush.\n",
+		Stdout:        &out,
+	})
+	if err != nil {
+		t.Fatalf("RunSync: %v", err)
+	}
+	if _, err := os.ReadFile(filepath.Join(priv, "decisions", "2026-07-25-secret-sauce.md")); err != nil {
+		t.Fatalf("private decision should route to the private vault: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(pub, "decisions", "2026-07-25-secret-sauce.md")); err == nil {
+		t.Error("private decision leaked into the public vault")
+	}
+}
+
+func TestRunSync_ForcePublic_NoPrivateVault_Errors(t *testing.T) {
+	vaultDir := mkVaultForTest(t) // plain local vault, no private_vault
+	var out bytes.Buffer
+	err := RunSync(SyncOpts{
+		VaultPath:   vaultDir,
+		DocType:     "session",
+		Date:        time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC),
+		BodyFlag:    "## [10:00] Session\n",
+		ForcePublic: true,
+		Stdout:      &out,
+	})
+	if err == nil {
+		t.Fatal("expected error: forced-public with no private_vault configured")
+	}
+}
+
+func TestRunSync_ForcePublic_WithPrivateVaultFlag_Routes(t *testing.T) {
+	vaultDir := mkVaultForTest(t) // workspace "test", no visibility set
+	priv := t.TempDir()
+	var out bytes.Buffer
+	err := RunSync(SyncOpts{
+		VaultPath:    vaultDir,
+		DocType:      "session",
+		Date:         time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC),
+		BodyFlag:     "## [10:00] Session\n",
+		ForcePublic:  true,
+		PrivateVault: priv,
+		Stdout:       &out,
+	})
+	if err != nil {
+		t.Fatalf("RunSync: %v", err)
+	}
+	if _, err := os.ReadFile(filepath.Join(priv, "sessions", "2026-07-25-test.md")); err != nil {
+		t.Fatalf("forced-public session should route to --private-vault: %v", err)
+	}
+}
+
 func TestRunSync_BodyFlag(t *testing.T) {
 	vaultDir := mkVaultForTest(t)
 	var out bytes.Buffer

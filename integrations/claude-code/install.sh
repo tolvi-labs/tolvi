@@ -119,6 +119,16 @@ if [[ "$ACTION" == "uninstall" ]]; then
       fi
     done
   fi
+
+  # Remove installed stack skills (only our own symlinks/copies).
+  for name in tolvi-bastion tolvi-guild; do
+    sk_dest="${HOME}/.claude/skills/$name"
+    if [[ -L "$sk_dest" ]]; then
+      rm "$sk_dest" && echo "✓ Removed stack skill: /$name (was symlink)"
+    elif [[ -d "$sk_dest" ]]; then
+      rm -rf "$sk_dest" && echo "✓ Removed stack skill: /$name (was copy)"
+    fi
+  done
   exit 0
 fi
 
@@ -147,6 +157,43 @@ install_commands() {
       cp "$f" "$dest"
     fi
     echo "✓ Installed command: /${name%.md}"
+  done
+}
+
+# --- stack skill install ---
+# Symlinks (or copies, with --copy) sibling Tolvi stack skills — tolvi-bastion and
+# tolvi-guild — from repos cloned alongside this one, into ~/.claude/skills/ so
+# /tolvi-bastion and /tolvi-guild ship as part of the suite.
+install_stack_skills() {
+  local repo_root parent dest_base
+  repo_root="$(cd "$SCRIPT_DIR/../.." && pwd)"   # integrations/claude-code → repo root
+  parent="$(dirname "$repo_root")"               # the tolvi-labs/ workspace
+  dest_base="${HOME}/.claude/skills"
+  mkdir -p "$dest_base"
+  local name src dest
+  for name in tolvi-bastion tolvi-guild; do
+    case "$name" in
+      tolvi-bastion) src="$parent/bastion/skills/tolvi-bastion" ;;
+      tolvi-guild)   src="$parent/guild/skills/tolvi-guild" ;;
+    esac
+    dest="$dest_base/$name"
+    if [[ ! -d "$src" ]]; then
+      echo "  ⚠ $name: source not found at $src — clone tolvi-labs/${name#tolvi-} alongside tolvi (skipping)"
+      continue
+    fi
+    if [[ -e "$dest" || -L "$dest" ]]; then
+      if [[ "$FORCE" != "true" ]]; then
+        echo "  ⚠ $dest exists — skipping (re-run with --force to overwrite)"
+        continue
+      fi
+      rm -rf "$dest"
+    fi
+    if [[ "$MODE" == "symlink" ]]; then
+      ln -s "$src" "$dest"
+    else
+      cp -R "$src" "$dest"
+    fi
+    echo "✓ Installed stack skill: /$name"
   done
 }
 
@@ -298,6 +345,7 @@ fi
 echo "✓ Verifying: $DEST_FILE is readable ✓"
 
 install_commands
+install_stack_skills
 
 cat <<EOF
 

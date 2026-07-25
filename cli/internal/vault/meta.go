@@ -22,6 +22,15 @@ type Meta struct {
 	Workspace      string `json:"workspace"`
 	EmbeddingModel string `json:"embedding_model"`
 	SchemaVersion  int    `json:"schema_version"`
+
+	// Visibility, when "public", enables public/private routing (see
+	// ResolveDocDestination). Empty or any other value keeps the current
+	// local-only behavior. Optional; older vaults omit it.
+	Visibility string `json:"visibility,omitempty"`
+	// PrivateVault is the path to the private vault root that internal
+	// content routes to when Visibility=="public". May be relative to the
+	// public vault dir or absolute. Only consulted when Visibility=="public".
+	PrivateVault string `json:"private_vault,omitempty"`
 }
 
 // ReadMeta parses <vaultPath>/.vault-meta.json.

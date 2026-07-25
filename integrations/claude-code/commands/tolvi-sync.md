@@ -12,6 +12,13 @@ Capture what was tried *or* considered inside **this working session**, includin
 
 1. **Reconstruct** from the conversation: files changed, tickets, decisions made, patterns observed, and what is left open.
 2. **Discover the vault** — walk up to the first `vault/.vault-meta.json`. Prefer the `tolvi` CLI, which discovers automatically; `--vault <path>` overrides.
+
+   **Vault routing (public repos with a private vault)** — before writing any session note or decision, check for a local routing config file `vault/.vault-routing.local.json` in the repo being committed (it is git-ignored and present only on internal-dev checkouts of a public repo). If it exists, read its `private_vault` path and route:
+   - Session notes ALWAYS go to `<private_vault>/sessions/YYYY-MM-DD-<workspace>.md` (workspace-suffixed to avoid cross-repo collisions) — NEVER into the public repo's own `vault/`.
+   - Decisions default to the repo's own `vault/decisions/` (public, contributor-facing). Write a decision to `<private_vault>/decisions/` with `visibility: private` in its frontmatter instead whenever it is internal or strategic — business, cross-repo coordination, unreleased products, or roadmap. When in doubt, write it private.
+   - Never write a session note or a `visibility: private` decision into the public repo's `vault/`.
+
+   If the config file is absent (an external contributor, or a private repo), behave exactly as before: everything goes to the local `vault/`, so contributor PRs keep feeding the public vault normally. The `tolvi` CLI applies the same split via `tolvi sync|commit --open-source --private-vault <path>`, and `tolvi sync --private` marks a decision private.
 3. **Session log** → `vault/sessions/<date>.md` (one file per day; append a block if it exists). Frontmatter: `tags: [session]`, `date`, `status: active`. Block shape: `## [HH:MM] Session — <summary>`, then `### What happened`, `### Files touched`, `### Left open`.
 4. **Decisions** (if any) → `vault/decisions/<date>-<slug>.md`. Frontmatter: `tags: [decision]`, `date`, `repo`, `status` (optional: `ticket`, `user_impact`, `product_area`). Body: `# Title`, `**Date:**`, `**Repo:**`, then layered `## Why` (1–2 business-readable sentences), `## How` (depth scales with technical weight — include rejected alternatives and *why* each was rejected), `## Outcome` (1 sentence). Keep Why/Outcome short; depth lives only in How.
 5. **Patterns** (if any) → `vault/patterns/<slug>.md` (no date prefix). Frontmatter: `tags: [pattern]`, `status: active`. Append a new example if the file already exists.
