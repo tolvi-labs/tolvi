@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tolvi-labs/tolvi/cli/internal/vault"
 )
 
 // writeVaultFile is a helper to create vault docs for recall tests.
@@ -201,5 +203,115 @@ func TestRunRecall_HookJSON_MaxBytesApplied(t *testing.T) {
 	}
 	if !strings.Contains(ctx, "truncated") {
 		t.Errorf("expected truncation notice: %s", ctx)
+	}
+}
+
+// ── routed (public/private) vaults ────────────────────────────────────────
+//
+// On a repo with vault/.vault-routing.local.json, sync writes session notes
+// to the private vault, so recall has to read them from there or it reports a
+// stale local note as the latest session. The private vault is shared by every
+// repo in the org, so recall must also filter to this workspace's own content.
+
+// mkRoutedVaultForTest returns a public vault carrying a routing config that
+// points at a fresh private vault, plus that private vault's path.
+func mkRoutedVaultForTest(t *testing.T) (string, string) {
+	t.Helper()
+	pub := mkVaultForTest(t)
+	priv := filepath.Join(t.TempDir(), "private-vault")
+	for _, sub := range []string{"decisions", "sessions"} {
+		if err := os.MkdirAll(filepath.Join(priv, sub), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeVaultFile(t, pub, vault.RoutingConfigFileName, `{"private_vault": "`+priv+`"}`)
+	return pub, priv
+}
+
+func sessionDoc(heading string) string {
+	return "---\nstatus: active\ntags: [session]\n---\n\n## [10:00] Session — " + heading + "\n\nbody\n"
+}
+
+func decisionDoc(repo, status, title string) string {
+	return "---\nstatus: " + status + "\nrepo: " + repo + "\ntags: [decision]\n---\n\n# " + title + "\n\n## TL;DR\nOne line.\n"
+}
+
+func TestRunRecall_RoutedVault_PrefersPrivateSession(t *testing.T) {
+	pub, priv := mkRoutedVaultForTest(t)
+	writeVaultFile(t, pub, "sessions/2026-06-07.md", sessionDoc("stale local note"))
+	writeVaultFile(t, priv, "sessions/2026-09-12-test.md", sessionDoc("routed private note"))
+
+	var out bytes.Buffer
+	if err := RunRecall(RecallOpts{VaultPath: pub, Stdout: &out}); err != nil {
+		t.Fatalf("RunRecall: %v", err)
+	}
+	got := out.String()
+	if !strings.Contains(got, "Last session:     2026-09-12 — routed private note") {
+		t.Errorf("private session not surfaced as latest: %s", got)
+	}
+	if !strings.Contains(got, "2026-06-07 — stale local note") {
+		t.Errorf("legacy local session should still appear as prior: %s", got)
+	}
+}
+
+func TestRunRecall_RoutedVault_IgnoresOtherWorkspaces(t *testing.T) {
+	pub, priv := mkRoutedVaultForTest(t)
+	writeVaultFile(t, priv, "sessions/2026-09-12-test.md", sessionDoc("our note"))
+	// Newer, but belongs to a sibling repo sharing the private vault.
+	writeVaultFile(t, priv, "sessions/2026-09-13-canary.md", sessionDoc("sibling repo note"))
+	// Newer still, and the private vault's own host repo.
+	writeVaultFile(t, priv, "sessions/2026-09-14.md", sessionDoc("host repo note"))
+
+	var out bytes.Buffer
+	if err := RunRecall(RecallOpts{VaultPath: pub, Stdout: &out}); err != nil {
+		t.Fatalf("RunRecall: %v", err)
+	}
+	got := out.String()
+	if !strings.Contains(got, "Last session:     2026-09-12 — our note") {
+		t.Errorf("own workspace session not latest: %s", got)
+	}
+	if strings.Contains(got, "sibling repo note") || strings.Contains(got, "host repo note") {
+		t.Errorf("leaked another workspace's session: %s", got)
+	}
+}
+
+func TestRunRecall_RoutedVault_MergesDecisionsForThisRepo(t *testing.T) {
+	pub, priv := mkRoutedVaultForTest(t)
+	writeVaultFile(t, pub, "decisions/2026-09-01-public-thing.md", decisionDoc("test", "active", "Public thing"))
+	writeVaultFile(t, priv, "decisions/2026-09-12-private-thing.md", decisionDoc("test", "active", "Private thing"))
+	writeVaultFile(t, priv, "decisions/2026-09-11-dead-thing.md", decisionDoc("test", "superseded", "Dead thing"))
+	// Another repo's private decision — must not appear.
+	writeVaultFile(t, priv, "decisions/2026-09-13-other-repo-thing.md", decisionDoc("canary", "active", "Other repo thing"))
+
+	var out bytes.Buffer
+	if err := RunRecall(RecallOpts{VaultPath: pub, Stdout: &out}); err != nil {
+		t.Fatalf("RunRecall: %v", err)
+	}
+	got := out.String()
+	if !strings.Contains(got, "private-thing") {
+		t.Errorf("private decision missing: %s", got)
+	}
+	if !strings.Contains(got, "public-thing") {
+		t.Errorf("public decision missing: %s", got)
+	}
+	if strings.Contains(got, "other-repo-thing") {
+		t.Errorf("leaked another repo's decision: %s", got)
+	}
+	if !strings.Contains(got, "Filtered out:     1") {
+		t.Errorf("status filter should count the superseded private decision: %s", got)
+	}
+}
+
+func TestRunRecall_BrokenRoutingConfig_FallsBackToLocal(t *testing.T) {
+	pub := mkVaultForTest(t)
+	writeVaultFile(t, pub, vault.RoutingConfigFileName, `{"private_vault":`)
+	writeVaultFile(t, pub, "sessions/2026-06-07.md", sessionDoc("local note"))
+
+	var out bytes.Buffer
+	if err := RunRecall(RecallOpts{VaultPath: pub, Stdout: &out}); err != nil {
+		t.Fatalf("recall must not fail the session start on a broken config: %v", err)
+	}
+	if got := out.String(); !strings.Contains(got, "2026-06-07 — local note") {
+		t.Errorf("expected local-only fallback: %s", got)
 	}
 }
