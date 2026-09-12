@@ -143,6 +143,9 @@ install_commands() {
   local f name dest
   for f in "$src_dir"/*.md; do
     name="$(basename "$f")"
+    # Underscore-prefixed files are shared includes (e.g. _preflight.md), not
+    # slash commands; installing one would create a bogus /_preflight.
+    [[ "$name" == _* ]] && continue
     dest="$dest_dir/$name"
     if [[ -e "$dest" || -L "$dest" ]]; then
       if [[ "$FORCE" != "true" ]]; then
@@ -357,15 +360,44 @@ echo "✓ Verifying: $DEST_FILE is readable ✓"
 install_commands
 install_stack_skills
 
+if [[ "$WITH_HOOKS" == "true" ]]; then
+  install_hooks
+fi
+
+# Verify the binary is reachable BY NAME, not merely installed. `go install`
+# succeeds into $(go env GOPATH)/bin, which is often not on PATH, so an install
+# can look complete while every skill and hook that shells out to `tolvi`
+# silently falls back to reading the vault directly. Naming only the install
+# command is not a fix; the PATH export is the half people miss.
+check_cli() {
+  if command -v tolvi &>/dev/null; then
+    echo ""
+    echo "✓ tolvi CLI: $(command -v tolvi)"
+    echo "  Run 'tolvi doctor' to check the rest of your setup."
+    return 0
+  fi
+
+  cat <<EOF
+
+! tolvi CLI not found on PATH.
+
+  The skills still work without it: they fall back to reading vault/ directly.
+  You lose 'tolvi ask' and the single-invocation recall path.
+
+  To install it:
+      go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
+
+  Then make it reachable, which 'go install' does not do for you:
+      export PATH="\$PATH:\$(go env GOPATH)/bin"     # add to ~/.zshrc or ~/.bashrc
+
+  Verify with:  tolvi doctor
+EOF
+}
+
 cat <<EOF
 
 Next steps:
   - In any Claude Code session, type /tolvi to load the skill.
-  - The CLI binary should be in \$PATH. Verify with: tolvi version
-  - If you don't have it yet:
-      go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
 EOF
 
-if [[ "$WITH_HOOKS" == "true" ]]; then
-  install_hooks
-fi
+check_cli

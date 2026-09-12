@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -483,6 +484,38 @@ func firstNonEmpty(s ...string) string {
 	return ""
 }
 
+var doctorVaultFlag string
+
+var doctorCmd = &cobra.Command{
+	Use:   "doctor",
+	Short: "Check that the local tolvi setup is sound, and say how to fix what is not",
+	Long: `doctor inspects the things a working tolvi install depends on: whether the
+binary is reachable as ` + "`tolvi`" + ` on PATH, whether a vault resolves from here,
+whether ANTHROPIC_API_KEY is set, and whether the Claude Code allow rules are
+in place. Each failing check prints the command that fixes it.
+
+Exits non-zero when any check fails, so it is usable in CI and in scripts.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cwd, _ := os.Getwd()
+		home, _ := os.UserHomeDir()
+		checks, err := clicmd.RunDoctor(clicmd.DoctorOpts{
+			StartDir:      cwd,
+			HomeDir:       home,
+			ExplicitVault: firstNonEmpty(doctorVaultFlag, os.Getenv("TOLVI_VAULT")),
+			Env:           os.Getenv,
+			LookPath:      exec.LookPath,
+			Stdout:        os.Stdout,
+		})
+		if err != nil {
+			return err
+		}
+		if clicmd.DoctorFailures(checks) > 0 {
+			os.Exit(clicmd.ExitConfig)
+		}
+		return nil
+	},
+}
+
 func main() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
@@ -490,6 +523,8 @@ func main() {
 	rootCmd.AddCommand(askCmd)
 	rootCmd.AddCommand(recallCmd)
 	rootCmd.AddCommand(commitCmd)
+	doctorCmd.Flags().StringVar(&doctorVaultFlag, "vault", "", "path to the vault (default: discovered from $PWD)")
+	rootCmd.AddCommand(doctorCmd)
 
 	precommitCmd.AddCommand(precommitInstallCmd)
 	precommitCmd.AddCommand(precommitCheckCmd)
