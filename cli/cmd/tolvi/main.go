@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -483,6 +484,72 @@ func firstNonEmpty(s ...string) string {
 	return ""
 }
 
+var doctorVaultFlag string
+
+var doctorCmd = &cobra.Command{
+	Use:   "doctor [vault-health]",
+	Args:  cobra.MaximumNArgs(1),
+	Short: "Check that the local tolvi setup is sound, and say how to fix what is not",
+	Long: `doctor inspects the things a working tolvi install depends on: whether the
+binary is reachable as ` + "`tolvi`" + ` on PATH, whether a vault resolves from here,
+whether ANTHROPIC_API_KEY is set, and whether the Claude Code allow rules are
+in place. Each failing check prints the command that fixes it.
+
+It then scans the vault's contents for the defects that stop a note being
+found: empty tags, unrecognized status values, duplicate titles, unfilled
+template placeholders, and escaped unicode.
+
+Pass "vault-health" to run only the content scan.
+
+Exit codes differ by what is being asserted. A plain run exits non-zero when a
+SETUP check fails, because that is what stops the tools working; content
+findings are reported but do not change it. "tolvi doctor vault-health" exits
+non-zero when the scan finds any high-severity defect.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cwd, _ := os.Getwd()
+		home, _ := os.UserHomeDir()
+		only := ""
+		if len(args) == 1 {
+			if args[0] != "vault-health" {
+				return fmt.Errorf("unknown section %q (the only section is \"vault-health\")", args[0])
+			}
+			only = args[0]
+		}
+		opts := clicmd.DoctorOpts{
+			StartDir:      cwd,
+			HomeDir:       home,
+			ExplicitVault: firstNonEmpty(doctorVaultFlag, os.Getenv("TOLVI_VAULT")),
+			Env:           os.Getenv,
+			LookPath:      exec.LookPath,
+			Stdout:        os.Stdout,
+			Only:          only,
+		}
+
+		if only == "vault-health" {
+			rep, err := clicmd.DoctorVaultHealth(opts)
+			if err != nil {
+				return err
+			}
+			if err := clicmd.RenderVaultHealth(os.Stdout, rep); err != nil {
+				return err
+			}
+			if clicmd.HealthHighSeverity(rep) > 0 {
+				os.Exit(clicmd.ExitVaultState)
+			}
+			return nil
+		}
+
+		checks, err := clicmd.RunDoctor(opts)
+		if err != nil {
+			return err
+		}
+		if clicmd.DoctorFailures(checks) > 0 {
+			os.Exit(clicmd.ExitConfig)
+		}
+		return nil
+	},
+}
+
 func main() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
@@ -490,6 +557,8 @@ func main() {
 	rootCmd.AddCommand(askCmd)
 	rootCmd.AddCommand(recallCmd)
 	rootCmd.AddCommand(commitCmd)
+	doctorCmd.Flags().StringVar(&doctorVaultFlag, "vault", "", "path to the vault (default: discovered from $PWD)")
+	rootCmd.AddCommand(doctorCmd)
 
 	precommitCmd.AddCommand(precommitInstallCmd)
 	precommitCmd.AddCommand(precommitCheckCmd)

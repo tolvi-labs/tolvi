@@ -4,6 +4,29 @@ description: Synthesize the working session into vault docs (decisions, patterns
 
 You are running /tolvi-sync. Turn this working session into durable, schema-conformant vault docs. This is the comprehensive capture path — it reconstructs the whole session, unlike `tolvi sync <type> <title>`, which captures a single note you already have in mind.
 
+<!-- PREFLIGHT:BEGIN -->
+## Preflight — say it once if the CLI is missing
+
+Before the steps below, check whether the `tolvi` CLI is available:
+
+    command -v tolvi
+
+**If it is present**, use it. It is one invocation, it discovers the vault itself, and it does not raise a permission prompt per file.
+
+**If it is absent**, fall back to reading the vault directly (the steps below work either way), and tell the user exactly once per conversation:
+
+> `!` tolvi CLI not on PATH. Reading the vault directly, which works but skips
+> semantic retrieval and costs one shell call per step. To fix:
+> `go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest`, then
+> `export PATH="$PATH:$(go env GOPATH)/bin"`. Verify with `tolvi doctor`.
+
+Do not tell the user to run `tolvi doctor` as the fix here. This branch only runs when the binary is unreachable, so `tolvi doctor` is unreachable too; it is the verification step after the install, not the remedy. Point at `tolvi doctor` only when the binary exists and something else is wrong.
+
+**Once per conversation means once.** If you have already reported this in the current conversation, do not repeat it — later commands in the same session stay quiet. You know what you have already said; no marker file is needed. A user who has chosen not to install the CLI should not be told four times in one session, because a warning repeated that often stops being read.
+
+Never silently degrade. The fallback path is legitimate and produces real answers, but the user has to learn once that they are on it, or a broken install looks identical to a working one.
+<!-- PREFLIGHT:END -->
+
 ## What to capture — the authority gate
 
 Capture what was tried *or* considered inside **this working session**, including reasoned rejections ("we tried X, Y broke, so we shipped Z") — a road not taken for a stated reason is some of the most valuable content. Do not import unqualified chatter from outside the session; a passing idea that was never weighed is noise.
