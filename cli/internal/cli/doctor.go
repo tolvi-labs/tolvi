@@ -29,6 +29,14 @@ type DoctorOpts struct {
 	Env           func(string) string
 	LookPath      func(string) (string, error)
 	Stdout        io.Writer
+
+	// Only scopes the run to a single section. "" runs everything;
+	// "vault-health" runs only the content scan.
+	Only string
+
+	// SkipVaultHealth suppresses the content scan (used by tests that only
+	// care about setup checks).
+	SkipVaultHealth bool
 }
 
 // goBinHint is the remediation for a binary that exists but is unreachable.
@@ -50,16 +58,69 @@ func RunDoctor(opts DoctorOpts) ([]Check, error) {
 	if opts.Env == nil {
 		opts.Env = os.Getenv
 	}
-	checks := []Check{
-		checkPath(opts),
-		checkVault(opts),
-		checkAPIKey(opts),
-		checkClaudePermissions(opts),
+	var checks []Check
+	if opts.Only != "vault-health" {
+		checks = []Check{
+			checkPath(opts),
+			checkVault(opts),
+			checkAPIKey(opts),
+			checkClaudePermissions(opts),
+		}
+		if err := writeDoctorReport(opts.Stdout, checks); err != nil {
+			return checks, err
+		}
 	}
-	if err := writeDoctorReport(opts.Stdout, checks); err != nil {
-		return checks, err
+	if !opts.SkipVaultHealth {
+		if err := runDoctorVaultHealth(opts); err != nil {
+			return checks, err
+		}
 	}
 	return checks, nil
+}
+
+// runDoctorVaultHealth appends the content scan. It is skipped silently when
+// no vault resolves: "no vault here" is already reported by the vault check,
+// and repeating it as a health failure would be noise.
+func runDoctorVaultHealth(opts DoctorOpts) error {
+	path, err := vault.Discover(vault.DiscoverOpts{
+		StartDir:     opts.StartDir,
+		HomeDir:      opts.HomeDir,
+		ExplicitPath: opts.ExplicitVault,
+	})
+	if err != nil {
+		return nil
+	}
+	rep, err := RunVaultHealth(path)
+	if err != nil {
+		return nil
+	}
+	return RenderVaultHealth(opts.Stdout, rep)
+}
+
+// DoctorVaultHealth runs only the content scan and returns its report, for
+// callers that need the findings rather than the rendered text.
+func DoctorVaultHealth(opts DoctorOpts) (HealthReport, error) {
+	path, err := vault.Discover(vault.DiscoverOpts{
+		StartDir:     opts.StartDir,
+		HomeDir:      opts.HomeDir,
+		ExplicitPath: opts.ExplicitVault,
+	})
+	if err != nil {
+		return HealthReport{}, err
+	}
+	return RunVaultHealth(path)
+}
+
+// HealthHighSeverity counts findings that are outright defects rather than
+// advisories. `tolvi doctor vault-health` exits non-zero on these.
+func HealthHighSeverity(rep HealthReport) int {
+	n := 0
+	for _, f := range rep.Findings {
+		if f.Severity == "high" {
+			n++
+		}
+	}
+	return n
 }
 
 // DoctorFailures counts the checks that did not pass.
