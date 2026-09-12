@@ -1,10 +1,10 @@
-# Tolvi — Aider integration (skeleton)
+# Tolvi: Aider integration (skeleton)
 
 A `CONVENTIONS.md` template that teaches [Aider](https://aider.chat) about Tolvi vault conventions. Aider reads convention files at session start (when invoked with `--read CONVENTIONS.md`, or auto-loaded if listed in `.aider.conf.yml`).
 
 ## Tier
 
-Aider is a **Tier 3 — skeleton** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap that should let Aider participate in vault read/write flows; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../claude-code/). If you find yourself wanting more, copy from there.
+Aider is a **Tier 3 (skeleton)** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap that should let Aider participate in vault read/write flows; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../claude-code/). If you find yourself wanting more, copy from there.
 
 ## Prerequisites
 

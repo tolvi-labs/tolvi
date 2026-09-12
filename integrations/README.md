@@ -6,17 +6,17 @@ Per-agent configuration files for using a Tolvi vault from your AI coding tool o
 
 | Integration | Tier | Status | Directory |
 |---|---|---|---|
-| Claude Code | 1 — deep | ✅ shipped | [`claude-code/`](./claude-code/) |
-| Cursor | 2 — light | ✅ shipped | [`cursor/`](./cursor/) |
-| Aider | 3 — skeleton | ✅ shipped | [`aider/`](./aider/) |
-| OpenHands | 3 — skeleton | ✅ shipped | [`openhands/`](./openhands/) |
-| Continue | 3 — skeleton | ✅ shipped | [`continue/`](./continue/) |
+| Claude Code | 1 (deep) | ✅ shipped | [`claude-code/`](./claude-code/) |
+| Cursor | 2 (light) | ✅ shipped | [`cursor/`](./cursor/) |
+| Aider | 3 (skeleton) | ✅ shipped | [`aider/`](./aider/) |
+| OpenHands | 3 (skeleton) | ✅ shipped | [`openhands/`](./openhands/) |
+| Continue | 3 (skeleton) | ✅ shipped | [`continue/`](./continue/) |
 
-**Tier 1 — deep:** Custom skill files with slash commands, format-spec awareness, and CLI orchestration. The agent can read, write, and ask questions of the vault as a first-class workflow.
+**Tier 1 (deep):** Custom skill files with slash commands, format-spec awareness, and CLI orchestration. The agent can read, write, and ask questions of the vault as a first-class workflow.
 
-**Tier 2 — light:** Static configuration (e.g., `.cursorrules`) that teaches the agent about the vault format. No tool wiring; the agent uses its own primitives.
+**Tier 2 (light):** Static configuration (e.g., `.cursorrules`) that teaches the agent about the vault format. No tool wiring; the agent uses its own primitives.
 
-**Tier 3 — skeleton:** Per-tool README snippets or convention files showing the agent the vault layout. Symbolic — proves Tolvi is agent-agnostic without per-tool investment.
+**Tier 3 (skeleton):** Per-tool README snippets or convention files showing the agent the vault layout. Symbolic: it proves Tolvi is agent-agnostic without per-tool investment.
 
 ## Common conventions
 

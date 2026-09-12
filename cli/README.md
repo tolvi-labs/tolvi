@@ -37,7 +37,7 @@ Key flags: `--no-stream`, `--json`, `--model`, `--include-status`, `--exclude-ty
 
 ### `tolvi recall`
 
-Emit a session-resumption summary — recent sessions and active decisions — without making any API call. Pure file-read; designed for use in Claude Code session hooks.
+Emit a session-resumption summary (recent sessions and active decisions) without making any API call. Pure file-read; designed for use in Claude Code session hooks.
 
 ```bash
 tolvi recall [flags]
@@ -49,7 +49,7 @@ tolvi recall [flags]
 | `--session-count` | 3 | Number of recent sessions to surface |
 | `--decision-count` | 10 | Max active decisions to surface |
 | `--max-bytes` | 8000 | Hard cap on `additionalContext` length in `hook-json` mode |
-| `--include-patterns` | false | Also surface pattern names (off by default — patterns are timeless reference, not session-resumption context) |
+| `--include-patterns` | false | Also surface pattern names (off by default: patterns are timeless reference, not session-resumption context) |
 | `--vault` | walks up from cwd | Path to vault dir |
 
 Config-file defaults (`~/.config/tolvi/config.yaml`):
@@ -66,7 +66,7 @@ See [`integrations/claude-code/`](../integrations/claude-code/) for the Claude C
 
 ### `tolvi commit`
 
-Stage `vault/` and run `git commit`, gated on a session note existing for today. This is the controlled, deterministic capture path — no LLM, no synthesis. For comprehensive capture, use the `/tolvi-commit` skill in a working session instead (it synthesizes the whole session, then commits).
+Stage `vault/` and run `git commit`, gated on a session note existing for today. This is the controlled, deterministic capture path, with no LLM and no synthesis. For comprehensive capture, use the `/tolvi-commit` skill in a working session instead (it synthesizes the whole session, then commits).
 
 ```bash
 tolvi commit [flags]
@@ -91,15 +91,15 @@ tolvi precommit install
 
 The hook is a 4-line shell shim written to `.git/hooks/pre-commit`. It:
 
-- Always exits 0 — never blocks a commit
+- Always exits 0, so it never blocks a commit
 - Silently degrades to a no-op if the `tolvi` binary is removed from `$PATH`
 - Honors `TOLVI_PRECOMMIT_QUIET=1` to silence the nudge per-shell
 
 Flags for `tolvi precommit install`:
 
-- `--force` — overwrite an existing non-tolvi hook
-- `--append` — chain after an existing hook (preserves the previous content)
-- `--repo <path>` — install into a specific repo's `.git/hooks/`
+- `--force`: overwrite an existing non-tolvi hook
+- `--append`: chain after an existing hook (preserves the previous content)
+- `--repo <path>`: install into a specific repo's `.git/hooks/`
 
 Remove with `tolvi precommit uninstall`. Refuses to remove a non-tolvi hook unless `--force`.
 
@@ -109,5 +109,5 @@ Prints the binary version (baked at release time via `-ldflags`).
 
 ## See also
 
-- [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — the local-arm component in context
-- [`../integrations/`](../integrations/) — per-agent integration files (Claude Code skill, Cursor `.cursorrules`, Aider/OpenHands/Continue conventions)
+- [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md): the local-arm component in context
+- [`../integrations/`](../integrations/): per-agent integration files (Claude Code skill, Cursor `.cursorrules`, Aider/OpenHands/Continue conventions)

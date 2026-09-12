@@ -1,10 +1,10 @@
-# Tolvi — Continue integration (skeleton)
+# Tolvi: Continue integration (skeleton)
 
 A `.continuerules` template that teaches [Continue](https://continue.dev) about Tolvi vault conventions. Continue reads this file from the workspace root and uses it as system-prompt context for every interaction in the project.
 
 ## Tier
 
-Continue is a **Tier 3 — skeleton** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../claude-code/).
+Continue is a **Tier 3 (skeleton)** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../claude-code/).
 
 ## Prerequisites
 

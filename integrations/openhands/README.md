@@ -1,10 +1,10 @@
-# Tolvi — OpenHands integration (skeleton)
+# Tolvi: OpenHands integration (skeleton)
 
 A `.openhands_instructions` template that teaches [OpenHands](https://www.all-hands.dev) about Tolvi vault conventions. OpenHands reads this file from the project root as part of its repo-aware context.
 
 ## Tier
 
-OpenHands is a **Tier 3 — skeleton** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../claude-code/).
+OpenHands is a **Tier 3 (skeleton)** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../claude-code/).
 
 ## Prerequisites
 

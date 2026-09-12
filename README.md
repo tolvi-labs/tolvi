@@ -42,12 +42,12 @@ tolvi precommit install
 
 ## Two ways to capture
 
-Tolvi captures at two altitudes, on purpose — they are complementary, not redundant:
+Tolvi captures at two altitudes, on purpose. They are complementary, not redundant:
 
-- **Mechanical (CLI)** — `tolvi sync` writes a single note you already have in mind; `tolvi commit` stages `vault/` and runs `git commit`, gated on a session note existing for today. Deterministic, no LLM, scriptable — what you commit is exactly what is there. Use it in CI, in hooks, or when you want control and no surprises.
-- **Synthesized (skill)** — inside a Claude Code or Cursor session, `/tolvi-sync` reconstructs the *whole* working session into decisions, patterns, and a session log, and `/tolvi-commit` does that and then commits. Comprehensive and near-zero effort, but it needs an agent in the loop and is non-deterministic.
+- **Mechanical (CLI)**: `tolvi sync` writes a single note you already have in mind; `tolvi commit` stages `vault/` and runs `git commit`, gated on a session note existing for today. Deterministic, no LLM, scriptable: what you commit is exactly what is there. Use it in CI, in hooks, or when you want control and no surprises.
+- **Synthesized (skill)**: inside a Claude Code or Cursor session, `/tolvi-sync` reconstructs the *whole* working session into decisions, patterns, and a session log, and `/tolvi-commit` does that and then commits. Comprehensive and near-zero effort, but it needs an agent in the loop and is non-deterministic.
 
-Rule of thumb: **mechanical for known, controlled capture; the skill for synthesizing the messy reality of a working session.** The skill captures what a qualified actor tried or considered (including reasoned rejections) — the high-signal record a Slack thread or ticket can't give you.
+Rule of thumb: **mechanical for known, controlled capture; the skill for synthesizing the messy reality of a working session.** The skill captures what a qualified actor tried or considered (including reasoned rejections), the high-signal record a Slack thread or ticket can't give you.
 
 ## What's shipped
 
