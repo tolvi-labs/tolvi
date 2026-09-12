@@ -9,7 +9,10 @@
   "scripts": {
     "validate:schemas": "node .github/scripts/validate-schema.js",
     "validate:brand": ".github/scripts/brand-isolation-check.sh",
-    "validate": "npm run validate:schemas && npm run validate:brand"
+    "validate": "npm run validate:schemas && npm run validate:brand && npm run validate:installers && npm run validate:preflight && npm run validate:vault-health",
+    "validate:installers": ".github/scripts/installer-remediation-check.sh",
+    "validate:preflight": ".github/scripts/preflight-sync-check.sh",
+    "validate:vault-health": ".github/scripts/vault-health-parity-check.sh"
   },
   "devDependencies": {
     "ajv": "^8.17.1",
