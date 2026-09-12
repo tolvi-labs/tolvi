@@ -22,7 +22,7 @@ While running that sync flow, before writing any session note or decision, check
 - Decisions default to the repo's own `vault/decisions/` (public, contributor-facing). Write a decision to `<private_vault>/decisions/` with `visibility: private` in its frontmatter instead whenever it is internal or strategic — business, cross-repo coordination, unreleased products, or roadmap. When in doubt, write it private.
 - Never write a session note or a `visibility: private` decision into the public repo's `vault/`.
 
-If the config file is absent (an external contributor, or a private repo), behave exactly as before: everything goes to the local `vault/`, so contributor PRs keep feeding the public vault normally. The `tolvi` CLI applies the same split via `tolvi sync|commit --open-source --private-vault <path>`, and `tolvi sync --private` marks a decision private.
+If the config file is absent (an external contributor, or a private repo), behave exactly as before: everything goes to the local `vault/`, so contributor PRs keep feeding the public vault normally. The `tolvi` CLI reads the same `vault/.vault-routing.local.json` itself, so both capture paths route identically with no extra flags; `--open-source` and `--private-vault <path>` still override it, and `tolvi sync --private` marks a decision private.
 
 ## Step 2 — Stage
 

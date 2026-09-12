@@ -119,3 +119,26 @@ func TestRunCommit_PublicGate_LooksInPrivateVault(t *testing.T) {
 		t.Fatalf("expected ErrNoSessionNote (note is in public vault, gate must look in private), got %v", err)
 	}
 }
+
+// A malformed .vault-routing.local.json must fail loudly rather than quietly
+// reverting to local-only routing, which would gate the commit on a session
+// note in the public vault.
+func TestRunCommit_BrokenRoutingConfig_Errors(t *testing.T) {
+	vaultDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(vaultDir, ".vault-routing.local.json"), []byte(`{"private_vault":`), 0o644); err != nil {
+		t.Fatalf("write routing config: %v", err)
+	}
+
+	err := RunCommit(CommitOpts{
+		VaultPath: vaultDir,
+		RepoRoot:  t.TempDir(),
+		Stdout:    &bytes.Buffer{},
+		Stderr:    &bytes.Buffer{},
+	})
+	if err == nil {
+		t.Fatal("expected an error for a malformed routing config")
+	}
+	if errors.Is(err, ErrNoSessionNote) {
+		t.Errorf("got ErrNoSessionNote, want a config error: %v", err)
+	}
+}
