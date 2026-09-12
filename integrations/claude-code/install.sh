@@ -294,11 +294,21 @@ for event, entries in fragment["hooks"].items():
     else:
         existing[event] = entries
 
+# Allowlist the read-only tolvi subcommands so /tolvi-recall and `tolvi ask`
+# stop raising a permission prompt on every use. Writes are deliberately NOT
+# allowlisted: `tolvi sync` and `tolvi commit` mutate the vault and the git
+# history, so they should stay a conscious per-call approval.
+allow = settings.setdefault("permissions", {}).setdefault("allow", [])
+added = [r for r in ("Bash(tolvi recall:*)", "Bash(tolvi ask:*)") if r not in allow]
+allow.extend(added)
+
 with open(settings_path, "w") as f:
     json.dump(settings, f, indent=2)
     f.write("\n")
 
 print(f"✓ Merged hooks into {settings_path}")
+if added:
+    print(f"✓ Allowlisted {', '.join(added)} (read-only; sync/commit still prompt)")
 PYEOF
 
   echo ""
