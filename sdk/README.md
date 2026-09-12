@@ -101,14 +101,14 @@ try {
 
 Every `TolviAPIError` exposes:
 
-- `status: number` — HTTP status code
-- `code: string` — server error code (e.g. `"validation_error"`)
-- `body: ErrorEnvelope` — full server envelope for forward-compat access
-- `requestId?: string` — from `x-request-id` response header when present
+- `status: number`: HTTP status code
+- `code: string`: server error code (e.g. `"validation_error"`)
+- `body: ErrorEnvelope`: full server envelope for forward-compat access
+- `requestId?: string`: from `x-request-id` response header when present
 
 ## Cancellation
 
-The SDK has no default request timeout — set one explicitly via `AbortSignal.timeout()`:
+The SDK has no default request timeout. Set one explicitly via `AbortSignal.timeout()`:
 
 ```ts
 const result = await client.ask(
@@ -141,7 +141,7 @@ npm run build
 ```
 
 If the SDK is ever extracted to a standalone repo, `gen:types` will need to source
-the OpenAPI document differently — see `docs/OPEN_QUESTIONS.md` #10.
+the OpenAPI document differently. See `docs/OPEN_QUESTIONS.md` #10.
 
 ## Releasing
 
@@ -151,7 +151,7 @@ the OpenAPI document differently — see `docs/OPEN_QUESTIONS.md` #10.
 4. Tag and push: `git tag sdk-v<X.Y.Z> && git push origin sdk-v<X.Y.Z>`.
 5. `.github/workflows/sdk-release.yml` publishes to npm and creates the GitHub release.
 
-No local `npm publish` runs — everything happens in CI.
+No local `npm publish` runs. Everything happens in CI.
 
 ## License
 

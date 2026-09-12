@@ -77,7 +77,7 @@ psql $DATABASE_URL -c "
 "
 ```
 
-Save the plaintext `KEY` value — it's not recoverable from the database.
+Save the plaintext `KEY` value. It's not recoverable from the database.
 
 A `tolvi keys create` CLI command lands in Phase 3.
 

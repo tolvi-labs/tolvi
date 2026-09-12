@@ -1,4 +1,4 @@
-# Tolvi — Claude Code integration
+# Tolvi: Claude Code integration
 
 A Claude Code skill that lets you read, write, and ask questions of a Tolvi vault from any Claude Code session.
 
@@ -30,11 +30,11 @@ Default mode is **symlink**, so `git pull` on this repo updates the skill automa
 
 ### Install options
 
-- `--copy` — Deep-copy `SKILL.md` instead of symlinking. Use when you want isolation from `git pull` updates.
-- `--path <dir>` — Override the install destination (default: `$HOME/.claude/skills`). The `tolvi/` subdirectory is created under this path.
-- `--force` — Overwrite an existing install. Refuses by default to avoid clobbering customizations.
-- `--with-hooks` — Also install Claude Code session hooks (see [Session hooks](#session-hooks) below).
-- `--hooks-scope user|project` — Where to wire the hooks. `user` (default) writes to `~/.claude/settings.json` and activates in any repo with a vault. `project` writes to `.claude/settings.json` in the current repo only. Omit to be prompted interactively.
+- `--copy`: Deep-copy `SKILL.md` instead of symlinking. Use when you want isolation from `git pull` updates.
+- `--path <dir>`: Override the install destination (default: `$HOME/.claude/skills`). The `tolvi/` subdirectory is created under this path.
+- `--force`: Overwrite an existing install. Refuses by default to avoid clobbering customizations.
+- `--with-hooks`: Also install Claude Code session hooks (see [Session hooks](#session-hooks) below).
+- `--hooks-scope user|project`: Where to wire the hooks. `user` (default) writes to `~/.claude/settings.json` and activates in any repo with a vault. `project` writes to `.claude/settings.json` in the current repo only. Omit to be prompted interactively.
 
 ### Manual install (no script)
 
@@ -55,9 +55,9 @@ Open a Claude Code session in any repo with a Tolvi vault and type:
 Claude loads the skill content and acknowledges briefly. Then ask in natural language:
 
 - "What did we decide about Postgres?"
-- "Write down that we chose PASETO over JWT — body: JWT's lack of true revocation made it unusable for our session model."
+- "Write down that we chose PASETO over JWT, body: JWT's lack of true revocation made it unusable for our session model."
 - "Show me the most recent session log."
-- "This repo doesn't have a vault yet — set one up."
+- "This repo doesn't have a vault yet, set one up."
 
 Claude shells out to `tolvi ask`, `tolvi sync`, or `tolvi init` as appropriate.
 
@@ -65,11 +65,11 @@ Claude shells out to `tolvi ask`, `tolvi sync`, or `tolvi init` as appropriate.
 
 `bash install.sh` also installs three slash commands into `~/.claude/commands/` (symlinked by default, so `git pull` updates them):
 
-- **`/tolvi-recall`** — surface recent sessions and active decisions before you start. Mirrors the `tolvi recall` output; works with or without the CLI.
-- **`/tolvi-sync`** — synthesize the *whole* working session into decisions, patterns, and a session log, following the format spec and the authority gate (capture what was tried or considered in the session, including reasoned rejections; exclude unqualified outside chatter).
-- **`/tolvi-commit`** — run the `/tolvi-sync` synthesis, then stage and commit (vault + work) in one step.
+- **`/tolvi-recall`**: surface recent sessions and active decisions before you start. Mirrors the `tolvi recall` output; works with or without the CLI.
+- **`/tolvi-sync`**: synthesize the *whole* working session into decisions, patterns, and a session log, following the format spec and the authority gate (capture what was tried or considered in the session, including reasoned rejections; exclude unqualified outside chatter).
+- **`/tolvi-commit`**: run the `/tolvi-sync` synthesis, then stage and commit (vault + work) in one step.
 
-### Mechanical vs synthesized — two ways to commit
+### Mechanical vs synthesized: two ways to commit
 
 These commands sit at the opposite end of a control/comprehensiveness tradeoff from the CLI:
 
@@ -92,9 +92,9 @@ bash install.sh --with-hooks
 
 Two hooks are installed:
 
-**`SessionStart` → `tolvi-recall`** — runs `tolvi recall --format hook-json` before every session. Claude receives your recent sessions and decisions as context before your first message, so you never have to re-explain where things stand. On a `/clear` (the `clear` SessionStart source) the hook instead directs Claude to run the full `/tolvi-recall` command, so clearing context to reset mid-task reorients you with the complete recall rather than the lightweight digest.
+**`SessionStart` → `tolvi-recall`**: runs `tolvi recall --format hook-json` before every session. Claude receives your recent sessions and decisions as context before your first message, so you never have to re-explain where things stand. On a `/clear` (the `clear` SessionStart source) the hook instead directs Claude to run the full `/tolvi-recall` command, so clearing context to reset mid-task reorients you with the complete recall rather than the lightweight digest.
 
-**`PreToolUse(git commit)` → `tolvi-sync`** — fires before every `git commit`. Auto-stages any modified `vault/` files so they land in the commit. Blocks the commit if no session note exists for today, instructing Claude to write one first. The vault is always in sync with the code.
+**`PreToolUse(git commit)` → `tolvi-sync`**: fires before every `git commit`. Auto-stages any modified `vault/` files so they land in the commit. Blocks the commit if no session note exists for today, instructing Claude to write one first. The vault is always in sync with the code.
 
 ### Scope
 
@@ -114,8 +114,8 @@ User scope is recommended: recall fires in any repo with a vault without any per
 
 ## Update
 
-- **Symlink install** — run `git pull` in your `tolvi-labs/tolvi` checkout. The skill updates automatically; restart your Claude Code session or re-invoke `/tolvi` to pick up changes.
-- **Copy install** — re-run `bash install.sh --copy --force` to refresh.
+- **Symlink install**: run `git pull` in your `tolvi-labs/tolvi` checkout. The skill updates automatically; restart your Claude Code session or re-invoke `/tolvi` to pick up changes.
+- **Copy install**: re-run `bash install.sh --copy --force` to refresh.
 
 ## Uninstall
 
@@ -155,7 +155,7 @@ The skill is a single file: `SKILL.md`. It contains:
 
 - The Tolvi format spec (frontmatter, slug rules, status enum, wiki-link syntax)
 - The CLI command reference (`tolvi ask`, `sync`, `recall`, `init` with their flags)
-- Behavioral rules — when to prefer the CLI versus direct file ops, when to cite, when to refuse
-- Escape hatches — what to do when the CLI is missing, the vault doesn't exist, the API key isn't set, the vault is too large
+- Behavioral rules: when to prefer the CLI versus direct file ops, when to cite, when to refuse
+- Escape hatches: what to do when the CLI is missing, the vault doesn't exist, the API key isn't set, the vault is too large
 
 The skill is **read-only context**. It doesn't auto-run anything, doesn't store state, and doesn't proactively interrupt your conversations. Proactive nudges are handled by the session hooks in `hooks/` (installed separately via `bash install.sh --with-hooks`).

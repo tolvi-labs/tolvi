@@ -1,4 +1,4 @@
-# Tolvi — Cursor integration
+# Tolvi: Cursor integration
 
 A `.cursorrules` template that teaches [Cursor](https://cursor.com) about Tolvi vault conventions. When you ask Cursor questions about decisions, sessions, or patterns in a repo that has Tolvi installed, Cursor will use the `tolvi` CLI under the hood and cite vault content with `[[slug]]` references.
 
@@ -35,19 +35,19 @@ Commit the `.cursorrules` file alongside the rest of your repo so the rules are 
 
 ## Use
 
-There is no slash command to invoke — Cursor reads `.cursorrules` automatically as part of every interaction in this project. Once the file is in your repo, just ask Cursor about the vault in natural language:
+There is no slash command to invoke. Cursor reads `.cursorrules` automatically as part of every interaction in this project. Once the file is in your repo, just ask Cursor about the vault in natural language:
 
 - "What did we decide about Postgres?"
-- "Write down that we chose PASETO over JWT — body: JWT's lack of true revocation made it unusable for our session model."
+- "Write down that we chose PASETO over JWT, body: JWT's lack of true revocation made it unusable for our session model."
 - "Show me the most recent session log."
-- "This repo doesn't have a vault yet — set one up."
+- "This repo doesn't have a vault yet, set one up."
 
 Cursor will invoke `tolvi ask`, `tolvi sync`, or `tolvi init` as appropriate.
 
 ## Update
 
-- **Symlink install** — `git pull` on the `tolvi-labs/tolvi` checkout updates `.cursorrules` automatically.
-- **Copy install** — re-run the `cp` command to refresh.
+- **Symlink install**: `git pull` on the `tolvi-labs/tolvi` checkout updates `.cursorrules` automatically.
+- **Copy install**: re-run the `cp` command to refresh.
 
 ## Uninstall
 
@@ -86,11 +86,11 @@ See the [CLI README](../../cli/) for the full config reference.
 
 - The format spec (frontmatter, slug rules, status enum, wiki-link syntax)
 - The CLI command reference (`tolvi ask`, `sync`, `init` with their flags)
-- Behavioral rules — when to prefer the CLI versus direct file ops, when to cite
-- Escape hatches — what to do when the CLI is missing, the vault doesn't exist, the API key isn't set, the vault is too large
+- Behavioral rules: when to prefer the CLI versus direct file ops, when to cite
+- Escape hatches: what to do when the CLI is missing, the vault doesn't exist, the API key isn't set, the vault is too large
 
 The file is **read-only context**. It doesn't auto-run anything and doesn't proactively interrupt your conversations. Proactive nudges live in the separate `tolvi precommit` git-hook subcommand (planned).
 
 ## Tier
 
-Cursor is a **Tier 2 — light** integration in the [Tolvi integrations tier list](../README.md). The agent uses its own primitives (Cursor's built-in read/edit/run tools) to invoke the CLI; there's no custom Tolvi-specific tool wiring. For a deeper integration with custom slash commands, see [Claude Code](../claude-code/) (Tier 1).
+Cursor is a **Tier 2 (light)** integration in the [Tolvi integrations tier list](../README.md). The agent uses its own primitives (Cursor's built-in read/edit/run tools) to invoke the CLI; there's no custom Tolvi-specific tool wiring. For a deeper integration with custom slash commands, see [Claude Code](../claude-code/) (Tier 1).

@@ -22,7 +22,7 @@ What did we choose to do, and what trade-off does that buy us?
 
 ## Consequences
 
-What follows from this decision — both positive and negative? What becomes easier? What becomes harder?
+What follows from this decision, both positive and negative? What becomes easier? What becomes harder?
 ```
 
 ## Index
@@ -38,10 +38,10 @@ What follows from this decision — both positive and negative? What becomes eas
 
 1. Pick the next sequential number
 2. Copy the template above into `NNNN-short-slug.md`
-3. Fill in all four sections — leave nothing as "TBD"
+3. Fill in all four sections, leaving nothing as "TBD"
 4. Add an entry to the index above
 5. Commit in the same PR as the work the decision enables
 
 ## Superseding
 
-When a decision is replaced, set the old ADR's status to `superseded by NNNN`, link to the replacement, and create the new ADR. The old file stays — it's part of the historical record.
+When a decision is replaced, set the old ADR's status to `superseded by NNNN`, link to the replacement, and create the new ADR. The old file stays. It's part of the historical record.
