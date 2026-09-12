@@ -97,6 +97,13 @@ func RunCommit(opts CommitOpts) error {
 	// If meta is unreadable, fall back to legacy local-only behavior.
 	meta, err := vault.ReadMeta(opts.VaultPath)
 	if err != nil {
+		// A broken routing config must not degrade to local-only: that is
+		// how a session note ends up gated against the public vault the
+		// config exists to keep it out of. Only a missing or unreadable
+		// .vault-meta.json falls back.
+		if _, statErr := os.Stat(filepath.Join(opts.VaultPath, vault.RoutingConfigFileName)); statErr == nil {
+			return fmt.Errorf("read vault meta: %w", err)
+		}
 		meta = vault.Meta{}
 	}
 	if opts.ForcePublic {

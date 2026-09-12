@@ -56,6 +56,9 @@ func ReadMeta(vaultPath string) (Meta, error) {
 			path, m.SchemaVersion, SupportedSchemaVersion,
 		)
 	}
+	if err := applyLocalRouting(vaultPath, &m); err != nil {
+		return Meta{}, err
+	}
 	return m, nil
 }
 
@@ -78,4 +81,43 @@ func WriteMeta(vaultPath string, m Meta) error {
 	data = append(data, '\n')
 	path := filepath.Join(vaultPath, ".vault-meta.json")
 	return os.WriteFile(path, data, 0o644)
+}
+
+// RoutingConfigFileName is the machine-local, git-ignored routing config that
+// an internal-dev checkout of a public repo carries. It exists so the private
+// vault path never has to land in the committed .vault-meta.json.
+const RoutingConfigFileName = ".vault-routing.local.json"
+
+// routingConfig is the marshalled form of <vault>/.vault-routing.local.json.
+type routingConfig struct {
+	PrivateVault string `json:"private_vault"`
+}
+
+// applyLocalRouting overlays <vaultPath>/.vault-routing.local.json onto m.
+//
+// The file's presence is itself the marker that a vault is public, so it sets
+// both PrivateVault and Visibility, and a machine-local override wins over
+// whatever .vault-meta.json says. A malformed file, or one missing
+// private_vault, is a hard error rather than a silent no-op: ignoring it would
+// write session notes into the very public repo the config exists to keep them
+// out of.
+func applyLocalRouting(vaultPath string, m *Meta) error {
+	path := filepath.Join(vaultPath, RoutingConfigFileName)
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read %s: %w", path, err)
+	}
+	var cfg routingConfig
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return fmt.Errorf("parse %s: %w", path, err)
+	}
+	if cfg.PrivateVault == "" {
+		return fmt.Errorf("%s: private_vault field is required", path)
+	}
+	m.Visibility = "public"
+	m.PrivateVault = cfg.PrivateVault
+	return nil
 }
