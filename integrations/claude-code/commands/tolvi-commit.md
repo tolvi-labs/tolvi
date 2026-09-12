@@ -16,9 +16,11 @@ Before the steps below, check whether the `tolvi` CLI is available:
 **If it is absent**, fall back to reading the vault directly (the steps below work either way), and tell the user exactly once per conversation:
 
 > `!` tolvi CLI not on PATH. Reading the vault directly, which works but skips
-> semantic retrieval and costs one shell call per step. Fix: `tolvi doctor`,
-> or install with `go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest`
-> and add `$(go env GOPATH)/bin` to your PATH.
+> semantic retrieval and costs one shell call per step. To fix:
+> `go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest`, then
+> `export PATH="$PATH:$(go env GOPATH)/bin"`. Verify with `tolvi doctor`.
+
+Do not tell the user to run `tolvi doctor` as the fix here. This branch only runs when the binary is unreachable, so `tolvi doctor` is unreachable too; it is the verification step after the install, not the remedy. Point at `tolvi doctor` only when the binary exists and something else is wrong.
 
 **Once per conversation means once.** If you have already reported this in the current conversation, do not repeat it — later commands in the same session stay quiet. You know what you have already said; no marker file is needed. A user who has chosen not to install the CLI should not be told four times in one session, because a warning repeated that often stops being read.
 

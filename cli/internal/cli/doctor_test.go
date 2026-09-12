@@ -35,9 +35,15 @@ func healthyOpts(t *testing.T, out *bytes.Buffer) DoctorOpts {
 	return DoctorOpts{
 		StartDir: root,
 		HomeDir:  home,
-		Env:      func(k string) string { if k == "ANTHROPIC_API_KEY" { return "sk-ant-test" }; return "" },
-		LookPath: func(string) (string, error) { return "/usr/local/bin/tolvi", nil },
-		Stdout:   out,
+		Env: func(k string) string {
+			if k == "ANTHROPIC_API_KEY" {
+				return "sk-ant-test"
+			}
+			return ""
+		},
+		LookPath:        func(string) (string, error) { return "/usr/local/bin/tolvi", nil },
+		Stdout:          out,
+		SkipVaultHealth: true,
 	}
 }
 
