@@ -4,6 +4,27 @@ description: Surface recent sessions and active decisions from the vault before 
 
 You are running /tolvi-recall. Surface vault context before doing any work.
 
+<!-- PREFLIGHT:BEGIN -->
+## Preflight — say it once if the CLI is missing
+
+Before the steps below, check whether the `tolvi` CLI is available:
+
+    command -v tolvi
+
+**If it is present**, use it. It is one invocation, it discovers the vault itself, and it does not raise a permission prompt per file.
+
+**If it is absent**, fall back to reading the vault directly (the steps below work either way), and tell the user exactly once per conversation:
+
+> `!` tolvi CLI not on PATH. Reading the vault directly, which works but skips
+> semantic retrieval and costs one shell call per step. Fix: `tolvi doctor`,
+> or install with `go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest`
+> and add `$(go env GOPATH)/bin` to your PATH.
+
+**Once per conversation means once.** If you have already reported this in the current conversation, do not repeat it — later commands in the same session stay quiet. You know what you have already said; no marker file is needed. A user who has chosen not to install the CLI should not be told four times in one session, because a warning repeated that often stops being read.
+
+Never silently degrade. The fallback path is legitimate and produces real answers, but the user has to learn once that they are on it, or a broken install looks identical to a working one.
+<!-- PREFLIGHT:END -->
+
 If the `tolvi` CLI is available, run `tolvi recall` and present its output. That is one invocation and the preferred path — prefer it whenever the binary exists.
 
 Otherwise read the vault directly, using the commands below **verbatim**. They are loop-free on purpose: a `for f in *.md; do ... done` loop is not prefix-matchable by Claude Code's permission system, so every loop raises a permission prompt on every recall. Each command here is a single invocation covered by an ordinary `Bash(rg:*)` / `Bash(ls:*)` allow rule. Do not "simplify" them back into a loop.
