@@ -17,7 +17,7 @@ func healthVault(t *testing.T, files map[string]string) string {
 			t.Fatal(err)
 		}
 	}
-	meta := `{"workspace":"t","embedding_model":"nomic-embed-text","schema_version":1}`
+	meta := `{"workspace":"t","embedding_model":"nomic-embed-text","schema_version":2}`
 	if err := os.WriteFile(filepath.Join(v, ".vault-meta.json"), []byte(meta), 0o644); err != nil {
 		t.Fatal(err)
 	}

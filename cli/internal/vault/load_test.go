@@ -23,7 +23,7 @@ func TestLoadAll_HappyPath(t *testing.T) {
 	for _, d := range []string{"decisions", "sessions", "patterns"} {
 		_ = os.MkdirAll(filepath.Join(vault, d), 0o755)
 	}
-	if err := WriteMeta(vault, Meta{Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: 1}); err != nil {
+	if err := WriteMeta(vault, Meta{Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: SupportedSchemaVersion}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -54,7 +54,7 @@ func TestLoadAll_SortOrder(t *testing.T) {
 	for _, d := range []string{"decisions", "sessions", "patterns"} {
 		_ = os.MkdirAll(filepath.Join(vault, d), 0o755)
 	}
-	_ = WriteMeta(vault, Meta{Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: 1})
+	_ = WriteMeta(vault, Meta{Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: SupportedSchemaVersion})
 
 	seedDoc(t, filepath.Join(vault, "sessions", "2026-04-12.md"),
 		"tags: [session]\ndate: 2026-04-12\nstatus: active\n", "body\n")
@@ -81,7 +81,7 @@ func TestLoadAll_SortOrder(t *testing.T) {
 func TestLoadAll_PerFileErrorSkips(t *testing.T) {
 	vault := t.TempDir()
 	_ = os.MkdirAll(filepath.Join(vault, "decisions"), 0o755)
-	_ = WriteMeta(vault, Meta{Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: 1})
+	_ = WriteMeta(vault, Meta{Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: SupportedSchemaVersion})
 
 	// One valid, one malformed.
 	seedDoc(t, filepath.Join(vault, "decisions", "2026-04-12-good.md"),

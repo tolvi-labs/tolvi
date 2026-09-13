@@ -29,6 +29,9 @@ jobs:
       - name: Validate sample vault against schemas
         run: npm run validate:schemas
 
+      - name: Schema copy parity
+        run: npm run validate:schema-parity
+
       - name: Brand-isolation guard
         run: npm run validate:brand
         env:
@@ -36,6 +39,9 @@ jobs:
 
       - name: Claude Code skill install smoke test
         run: bash .github/scripts/test-install-claude-code-skill.sh
+
+      - name: Claude Code hook merge idempotency
+        run: bash .github/scripts/test-install-hook-idempotency.sh
 
       - name: Link checker
         uses: lycheeverse/lychee-action@v2

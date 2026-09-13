@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -80,7 +79,7 @@ func TestIntegration_Ask_StreamsAnswerAndPrintsSources(t *testing.T) {
 	// 4. tolvi ask, pointed at the stub.
 	ask := exec.Command(bin, "ask", "why postgres")
 	ask.Dir = work
-	ask.Env = append(os.Environ(),
+	ask.Env = append(isolatedEnv(t),
 		"ANTHROPIC_API_KEY=sk-ant-stub",
 		"ANTHROPIC_BASE_URL="+stub.URL,
 	)
@@ -127,7 +126,7 @@ func TestIntegration_Ask_UnverifiedCitationFlagged(t *testing.T) {
 
 	ask := exec.Command(bin, "ask", "anything")
 	ask.Dir = work
-	ask.Env = append(os.Environ(),
+	ask.Env = append(isolatedEnv(t),
 		"ANTHROPIC_API_KEY=sk-ant-stub",
 		"ANTHROPIC_BASE_URL="+stub.URL,
 	)

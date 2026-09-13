@@ -48,8 +48,26 @@ func TestHasSessionNote(t *testing.T) {
 	}
 }
 
-func TestSessionNotePath_Local(t *testing.T) {
-	got, err := sessionNotePath("/repo/vault", vault.Meta{Workspace: "w"}, "2026-07-25")
+// chainForTest builds a chain directly, without touching the filesystem.
+func chainForTest(t *testing.T, id vault.Identity, repoVault, rootsJSON string) vault.Chain {
+	t.Helper()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "roots.json")
+	if rootsJSON != "" {
+		if err := os.WriteFile(path, []byte(rootsJSON), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r, err := vault.LoadRoots(path)
+	if err != nil {
+		t.Fatalf("LoadRoots: %v", err)
+	}
+	return r.Chain(id, repoVault)
+}
+
+func TestSessionNotePath_SingleRootMode(t *testing.T) {
+	c := chainForTest(t, vault.Identity{Workspace: "w", Repo: "w"}, "/repo/vault", "")
+	got, err := sessionNotePath(c, "2026-07-25")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -59,9 +77,10 @@ func TestSessionNotePath_Local(t *testing.T) {
 	}
 }
 
-func TestSessionNotePath_Public(t *testing.T) {
-	m := vault.Meta{Workspace: "acme", Visibility: "public", PrivateVault: "/other/vault"}
-	got, err := sessionNotePath("/repo/vault", m, "2026-07-25")
+func TestSessionNotePath_Routed(t *testing.T) {
+	c := chainForTest(t, vault.Identity{Workspace: "acme-org", Repo: "acme"}, "/repo/vault",
+		`{"roots":[{"role":"org","workspace":"acme-org","path":"/other/vault"}]}`)
+	got, err := sessionNotePath(c, "2026-07-25")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -71,18 +90,19 @@ func TestSessionNotePath_Public(t *testing.T) {
 	}
 }
 
-func TestSessionNotePath_PublicNoPrivateVault_Errors(t *testing.T) {
-	m := vault.Meta{Workspace: "acme", Visibility: "public"}
-	if _, err := sessionNotePath("/repo/vault", m, "2026-07-25"); err == nil {
-		t.Fatal("expected error when public but private_vault unset")
+func TestSessionNotePath_DeclaredRootsWithoutAPrivateRoot_Errors(t *testing.T) {
+	c := chainForTest(t, vault.Identity{Workspace: "acme-org", Repo: "acme"}, "/repo/vault",
+		`{"roots":[{"role":"org","workspace":"someone-else","path":"/elsewhere"}]}`)
+	if _, err := sessionNotePath(c, "2026-07-25"); err == nil {
+		t.Fatal("expected an error when no private root is declared for this workspace")
 	}
 }
 
-// TestRunCommit_PublicGate_LooksInPrivateVault verifies that under public
-// visibility the gate checks the private vault (workspace-suffixed name),
-// not the local vault. A note placed only in the public vault must NOT
-// satisfy the gate.
-func TestRunCommit_PublicGate_LooksInPrivateVault(t *testing.T) {
+// TestRunCommit_RoutedGate_LooksInTheOrgRoot verifies that when a workspace
+// declares an org root the gate checks there, under the repo-suffixed name,
+// rather than in the repo's own vault. A note placed only in the repo vault
+// must NOT satisfy the gate.
+func TestRunCommit_RoutedGate_LooksInTheOrgRoot(t *testing.T) {
 	root := t.TempDir()
 	pub := filepath.Join(root, "public", "vault")
 	priv := filepath.Join(root, "private", "vault")
@@ -91,12 +111,14 @@ func TestRunCommit_PublicGate_LooksInPrivateVault(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "config"))
 	if err := vault.WriteMeta(pub, vault.Meta{
-		Workspace: "acme", EmbeddingModel: "nomic-embed-text", SchemaVersion: 1,
-		Visibility: "public", PrivateVault: priv,
+		Workspace: "acme", Repo: "acme", EmbeddingModel: "nomic-embed-text",
+		SchemaVersion: vault.SupportedSchemaVersion,
 	}); err != nil {
 		t.Fatal(err)
 	}
+	declareRawRoots(t, `{"roots":[{"role":"org","workspace":"acme","path":"`+priv+`"}]}`)
 
 	const today = "2026-07-25"
 	noteBody := "---\ntags: [session]\ndate: " + today + "\nstatus: active\n---\n\n## [10:00] Session — x\n"

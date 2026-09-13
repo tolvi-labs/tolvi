@@ -60,8 +60,15 @@ func TestRunInit_WorkspaceDefaultFromGit(t *testing.T) {
 		t.Fatalf("RunInit: %v", err)
 	}
 	data, _ := os.ReadFile(filepath.Join(dir, "vault", ".vault-meta.json"))
-	if !bytes.Contains(data, []byte(`"workspace": "example-repo"`)) {
-		t.Errorf("workspace default not derived from git: %s", data)
+	// v2 splits the origin URL: the org segment is the workspace (the
+	// container the server keys isolation on) and the repo segment is the
+	// member. Writing the repo name into workspace is what left 25 vaults
+	// disagreeing about which field means what.
+	if !bytes.Contains(data, []byte(`"workspace": "tolvi-labs"`)) {
+		t.Errorf("workspace should be the org segment: %s", data)
+	}
+	if !bytes.Contains(data, []byte(`"repo": "example-repo"`)) {
+		t.Errorf("repo should be the repo segment: %s", data)
 	}
 }
 
@@ -75,7 +82,11 @@ func TestRunInit_WorkspaceFallbackToBasename(t *testing.T) {
 		t.Fatalf("RunInit: %v", err)
 	}
 	data, _ := os.ReadFile(filepath.Join(dir, "vault", ".vault-meta.json"))
+	// With no remote there is no org to name, so the directory serves as both.
 	if !bytes.Contains(data, []byte(`"workspace": "my-folder-name"`)) {
 		t.Errorf("workspace fallback to basename failed: %s", data)
+	}
+	if !bytes.Contains(data, []byte(`"repo": "my-folder-name"`)) {
+		t.Errorf("repo fallback to basename failed: %s", data)
 	}
 }

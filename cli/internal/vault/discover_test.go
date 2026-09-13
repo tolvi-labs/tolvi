@@ -13,7 +13,7 @@ func mkVault(t *testing.T, dir string) string {
 	if err := os.MkdirAll(vaultDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := WriteMeta(vaultDir, Meta{Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: 1}); err != nil {
+	if err := WriteMeta(vaultDir, Meta{Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: SupportedSchemaVersion}); err != nil {
 		t.Fatal(err)
 	}
 	return vaultDir

@@ -2,8 +2,10 @@ package cli
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -36,14 +38,37 @@ func fakeEditor(body string) func(string) error {
 func mkVaultForTest(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
+	// Isolate from the developer's real ~/.config/tolvi/roots.json: an empty
+	// config dir is single-root mode, which is what an unrouted vault means.
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "config"))
 	vaultDir := filepath.Join(root, "vault")
 	for _, sub := range []string{"decisions", "sessions", "patterns"} {
 		_ = os.MkdirAll(filepath.Join(vaultDir, sub), 0o755)
 	}
 	_ = vault.WriteMeta(vaultDir, vault.Meta{
-		Workspace: "test", EmbeddingModel: "nomic-embed-text", SchemaVersion: 1,
+		Workspace: "test", Repo: "test", EmbeddingModel: "nomic-embed-text",
+		SchemaVersion: vault.SupportedSchemaVersion,
 	})
 	return vaultDir
+}
+
+// declareRoots declares an org root for workspace "test" in the config dir the
+// current test is isolated to.
+func declareRoots(t *testing.T, path string) {
+	t.Helper()
+	declareRawRoots(t, `{"roots":[{"role":"org","workspace":"test","path":"`+path+`"}]}`)
+}
+
+// declareRawRoots writes roots.json verbatim, for malformed-config cases.
+func declareRawRoots(t *testing.T, body string) {
+	t.Helper()
+	dir := filepath.Join(os.Getenv("XDG_CONFIG_HOME"), "tolvi")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, vault.RootsConfigFileName), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestRunSync_DecisionHappyPath(t *testing.T) {
@@ -97,12 +122,12 @@ func TestRunSync_RefusesOverwrite(t *testing.T) {
 	}
 }
 
-// mkPublicVaultForTest creates a public vault whose meta declares
-// visibility=public and points private_vault at a sibling private vault.
-// Returns (publicVault, privateVault).
-func mkPublicVaultForTest(t *testing.T, workspace string) (string, string) {
+// mkPublicVaultForTest creates a repo vault whose workspace declares an org
+// root at a sibling private vault. Returns (repoVault, orgRoot).
+func mkPublicVaultForTest(t *testing.T, name string) (string, string) {
 	t.Helper()
 	root := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "config"))
 	pub := filepath.Join(root, "public", "vault")
 	priv := filepath.Join(root, "private", "vault")
 	for _, base := range []string{pub, priv} {
@@ -111,13 +136,14 @@ func mkPublicVaultForTest(t *testing.T, workspace string) (string, string) {
 		}
 	}
 	_ = vault.WriteMeta(pub, vault.Meta{
-		Workspace: workspace, EmbeddingModel: "nomic-embed-text", SchemaVersion: 1,
-		Visibility: "public", PrivateVault: priv,
+		Workspace: name, Repo: name, EmbeddingModel: "nomic-embed-text",
+		SchemaVersion: vault.SupportedSchemaVersion,
 	})
+	declareRawRoots(t, `{"roots":[{"role":"org","workspace":"`+name+`","path":"`+priv+`"}]}`)
 	return pub, priv
 }
 
-func TestRunSync_PublicSession_RoutesToPrivateWithWorkspaceName(t *testing.T) {
+func TestRunSync_RoutedSession_LandsInTheOrgRootUnderTheRepoName(t *testing.T) {
 	pub, priv := mkPublicVaultForTest(t, "acme")
 	var out bytes.Buffer
 	err := RunSync(SyncOpts{
@@ -189,24 +215,31 @@ func TestRunSync_PublicPrivateDecision_RoutesToPrivate(t *testing.T) {
 	}
 }
 
-func TestRunSync_ForcePublic_NoPrivateVault_Errors(t *testing.T) {
-	vaultDir := mkVaultForTest(t) // plain local vault, no private_vault
+func TestRunSync_DeclaredRootsWithoutAPrivateRoot_Errors(t *testing.T) {
+	vaultDir := mkVaultForTest(t)
+	// Config exists but declares nothing for this workspace. That is a
+	// misconfiguration, not a contributor, so the session must be refused
+	// rather than written into the repo's public vault.
+	declareRawRoots(t, `{"roots":[{"role":"org","workspace":"someone-else","path":"/elsewhere"}]}`)
+
 	var out bytes.Buffer
 	err := RunSync(SyncOpts{
-		VaultPath:   vaultDir,
-		DocType:     "session",
-		Date:        time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC),
-		BodyFlag:    "## [10:00] Session\n",
-		ForcePublic: true,
-		Stdout:      &out,
+		VaultPath: vaultDir,
+		DocType:   "session",
+		Date:      time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC),
+		BodyFlag:  "## [10:00] Session\n",
+		Stdout:    &out,
 	})
 	if err == nil {
-		t.Fatal("expected error: forced-public with no private_vault configured")
+		t.Fatal("expected a refusal: declared roots with no private root for this workspace")
+	}
+	if _, statErr := os.Stat(filepath.Join(vaultDir, "sessions", "2026-07-25.md")); statErr == nil {
+		t.Error("refused session must not have been written to the repo vault")
 	}
 }
 
-func TestRunSync_ForcePublic_WithPrivateVaultFlag_Routes(t *testing.T) {
-	vaultDir := mkVaultForTest(t) // workspace "test", no visibility set
+func TestRunSync_PrivateVaultFlagOverridesTheChain(t *testing.T) {
+	vaultDir := mkVaultForTest(t)
 	priv := t.TempDir()
 	var out bytes.Buffer
 	err := RunSync(SyncOpts{
@@ -214,7 +247,6 @@ func TestRunSync_ForcePublic_WithPrivateVaultFlag_Routes(t *testing.T) {
 		DocType:      "session",
 		Date:         time.Date(2026, 7, 25, 0, 0, 0, 0, time.UTC),
 		BodyFlag:     "## [10:00] Session\n",
-		ForcePublic:  true,
 		PrivateVault: priv,
 		Stdout:       &out,
 	})
@@ -222,7 +254,7 @@ func TestRunSync_ForcePublic_WithPrivateVaultFlag_Routes(t *testing.T) {
 		t.Fatalf("RunSync: %v", err)
 	}
 	if _, err := os.ReadFile(filepath.Join(priv, "sessions", "2026-07-25-test.md")); err != nil {
-		t.Fatalf("forced-public session should route to --private-vault: %v", err)
+		t.Fatalf("session should route to --private-vault: %v", err)
 	}
 }
 
@@ -244,5 +276,55 @@ func TestRunSync_BodyFlag(t *testing.T) {
 	data, _ := os.ReadFile(created)
 	if !bytes.Contains(data, []byte("body from flag")) {
 		t.Errorf("body flag not honored: %s", data)
+	}
+}
+
+// TestAppendSessionBlock_ConcurrentAppendsKeepEveryBlock pins the fix for a
+// real loss: a routed session note is a shared append target across concurrent
+// sessions, and a read-modify-write of the whole file drops whatever another
+// session added between the read and the write.
+func TestAppendSessionBlock_ConcurrentAppendsKeepEveryBlock(t *testing.T) {
+	vaultDir := mkVaultForTest(t)
+	day := time.Date(2026, 9, 12, 10, 0, 0, 0, time.UTC)
+
+	// Seed the file so every goroutine takes the append path, not the create one.
+	if err := RunSync(SyncOpts{
+		VaultPath: vaultDir, DocType: "session", Date: day,
+		BodyFlag: "## [09:00] Session — seed\n", Stdout: &bytes.Buffer{},
+	}); err != nil {
+		t.Fatalf("seed RunSync: %v", err)
+	}
+
+	const n = 8
+	var wg sync.WaitGroup
+	errs := make(chan error, n)
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			errs <- RunSync(SyncOpts{
+				VaultPath: vaultDir, DocType: "session", Date: day,
+				BodyFlag: fmt.Sprintf("## [1%d:00] Session — block %d\n", i, i),
+				Stdout:   &bytes.Buffer{},
+			})
+		}(i)
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatalf("concurrent RunSync: %v", err)
+		}
+	}
+
+	data, err := os.ReadFile(filepath.Join(vaultDir, "sessions", "2026-09-12.md"))
+	if err != nil {
+		t.Fatalf("read session note: %v", err)
+	}
+	for i := 0; i < n; i++ {
+		want := fmt.Sprintf("block %d", i)
+		if !bytes.Contains(data, []byte(want)) {
+			t.Errorf("%q was dropped by a concurrent append:\n%s", want, data)
+		}
 	}
 }

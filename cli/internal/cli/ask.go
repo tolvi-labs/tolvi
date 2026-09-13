@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/tolvi-labs/tolvi/cli/internal/citations"
@@ -70,14 +71,29 @@ func RunAsk(opts AskOpts) error {
 
 	docs := opts.Docs
 	if docs == nil {
-		loaded, errs, err := vault.LoadAll(opts.VaultPath)
+		roots, err := askReadRoots(opts.VaultPath)
 		if err != nil {
 			return err
 		}
-		for _, e := range errs {
-			fmt.Fprintf(opts.Stderr, "warn: skipped invalid doc: %v\n", e)
+		for _, root := range roots {
+			loaded, errs, err := vault.LoadAll(root.Path)
+			if err != nil {
+				if root.Role == vault.RoleRepo {
+					return err
+				}
+				// A declared root that is not readable narrows the corpus
+				// rather than failing the query, but never silently.
+				fmt.Fprintf(opts.Stderr, "warn: skipped %s root %s: %v\n", root.Role, root.Path, err)
+				continue
+			}
+			for _, e := range errs {
+				fmt.Fprintf(opts.Stderr, "warn: skipped invalid doc: %v\n", e)
+			}
+			docs = append(docs, loaded...)
 		}
-		docs = loaded
+		if narrowed := askNarrowedFrom(opts.VaultPath, roots); narrowed != "" {
+			fmt.Fprintf(opts.Stderr, "note: answering from %s. %s\n", askScopeLabel(roots), narrowed)
+		}
 	}
 
 	systemPrompt := llm.AssemblePrompt(llm.AssembleOpts{
@@ -138,6 +154,64 @@ func RunAsk(opts AskOpts) error {
 	}
 	printSourcesFooter(opts.Stdout, matched, unmatched, docBySlug)
 	return nil
+}
+
+// askReadRoots is the corpus ask reads: the repo root plus its product root,
+// never the whole chain. Reading the org root would pull every repo's history
+// into a paid query and blow the context budget the local CAG arm depends on,
+// so wider corpora stay opt-in.
+func askReadRoots(vaultPath string) ([]vault.Root, error) {
+	meta, err := vault.ReadMeta(vaultPath)
+	if err != nil {
+		return nil, err
+	}
+	chain, err := vault.ChainFor(meta, vaultPath)
+	if err != nil {
+		return nil, err
+	}
+	var out []vault.Root
+	for _, r := range chain.ReadRoots() {
+		if r.Role == vault.RoleRepo || r.Role == vault.RoleProduct {
+			out = append(out, r)
+		}
+	}
+	return out, nil
+}
+
+// askScopeLabel names the roots an answer was drawn from.
+func askScopeLabel(roots []vault.Root) string {
+	parts := make([]string, 0, len(roots))
+	for _, r := range roots {
+		parts = append(parts, string(r.Role))
+	}
+	return strings.Join(parts, " + ")
+}
+
+// askNarrowedFrom reports what the chain holds that the answer did not read,
+// so a miss caused by the narrowing is visible rather than mysterious.
+func askNarrowedFrom(vaultPath string, read []vault.Root) string {
+	meta, err := vault.ReadMeta(vaultPath)
+	if err != nil {
+		return ""
+	}
+	chain, err := vault.ChainFor(meta, vaultPath)
+	if err != nil {
+		return ""
+	}
+	seen := make(map[string]bool, len(read))
+	for _, r := range read {
+		seen[r.Path] = true
+	}
+	var skipped []string
+	for _, r := range chain.ReadRoots() {
+		if !seen[r.Path] {
+			skipped = append(skipped, string(r.Role))
+		}
+	}
+	if len(skipped) == 0 {
+		return ""
+	}
+	return "Not searched: " + strings.Join(skipped, ", ") + "."
 }
 
 func printSourcesFooter(w io.Writer, matched, unmatched []string, docBySlug map[string]vault.Doc) {

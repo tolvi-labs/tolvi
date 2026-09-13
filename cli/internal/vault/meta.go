@@ -9,28 +9,35 @@ import (
 	"path/filepath"
 )
 
-// SupportedSchemaVersion is the only tolvi-format-v1 schema version this
-// CLI understands. A vault tagged with a different version is rejected
-// at read time with a clear "this CLI is too old/new" message.
-const SupportedSchemaVersion = 1
+// SupportedSchemaVersion is the only vault format version this CLI
+// understands. A vault tagged with a different version is rejected at read
+// time with a clear "this CLI is too old/new" message.
+//
+// v2 replaced the two-root routing fields with identity: a vault says who it
+// is, and ~/.config/tolvi/roots.json says where the roots are.
+const SupportedSchemaVersion = 2
 
 // Meta is the marshalled form of <vault>/.vault-meta.json.
 //
 // Fields are emitted in this struct order; ReadMeta validates required
 // fields are present and that SchemaVersion matches SupportedSchemaVersion.
 type Meta struct {
-	Workspace      string `json:"workspace"`
+	// Workspace is the container this vault belongs to, and the unit the
+	// server keys multi-tenant isolation on.
+	Workspace string `json:"workspace"`
+	// Repo is the member within that workspace. Optional: a container vault
+	// serves a whole workspace and names no repo.
+	Repo string `json:"repo,omitempty"`
+	// Product names a group of repos that genuinely share a brain. Optional,
+	// and declared only where such a group exists.
+	Product        string `json:"product,omitempty"`
 	EmbeddingModel string `json:"embedding_model"`
 	SchemaVersion  int    `json:"schema_version"`
+}
 
-	// Visibility, when "public", enables public/private routing (see
-	// ResolveDocDestination). Empty or any other value keeps the current
-	// local-only behavior. Optional; older vaults omit it.
-	Visibility string `json:"visibility,omitempty"`
-	// PrivateVault is the path to the private vault root that internal
-	// content routes to when Visibility=="public". May be relative to the
-	// public vault dir or absolute. Only consulted when Visibility=="public".
-	PrivateVault string `json:"private_vault,omitempty"`
+// Identity returns the parts of a meta that resolve a chain of roots.
+func (m Meta) Identity() Identity {
+	return Identity{Workspace: m.Workspace, Repo: m.Repo, Product: m.Product}
 }
 
 // ReadMeta parses <vaultPath>/.vault-meta.json.
@@ -52,12 +59,9 @@ func ReadMeta(vaultPath string) (Meta, error) {
 	}
 	if m.SchemaVersion != SupportedSchemaVersion {
 		return Meta{}, fmt.Errorf(
-			"%s: schema_version is %d but this CLI only supports %d — upgrade the CLI or migrate the vault",
-			path, m.SchemaVersion, SupportedSchemaVersion,
+			"%s: schema_version is %d but this CLI only supports %d — upgrade the CLI, or migrate the vault by replacing visibility/private_vault with repo and declaring the roots in %s",
+			path, m.SchemaVersion, SupportedSchemaVersion, RootsConfigFileName,
 		)
-	}
-	if err := applyLocalRouting(vaultPath, &m); err != nil {
-		return Meta{}, err
 	}
 	return m, nil
 }
@@ -81,43 +85,4 @@ func WriteMeta(vaultPath string, m Meta) error {
 	data = append(data, '\n')
 	path := filepath.Join(vaultPath, ".vault-meta.json")
 	return os.WriteFile(path, data, 0o644)
-}
-
-// RoutingConfigFileName is the machine-local, git-ignored routing config that
-// an internal-dev checkout of a public repo carries. It exists so the private
-// vault path never has to land in the committed .vault-meta.json.
-const RoutingConfigFileName = ".vault-routing.local.json"
-
-// routingConfig is the marshalled form of <vault>/.vault-routing.local.json.
-type routingConfig struct {
-	PrivateVault string `json:"private_vault"`
-}
-
-// applyLocalRouting overlays <vaultPath>/.vault-routing.local.json onto m.
-//
-// The file's presence is itself the marker that a vault is public, so it sets
-// both PrivateVault and Visibility, and a machine-local override wins over
-// whatever .vault-meta.json says. A malformed file, or one missing
-// private_vault, is a hard error rather than a silent no-op: ignoring it would
-// write session notes into the very public repo the config exists to keep them
-// out of.
-func applyLocalRouting(vaultPath string, m *Meta) error {
-	path := filepath.Join(vaultPath, RoutingConfigFileName)
-	data, err := os.ReadFile(path)
-	if os.IsNotExist(err) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("read %s: %w", path, err)
-	}
-	var cfg routingConfig
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return fmt.Errorf("parse %s: %w", path, err)
-	}
-	if cfg.PrivateVault == "" {
-		return fmt.Errorf("%s: private_vault field is required", path)
-	}
-	m.Visibility = "public"
-	m.PrivateVault = cfg.PrivateVault
-	return nil
 }

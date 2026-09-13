@@ -31,7 +31,7 @@ func TestIntegration_Commit_GateThenCommit(t *testing.T) {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
 
-	gitEnv := append(os.Environ(),
+	gitEnv := append(isolatedEnv(t),
 		"GIT_AUTHOR_NAME=test", "GIT_AUTHOR_EMAIL=test@test",
 		"GIT_COMMITTER_NAME=test", "GIT_COMMITTER_EMAIL=test@test",
 	)

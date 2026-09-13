@@ -55,8 +55,6 @@ var (
 	syncNoEditFlag       bool
 	syncPrintFlag        bool
 	syncVaultFlag        string
-	syncOpenSourceFlag   bool
-	syncOSFlag           bool
 	syncPrivateFlag      bool
 	syncPrivateVaultFlag string
 )
@@ -97,7 +95,6 @@ var syncCmd = &cobra.Command{
 			NoEdit:        syncNoEditFlag,
 			PrintPath:     syncPrintFlag,
 			DocVisibility: docVisibility,
-			ForcePublic:   syncOpenSourceFlag || syncOSFlag,
 			PrivateVault:  syncPrivateVaultFlag,
 			Stdout:        os.Stdout,
 		})
@@ -235,8 +232,6 @@ suitable for piping from a hooks/session-recall.sh script.`,
 var (
 	commitMessageFlag      string
 	commitVaultFlag        string
-	commitOpenSourceFlag   bool
-	commitOSFlag           bool
 	commitPrivateVaultFlag string
 )
 
@@ -276,7 +271,6 @@ If no session note exists for today, commit refuses and points you at
 			RepoRoot:     repoRoot,
 			VaultPath:    vaultPath,
 			Message:      commitMessageFlag,
-			ForcePublic:  commitOpenSourceFlag || commitOSFlag,
 			PrivateVault: commitPrivateVaultFlag,
 			Stdin:        os.Stdin,
 			Stdout:       os.Stdout,
@@ -442,10 +436,8 @@ func init() {
 	syncCmd.Flags().BoolVar(&syncNoEditFlag, "no-edit", false, "write skeleton-only file (no $EDITOR)")
 	syncCmd.Flags().BoolVar(&syncPrintFlag, "print-path", false, "print only the resulting path on stdout")
 	syncCmd.Flags().StringVar(&syncVaultFlag, "vault", "", "path to vault dir (default: walk up)")
-	syncCmd.Flags().BoolVar(&syncOpenSourceFlag, "open-source", false, "force public-vault routing (sessions + private docs go to the configured private_vault)")
-	syncCmd.Flags().BoolVar(&syncOSFlag, "OS", false, "alias for --open-source")
 	syncCmd.Flags().BoolVar(&syncPrivateFlag, "private", false, "mark this decision/pattern as private (routes to the private vault under public visibility)")
-	syncCmd.Flags().StringVar(&syncPrivateVaultFlag, "private-vault", "", "path to the private vault (overrides .vault-meta.json private_vault)")
+	syncCmd.Flags().StringVar(&syncPrivateVaultFlag, "private-vault", "", "path to the private vault (overrides the org root declared in roots.json)")
 
 	askCmd.Flags().StringVar(&askVaultFlag, "vault", "", "path to vault dir (default: walk up)")
 	askCmd.Flags().StringVar(&askModelFlag, "model", "", "override the configured Anthropic model")
@@ -463,9 +455,7 @@ func init() {
 
 	commitCmd.Flags().StringVarP(&commitMessageFlag, "message", "m", "", "commit message (if omitted, git opens $EDITOR)")
 	commitCmd.Flags().StringVar(&commitVaultFlag, "vault", "", "path to vault dir (default: walk up)")
-	commitCmd.Flags().BoolVar(&commitOpenSourceFlag, "open-source", false, "public vault: gate on today's session note in the configured private_vault")
-	commitCmd.Flags().BoolVar(&commitOSFlag, "OS", false, "alias for --open-source")
-	commitCmd.Flags().StringVar(&commitPrivateVaultFlag, "private-vault", "", "path to the private vault (overrides .vault-meta.json private_vault)")
+	commitCmd.Flags().StringVar(&commitPrivateVaultFlag, "private-vault", "", "path to the private vault (overrides the org root declared in roots.json)")
 
 	precommitInstallCmd.Flags().BoolVar(&precommitForceFlag, "force", false, "overwrite an existing non-tolvi hook")
 	precommitInstallCmd.Flags().BoolVar(&precommitAppendFlag, "append", false, "append tolvi check to an existing hook instead of overwriting")
