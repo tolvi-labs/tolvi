@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/tolvi-labs/tolvi/cli/internal/vault"
 )
 
 // writeVaultFile is a helper to create vault docs for recall tests.
@@ -206,25 +204,25 @@ func TestRunRecall_HookJSON_MaxBytesApplied(t *testing.T) {
 	}
 }
 
-// ── routed (public/private) vaults ────────────────────────────────────────
+// ── routed vaults ─────────────────────────────────────────────────────────
 //
-// On a repo with vault/.vault-routing.local.json, sync writes session notes
-// to the private vault, so recall has to read them from there or it reports a
-// stale local note as the latest session. The private vault is shared by every
-// repo in the org, so recall must also filter to this workspace's own content.
+// When a workspace declares an org root, sync writes session notes there, so
+// recall has to read them from there or it reports a stale local note as the
+// latest session. An org root is shared by every repo in the workspace, so
+// recall must also filter to this repo's own content.
 
-// mkRoutedVaultForTest returns a public vault carrying a routing config that
-// points at a fresh private vault, plus that private vault's path.
+// mkRoutedVaultForTest returns a repo vault whose workspace declares an org
+// root, plus that root's path.
 func mkRoutedVaultForTest(t *testing.T) (string, string) {
 	t.Helper()
 	pub := mkVaultForTest(t)
-	priv := filepath.Join(t.TempDir(), "private-vault")
+	priv := filepath.Join(t.TempDir(), "org-root")
 	for _, sub := range []string{"decisions", "sessions"} {
 		if err := os.MkdirAll(filepath.Join(priv, sub), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
-	writeVaultFile(t, pub, vault.RoutingConfigFileName, `{"private_vault": "`+priv+`"}`)
+	declareRoots(t, priv)
 	return pub, priv
 }
 
@@ -254,12 +252,12 @@ func TestRunRecall_RoutedVault_PrefersPrivateSession(t *testing.T) {
 	}
 }
 
-func TestRunRecall_RoutedVault_IgnoresOtherWorkspaces(t *testing.T) {
+func TestRunRecall_RoutedVault_IgnoresOtherRepos(t *testing.T) {
 	pub, priv := mkRoutedVaultForTest(t)
 	writeVaultFile(t, priv, "sessions/2026-09-12-test.md", sessionDoc("our note"))
-	// Newer, but belongs to a sibling repo sharing the private vault.
+	// Newer, but belongs to a sibling repo sharing the org root.
 	writeVaultFile(t, priv, "sessions/2026-09-13-canary.md", sessionDoc("sibling repo note"))
-	// Newer still, and the private vault's own host repo.
+	// Newer still, and the org root's own host repo.
 	writeVaultFile(t, priv, "sessions/2026-09-14.md", sessionDoc("host repo note"))
 
 	var out bytes.Buffer
@@ -268,10 +266,10 @@ func TestRunRecall_RoutedVault_IgnoresOtherWorkspaces(t *testing.T) {
 	}
 	got := out.String()
 	if !strings.Contains(got, "Last session:     2026-09-12 — our note") {
-		t.Errorf("own workspace session not latest: %s", got)
+		t.Errorf("own repo session not latest: %s", got)
 	}
 	if strings.Contains(got, "sibling repo note") || strings.Contains(got, "host repo note") {
-		t.Errorf("leaked another workspace's session: %s", got)
+		t.Errorf("leaked another repo's session: %s", got)
 	}
 }
 
@@ -302,9 +300,9 @@ func TestRunRecall_RoutedVault_MergesDecisionsForThisRepo(t *testing.T) {
 	}
 }
 
-func TestRunRecall_BrokenRoutingConfig_FallsBackToLocal(t *testing.T) {
+func TestRunRecall_BrokenRootsConfig_FallsBackToLocal(t *testing.T) {
 	pub := mkVaultForTest(t)
-	writeVaultFile(t, pub, vault.RoutingConfigFileName, `{"private_vault":`)
+	declareRawRoots(t, `{"roots":[`)
 	writeVaultFile(t, pub, "sessions/2026-06-07.md", sessionDoc("local note"))
 
 	var out bytes.Buffer
@@ -313,5 +311,55 @@ func TestRunRecall_BrokenRoutingConfig_FallsBackToLocal(t *testing.T) {
 	}
 	if got := out.String(); !strings.Contains(got, "2026-06-07 — local note") {
 		t.Errorf("expected local-only fallback: %s", got)
+	}
+}
+
+// TestRecallExtractSessionHeading_TakesLatestTime pins the other half of the
+// concurrency fix. Blocks land in whatever order concurrent sessions append
+// them — a real [16:40] block landed between [10:46] and [11:32] — so "the
+// last heading in the file" is not "the latest session".
+func TestRecallExtractSessionHeading_TakesLatestTime(t *testing.T) {
+	content := []byte(
+		"## [10:46] Session — early\n\nbody\n\n" +
+			"## [16:40] Session — latest\n\nbody\n\n" +
+			"## [11:32] Session — middle, written last\n\nbody\n")
+
+	if got := recallExtractSessionHeading(content); got != "latest" {
+		t.Errorf("heading = %q, want %q (the latest time, not the last line)", got, "latest")
+	}
+}
+
+func TestRecallExtractSessionHeading_TiesTakeTheLastWritten(t *testing.T) {
+	content := []byte(
+		"## [10:00] Session — first\n\nbody\n\n" +
+			"## [10:00] Session — second\n\nbody\n")
+
+	if got := recallExtractSessionHeading(content); got != "second" {
+		t.Errorf("heading = %q, want %q", got, "second")
+	}
+}
+
+// TestRunRecall_HostRepoOfASharedRoot_IgnoresSiblingNotes covers the repo whose
+// own vault IS the org root. Deduping by path keeps the repo role, which reads
+// the directory unfiltered, so without an explicit rule that repo sees every
+// sibling's routed note as its own. A session belongs here only if it is
+// unsuffixed (written by the vault's host) or suffixed with this repo.
+func TestRunRecall_HostRepoOfASharedRoot_IgnoresSiblingNotes(t *testing.T) {
+	host := mkVaultForTest(t)
+	declareRoots(t, host) // the org root and the repo root are one directory
+
+	writeVaultFile(t, host, "sessions/2026-09-10.md", sessionDoc("host note"))
+	writeVaultFile(t, host, "sessions/2026-09-12-sibling.md", sessionDoc("sibling routed note"))
+
+	var out bytes.Buffer
+	if err := RunRecall(RecallOpts{VaultPath: host, Stdout: &out}); err != nil {
+		t.Fatalf("RunRecall: %v", err)
+	}
+	got := out.String()
+	if strings.Contains(got, "sibling routed note") {
+		t.Errorf("host repo surfaced a sibling's routed note as its own:\n%s", got)
+	}
+	if !strings.Contains(got, "host note") {
+		t.Errorf("host repo lost its own unsuffixed note:\n%s", got)
 	}
 }

@@ -23,10 +23,9 @@ type SyncOpts struct {
 	Status string // empty → "active"
 	Date   time.Time
 
-	// Public/private routing
+	// Routing
 	DocVisibility string // "private" marks a decision/pattern as internal; empty = default
-	ForcePublic   bool   // forces Visibility=="public" behavior (from --open-source/--OS)
-	PrivateVault  string // overrides meta.PrivateVault (from --private-vault)
+	PrivateVault  string // overrides the chain's private root (from --private-vault)
 
 	// Body capture (precedence: BodyFlag > StdinReader > editor)
 	BodyFlag    string
@@ -61,12 +60,12 @@ func RunSync(opts SyncOpts) error {
 	if err != nil {
 		return fmt.Errorf("read vault meta: %w", err)
 	}
-	// Flag overrides for public/private routing.
-	if opts.ForcePublic {
-		meta.Visibility = "public"
+	chain, err := vault.ChainFor(meta, opts.VaultPath)
+	if err != nil {
+		return err
 	}
 	if opts.PrivateVault != "" {
-		meta.PrivateVault = opts.PrivateVault
+		chain = chain.WithPrivateRoot(opts.PrivateVault)
 	}
 
 	if opts.Date.IsZero() {
@@ -85,19 +84,18 @@ func RunSync(opts SyncOpts) error {
 		slug = opts.Date.Format("2006-01-02")
 	}
 
-	// Resolve which vault root this doc belongs in (public vs. private).
-	destRoot, routedToPrivate, err := vault.ResolveDocDestination(opts.VaultPath, meta, opts.DocType, opts.DocVisibility)
+	// Ask the chain which root owns this doc.
+	target, err := chain.Target(opts.DocType, opts.DocVisibility)
 	if err != nil {
 		return err
 	}
 
 	dateStr := opts.Date.Format("2006-01-02")
 	relPath := PathForDoc(opts.DocType, slug, dateStr)
-	if opts.DocType == "session" && routedToPrivate {
-		// Routed sessions are workspace-suffixed to avoid cross-repo collisions.
-		relPath = filepath.ToSlash(filepath.Join("sessions", RoutedSessionFileName(dateStr, meta.Workspace)))
+	if opts.DocType == "session" {
+		relPath = filepath.ToSlash(filepath.Join("sessions", chain.SessionFileName(target, dateStr)))
 	}
-	absPath := filepath.Join(destRoot, relPath)
+	absPath := filepath.Join(target.Path, relPath)
 	if err := os.MkdirAll(filepath.Dir(absPath), 0o755); err != nil {
 		return fmt.Errorf("create %s: %w", filepath.Dir(absPath), err)
 	}
@@ -209,13 +207,26 @@ func atomicWriteFile(path string, data []byte) error {
 // existing frontmatter is preserved; a fresh session-block template
 // is captured via the same body-capture pipeline; the new block is
 // appended to the body with a blank line separator.
+// appendToFile appends data to an existing file in a single write against an
+// O_APPEND handle, so concurrent appenders cannot overwrite each other.
+func appendToFile(path string, data []byte) error {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
+}
+
 func appendSessionBlock(opts SyncOpts, path string) error {
 	existing, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("read existing session file: %w", err)
 	}
-	fm, body, err := format.ParseFrontmatter(existing)
-	if err != nil {
+	if _, _, err := format.ParseFrontmatter(existing); err != nil {
 		return fmt.Errorf("parse existing session file: %w", err)
 	}
 
@@ -240,20 +251,11 @@ func appendSessionBlock(opts SyncOpts, path string) error {
 		newBlock = captured
 	}
 
-	// Ensure separation between existing body and new block.
-	var merged []byte
-	merged = append(merged, body...)
-	if len(body) > 0 && body[len(body)-1] != '\n' {
-		merged = append(merged, '\n')
-	}
-	merged = append(merged, '\n')
-	merged = append(merged, newBlock...)
-
-	rendered, err := format.RenderDocument(fm, merged)
-	if err != nil {
-		return fmt.Errorf("render appended session: %w", err)
-	}
-	if err := atomicWriteFile(path, rendered); err != nil {
+	// Append in one O_APPEND write rather than rewriting the file. A routed
+	// session note is a shared target across concurrent sessions, and a
+	// read-modify-write drops whatever another session appended in between.
+	// Nothing here changes the frontmatter, so there is nothing to re-render.
+	if err := appendToFile(path, append([]byte{'\n'}, newBlock...)); err != nil {
 		return fmt.Errorf("write appended session: %w", err)
 	}
 	if opts.PrintPath {

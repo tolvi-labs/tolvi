@@ -10,6 +10,16 @@ import (
 
 // buildToTmp builds the tolvi binary into a t.TempDir and returns its path.
 // Shared by all integration tests in this package.
+// isolatedEnv returns the process environment with XDG_CONFIG_HOME pointed at
+// a temp dir, so a subprocess never reads the developer's real
+// ~/.config/tolvi/roots.json. Without it these tests pass or fail depending on
+// whose machine they run on: an absent roots.json is single-root mode, while a
+// real one declares roots that know nothing about a temp-dir workspace.
+func isolatedEnv(t *testing.T) []string {
+	t.Helper()
+	return append(os.Environ(), "XDG_CONFIG_HOME="+t.TempDir())
+}
+
 func buildToTmp(t *testing.T) string {
 	t.Helper()
 	bin := filepath.Join(t.TempDir(), "tolvi-it")
@@ -75,7 +85,7 @@ func TestIntegration_SyncWithFakeEditor(t *testing.T) {
 	// sync decision via $EDITOR stub
 	sync := exec.Command(bin, "sync", "decision", "Postgres choice")
 	sync.Dir = work
-	sync.Env = append(os.Environ(),
+	sync.Env = append(isolatedEnv(t),
 		"EDITOR="+editor,
 		"TOLVI_TEST_BODY=# Postgres\n\nthe editor stub wrote this body.\n",
 	)

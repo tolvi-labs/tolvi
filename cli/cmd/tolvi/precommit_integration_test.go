@@ -15,7 +15,7 @@ func runGit(t *testing.T, dir string, args ...string) []byte {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
 	// Suppress git's complaints about missing user.name / user.email in CI.
-	cmd.Env = append(os.Environ(),
+	cmd.Env = append(isolatedEnv(t),
 		"GIT_AUTHOR_NAME=test", "GIT_AUTHOR_EMAIL=test@test",
 		"GIT_COMMITTER_NAME=test", "GIT_COMMITTER_EMAIL=test@test",
 	)
@@ -156,7 +156,7 @@ func TestIntegration_Precommit_Check_QuietEnvSilences(t *testing.T) {
 	runGit(t, work, "add", "package.json")
 
 	cmd := exec.Command(bin, "precommit", "check", "--repo", work)
-	cmd.Env = append(os.Environ(), "TOLVI_PRECOMMIT_QUIET=1")
+	cmd.Env = append(isolatedEnv(t), "TOLVI_PRECOMMIT_QUIET=1")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("check quiet: %v\n%s", err, out)
@@ -206,7 +206,7 @@ func TestIntegration_Precommit_InstalledHookInvocation(t *testing.T) {
 	hookPath := filepath.Join(work, ".git", "hooks", "pre-commit")
 	hookCmd := exec.Command(hookPath)
 	hookCmd.Dir = work
-	hookCmd.Env = append(os.Environ(),
+	hookCmd.Env = append(isolatedEnv(t),
 		"PATH="+pathDir+":"+os.Getenv("PATH"),
 	)
 	out, err := hookCmd.CombinedOutput()

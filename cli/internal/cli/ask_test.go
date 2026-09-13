@@ -3,6 +3,8 @@ package cli
 import (
 	"bytes"
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -110,5 +112,51 @@ func TestRunAsk_GuardError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "too large") {
 		t.Errorf("error message lacks 'too large': %v", err)
+	}
+}
+
+// TestRunAsk_ReadsRepoAndProductNotTheWholeChain pins the CAG boundary. Reading
+// the whole chain would pull the org root's corpus into every paid query, which
+// is the premise cag-for-local-cli rests on. Repo plus product is the default,
+// and the answer says so when the corpus was narrower than the chain.
+func TestRunAsk_ReadsRepoAndProductNotTheWholeChain(t *testing.T) {
+	repo := mkVaultForTest(t)
+	product := filepath.Join(t.TempDir(), "product-root")
+	org := filepath.Join(t.TempDir(), "org-root")
+	for _, base := range []string{product, org} {
+		for _, sub := range []string{"decisions", "sessions", "patterns"} {
+			if err := os.MkdirAll(filepath.Join(base, sub), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	declareRawRoots(t, `{"roots":[
+		{"role":"product","product":"stack","path":"`+product+`"},
+		{"role":"org","workspace":"test","path":"`+org+`"}
+	]}`)
+	if err := vault.WriteMeta(repo, vault.Meta{
+		Workspace: "test", Repo: "test", Product: "stack",
+		EmbeddingModel: "nomic-embed-text", SchemaVersion: vault.SupportedSchemaVersion,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	writeVaultFile(t, repo, "decisions/2026-09-01-repo-doc.md", decisionDoc("test", "active", "Repo doc"))
+	writeVaultFile(t, product, "decisions/2026-09-02-product-doc.md", decisionDoc("test", "active", "Product doc"))
+	writeVaultFile(t, org, "decisions/2026-09-03-org-doc.md", decisionDoc("test", "active", "Org doc"))
+
+	roots, err := askReadRoots(repo)
+	if err != nil {
+		t.Fatalf("askReadRoots: %v", err)
+	}
+	got := map[string]bool{}
+	for _, r := range roots {
+		got[r.Path] = true
+	}
+	if !got[repo] || !got[product] {
+		t.Errorf("ask should read repo and product roots, got %v", roots)
+	}
+	if got[org] {
+		t.Errorf("ask must not read the org root by default, got %v", roots)
 	}
 }

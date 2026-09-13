@@ -85,14 +85,37 @@ func RunRecall(opts RecallOpts) error {
 	}
 }
 
-// recallSessionSource is one directory recall reads session notes from. The
-// private root of a routed vault is shared by every repo in the org, so suffix
-// restricts the read to this workspace's own notes; an empty suffix takes every
-// *.md, which is what a repo's own vault wants.
+// recallSessionSource is one directory recall reads session notes from. Both
+// kinds are filtered by repo: a shared root holds every repo's notes, and a
+// repo's own vault may itself be a shared root, so neither can take every
+// *.md it finds.
 type recallSessionSource struct {
-	dir      string
-	suffix   string
+	dir string
+	// repo is this repo's name, used to tell its notes from a sibling's.
+	repo string
+	// shared marks a root that holds many repos' notes, where an unsuffixed
+	// note belongs to the root's host repo rather than to this one.
+	shared   bool
 	priority int
+}
+
+// sessionBelongsTo reports whether a session filename belongs to repo. Names
+// are YYYY-MM-DD.md or YYYY-MM-DD-<repo>.md: an unsuffixed note belongs to the
+// vault it sits in, so it counts in that repo's own root and never in a shared
+// one. An empty repo takes only unsuffixed notes, which is single-root mode.
+func sessionBelongsTo(name, repo string, shared bool) bool {
+	base := strings.TrimSuffix(name, ".md")
+	if len(base) < len("2006-01-02") {
+		return false
+	}
+	switch rest := base[len("2006-01-02"):]; {
+	case rest == "":
+		return !shared
+	case repo == "":
+		return false
+	default:
+		return rest == "-"+repo
+	}
 }
 
 // recallDecisionSource is one directory recall reads decisions from. repo, when
@@ -103,36 +126,55 @@ type recallDecisionSource struct {
 	repo string
 }
 
-// recallSources resolves which vault roots recall reads. A vault with a local
-// routing config keeps its session notes in the private vault and splits its
-// decisions across both roots, so recall has to read both or it reports a
-// stale local note as the latest session.
+// recallSources resolves which vault roots recall reads, via the same chain
+// the write path resolves against. A repo whose sessions live in a shared root
+// would otherwise report a stale local note as the latest.
+//
+// Shared roots hold every repo's docs, so both source kinds are filtered to
+// this repo: sessions by their repo-suffixed filename, decisions by their
+// frontmatter. A doc in a shared root with no repo is container-scoped and
+// deliberately surfaces nowhere.
 //
 // Meta is read softly: recall is a read-only path that runs as a SessionStart
-// hook, so a broken routing config degrades to local-only here rather than
-// failing the session. The loud failure belongs to sync and commit, where
-// writing into the wrong vault is what actually does harm.
+// hook, so a broken config degrades to local-only here rather than failing the
+// session. The loud failure belongs to sync and commit, where writing into the
+// wrong vault is what actually does harm.
 func recallSources(vaultPath string) ([]recallSessionSource, []recallDecisionSource) {
 	sessions := []recallSessionSource{{dir: filepath.Join(vaultPath, "sessions")}}
 	decisions := []recallDecisionSource{{dir: filepath.Join(vaultPath, "decisions")}}
 
 	meta, err := vault.ReadMeta(vaultPath)
+	if err == nil {
+		// A repo whose own vault is also a shared root (the org root's host
+		// repo) reads that directory unfiltered, so name the repo even on the
+		// local source to keep siblings' routed notes out.
+		sessions[0].repo = meta.Repo
+	}
+	if err != nil || meta.Repo == "" {
+		// Without a repo identity there is no way to tell this repo's docs
+		// apart from a sibling's inside a shared root.
+		return sessions, decisions
+	}
+	chain, err := vault.ChainFor(meta, vaultPath)
 	if err != nil {
 		return sessions, decisions
 	}
-	privRoot, routed, err := vault.ResolveDocDestination(vaultPath, meta, "session", "")
-	if err != nil || !routed {
-		return sessions, decisions
+
+	for _, root := range chain.ReadRoots() {
+		if root.Role == vault.RoleRepo {
+			continue // seeded above, and unfiltered: the repo owns everything in it
+		}
+		sessions = append(sessions, recallSessionSource{
+			dir:      filepath.Join(root.Path, "sessions"),
+			repo:     meta.Repo,
+			shared:   true,
+			priority: 1,
+		})
+		decisions = append(decisions, recallDecisionSource{
+			dir:  filepath.Join(root.Path, "decisions"),
+			repo: meta.Repo,
+		})
 	}
-	sessions = append(sessions, recallSessionSource{
-		dir:      filepath.Join(privRoot, "sessions"),
-		suffix:   "-" + meta.Workspace + ".md",
-		priority: 1,
-	})
-	decisions = append(decisions, recallDecisionSource{
-		dir:  filepath.Join(privRoot, "decisions"),
-		repo: meta.Workspace,
-	})
 	return sessions, decisions
 }
 
@@ -154,7 +196,7 @@ func recallLoadSessions(sources []recallSessionSource, count int) ([]recallSessi
 			if e.IsDir() || !strings.HasSuffix(name, ".md") {
 				continue
 			}
-			if src.suffix != "" && !strings.HasSuffix(name, src.suffix) {
+			if !sessionBelongsTo(name, src.repo, src.shared) {
 				continue
 			}
 			content, err := os.ReadFile(filepath.Join(src.dir, name))
@@ -263,17 +305,26 @@ func recallLoadDecisions(sources []recallDecisionSource, maxCount int) ([]recall
 	return out, filteredOut, nil
 }
 
-var sessionHeadingRe = regexp.MustCompile(`(?m)^## \[\d{2}:\d{2}\] Session — (.+)$`)
+var sessionHeadingRe = regexp.MustCompile(`(?m)^## \[(\d{2}:\d{2})\] Session — (.+)$`)
 
 // recallExtractSessionHeading returns the summary text from the last
 // "## [HH:MM] Session — <summary>" heading in the file. Multiple blocks
 // may be appended to a single session file; the last one is most recent.
+// Blocks are appended by concurrent sessions, so they are not necessarily in
+// chronological order in the file. The latest session is the one with the
+// greatest timestamp, not the one written last; ties take the later of the two.
 func recallExtractSessionHeading(content []byte) string {
 	matches := sessionHeadingRe.FindAllSubmatch(content, -1)
 	if len(matches) == 0 {
 		return ""
 	}
-	return string(matches[len(matches)-1][1])
+	latest, heading := "", ""
+	for _, m := range matches {
+		if t := string(m[1]); t >= latest {
+			latest, heading = t, string(m[2])
+		}
+	}
+	return heading
 }
 
 var h1Re = regexp.MustCompile(`(?m)^# (.+)$`)

@@ -39,13 +39,14 @@ func RunInit(opts InitOpts) error {
 		}
 	}
 
-	workspace := opts.Workspace
-	if workspace == "" {
-		workspace = deriveWorkspace(opts.Cwd)
+	workspace, repo := deriveIdentity(opts.Cwd)
+	if opts.Workspace != "" {
+		workspace = opts.Workspace
 	}
 
 	meta := vault.Meta{
 		Workspace:      workspace,
+		Repo:           repo,
 		EmbeddingModel: "nomic-embed-text",
 		SchemaVersion:  vault.SupportedSchemaVersion,
 	}
@@ -63,37 +64,45 @@ func RunInit(opts InitOpts) error {
 	return nil
 }
 
-// deriveWorkspace tries to extract a workspace name from <cwd>/.git/config's
-// origin URL (the segment after the last "/" minus ".git"), falling back
-// to filepath.Base(cwd).
-func deriveWorkspace(cwd string) string {
+// deriveIdentity splits <cwd>/.git/config's origin URL into the workspace
+// (the org segment) and the repo (the segment after it). With no usable
+// remote, the directory name serves as both: there is no org to name.
+func deriveIdentity(cwd string) (workspace, repo string) {
 	gitConfig := filepath.Join(cwd, ".git", "config")
 	if data, err := os.ReadFile(gitConfig); err == nil {
-		if name := extractRepoNameFromGitConfig(string(data)); name != "" {
-			return name
+		if org, name := extractIdentityFromGitConfig(string(data)); name != "" {
+			if org == "" {
+				org = name
+			}
+			return org, name
 		}
 	}
-	return filepath.Base(cwd)
+	base := filepath.Base(cwd)
+	return base, base
 }
 
 var originURLRe = regexp.MustCompile(`url\s*=\s*(\S+)`)
 
-func extractRepoNameFromGitConfig(config string) string {
-	// Find the [remote "origin"] section.
+// extractIdentityFromGitConfig pulls (org, repo) out of the origin URL,
+// handling both git@host:org/repo and https://host/org/repo.
+func extractIdentityFromGitConfig(config string) (org, repo string) {
 	idx := strings.Index(config, `[remote "origin"]`)
 	if idx < 0 {
-		return ""
+		return "", ""
 	}
-	tail := config[idx:]
-	m := originURLRe.FindStringSubmatch(tail)
+	m := originURLRe.FindStringSubmatch(config[idx:])
 	if m == nil {
-		return ""
+		return "", ""
 	}
-	url := m[1]
-	url = strings.TrimSuffix(url, ".git")
-	// Handle both git@host:org/repo and https://host/org/repo.
-	if i := strings.LastIndexAny(url, "/:"); i >= 0 {
-		return url[i+1:]
+	url := strings.TrimSuffix(m[1], ".git")
+	i := strings.LastIndexAny(url, "/:")
+	if i < 0 {
+		return "", url
 	}
-	return url
+	repo = url[i+1:]
+	// The org is the segment before the repo, after the host separator.
+	if j := strings.LastIndexAny(url[:i], "/:"); j >= 0 {
+		org = url[j+1 : i]
+	}
+	return org, repo
 }

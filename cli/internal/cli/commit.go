@@ -31,7 +31,6 @@ type CommitOpts struct {
 	// Public/private routing overrides (from --open-source/--OS and
 	// --private-vault). When public, today's session note lives in the
 	// private vault, so the gate looks there instead of the local vault.
-	ForcePublic  bool
 	PrivateVault string
 }
 
@@ -58,19 +57,14 @@ func hasSessionNoteFile(path string) bool {
 }
 
 // sessionNotePath returns the absolute path of today's session note that the
-// commit gate must check. Under local (non-public) visibility this is
-// <vaultPath>/sessions/<date>.md. Under public visibility the note lives in
-// the private vault as <private>/sessions/<date>-<workspace>.md.
-func sessionNotePath(vaultPath string, m vault.Meta, date string) (string, error) {
-	root, routed, err := vault.ResolveDocDestination(vaultPath, m, "session", "")
+// commit gate must check. The gate asks the chain rather than computing its
+// own path, so it cannot disagree with where sync just wrote.
+func sessionNotePath(chain vault.Chain, date string) (string, error) {
+	root, err := chain.Target("session", "")
 	if err != nil {
 		return "", err
 	}
-	name := date + ".md"
-	if routed {
-		name = RoutedSessionFileName(date, m.Workspace)
-	}
-	return filepath.Join(root, "sessions", name), nil
+	return chain.SessionNotePath(root, date), nil
 }
 
 // RunCommit is the mechanical, deterministic commit path. It gates on a
@@ -92,32 +86,26 @@ func RunCommit(opts CommitOpts) error {
 		today = time.Now().Format("2006-01-02")
 	}
 
-	// Resolve where today's session note should live. Under public
-	// visibility it lives in the private vault; otherwise in the local vault.
-	// If meta is unreadable, fall back to legacy local-only behavior.
+	// Resolve where today's session note should live. An unreadable meta is a
+	// hard failure rather than a quiet fall back to the repo vault: gating
+	// against the public vault is how an internal note ends up committed to it.
 	meta, err := vault.ReadMeta(opts.VaultPath)
 	if err != nil {
-		// A broken routing config must not degrade to local-only: that is
-		// how a session note ends up gated against the public vault the
-		// config exists to keep it out of. Only a missing or unreadable
-		// .vault-meta.json falls back.
-		if _, statErr := os.Stat(filepath.Join(opts.VaultPath, vault.RoutingConfigFileName)); statErr == nil {
-			return fmt.Errorf("read vault meta: %w", err)
-		}
-		meta = vault.Meta{}
+		return fmt.Errorf("read vault meta: %w", err)
 	}
-	if opts.ForcePublic {
-		meta.Visibility = "public"
+	chain, err := vault.ChainFor(meta, opts.VaultPath)
+	if err != nil {
+		return fmt.Errorf("resolve vault roots: %w", err)
 	}
 	if opts.PrivateVault != "" {
-		meta.PrivateVault = opts.PrivateVault
+		chain = chain.WithPrivateRoot(opts.PrivateVault)
 	}
-	notePath, err := sessionNotePath(opts.VaultPath, meta, today)
+	notePath, err := sessionNotePath(chain, today)
 	if err != nil {
 		fmt.Fprintf(opts.Stderr,
 			"tolvi: %v.\n"+
-				"  Set private_vault in .vault-meta.json or pass --private-vault <path>.\n",
-			err)
+				"  Declare an org root in %s or pass --private-vault <path>.\n",
+			err, vault.RootsConfigPath())
 		return ErrNoSessionNote
 	}
 

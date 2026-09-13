@@ -289,13 +289,30 @@ with open(hooks_tpl_path) as f:
     fragment_text = f.read().replace("__HOOKS_DIR__", hooks_dir)
 fragment = json.loads(fragment_text)
 
-# Merge: extend existing event-type arrays rather than overwriting.
+# Merge: converge on the intended state rather than appending blindly. The
+# installer is re-run after every upgrade, so an unconditional extend() would
+# duplicate each hook on the second run — doubling recall output on session
+# start and firing the commit gate twice per commit.
+def hook_scripts(entry):
+    """Basenames of the hook scripts an entry invokes (e.g. {'tolvi-recall'})."""
+    return {
+        os.path.basename(h["command"])
+        for h in entry.get("hooks", [])
+        if h.get("command")
+    }
+
+
 existing = settings.setdefault("hooks", {})
 for event, entries in fragment["hooks"].items():
-    if event in existing:
-        existing[event].extend(entries)
-    else:
-        existing[event] = entries
+    current = existing.setdefault(event, [])
+    for entry in entries:
+        scripts = hook_scripts(entry)
+        # Drop any prior install of these same scripts, including one left
+        # pointing at a stale hooks directory by an earlier --hooks-scope, then
+        # re-add the fresh entry. Hooks belonging to other tools share no
+        # basename with ours and are left untouched.
+        current[:] = [e for e in current if not hook_scripts(e) & scripts]
+        current.append(entry)
 
 # Allowlist the read-only tolvi subcommands so /tolvi-recall and `tolvi ask`
 # stop raising a permission prompt on every use. Writes are deliberately NOT

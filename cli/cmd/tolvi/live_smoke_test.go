@@ -39,7 +39,7 @@ func TestLive_AskRoundTrip(t *testing.T) {
 
 	askCmd := exec.Command(bin, "ask", "what pets do we like?", "--no-stream")
 	askCmd.Dir = work
-	askCmd.Env = os.Environ() // inherits ANTHROPIC_API_KEY
+	askCmd.Env = isolatedEnv(t) // inherits ANTHROPIC_API_KEY
 	out, err := askCmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("ask: %v\n%s", err, out)
