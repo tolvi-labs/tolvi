@@ -274,7 +274,7 @@ When summarizing or quoting vault content in a response, cite with `[[slug]]`. U
 
 ### Pre-commit vault sync
 
-Before every `git commit` in a Tolvi-vaulted repo, the `tolvi-sync` Claude Code `PreToolUse` hook fires. It auto-stages any modified `vault/` files so they land in the commit. If no session note exists for today, it blocks the commit and instructs you to write one first. This happens automatically when hooks are installed (`bash install.sh --with-hooks`). Write the session note to `vault/sessions/YYYY-MM-DD.md` using the template, stage it, then re-run the commit — the vault will be included automatically.
+Before every `git commit` in a Tolvi-vaulted repo, the `tolvi-sync` Claude Code `PreToolUse` hook fires. It auto-stages any modified `vault/` files so they land in the commit, then asks `tolvi roots --session-note` where today's note belongs and checks whether it is there. If it is missing the hook says so and **allows the commit anyway** — a missed vault entry is recoverable, a blocked commit is not acceptable friction, and a hook that fails closed turns any bug in it into an inability to commit. This happens automatically when hooks are installed (`bash install.sh --with-hooks`).
 
 ## Escape hatches
 

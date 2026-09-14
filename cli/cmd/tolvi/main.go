@@ -455,6 +455,9 @@ func init() {
 
 	commitCmd.Flags().StringVarP(&commitMessageFlag, "message", "m", "", "commit message (if omitted, git opens $EDITOR)")
 	commitCmd.Flags().StringVar(&commitVaultFlag, "vault", "", "path to vault dir (default: walk up)")
+	rootsCmd.Flags().StringVar(&rootsVaultFlag, "vault", "", "path to the vault (default: discovered from the working directory)")
+	rootsCmd.Flags().BoolVar(&rootsSessionNoteFlag, "session-note", false, "print only the absolute path of today's session note")
+
 	commitCmd.Flags().StringVar(&commitPrivateVaultFlag, "private-vault", "", "path to the private vault (overrides the org root declared in roots.json)")
 
 	precommitInstallCmd.Flags().BoolVar(&precommitForceFlag, "force", false, "overwrite an existing non-tolvi hook")
@@ -472,6 +475,44 @@ func firstNonEmpty(s ...string) string {
 		}
 	}
 	return ""
+}
+
+var (
+	rootsVaultFlag       string
+	rootsSessionNoteFlag bool
+)
+
+var rootsCmd = &cobra.Command{
+	Use:   "roots",
+	Short: "Show the chain of vault roots this repo resolves to",
+	Long: `roots prints the repo's identity and the chain of vault roots it resolves
+to, nearest scope first, along with where today's session note belongs.
+
+The routing rule lives in one place, and this is how a human, a shell hook, or
+a bug report reads it without deriving its own answer.
+
+Use --session-note to print only the absolute path of today's session note,
+which is what the commit gate calls.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cwd, _ := os.Getwd()
+		home, _ := os.UserHomeDir()
+		cfg := config.Load(config.LoadOpts{HomeDir: home, Env: os.Getenv})
+
+		vaultPath, err := vault.Discover(vault.DiscoverOpts{
+			StartDir:     cwd,
+			HomeDir:      home,
+			ExplicitPath: firstNonEmpty(rootsVaultFlag, os.Getenv("TOLVI_VAULT")),
+			DefaultVault: cfg.DefaultVault,
+		})
+		if err != nil {
+			return err
+		}
+		return clicmd.RunRoots(clicmd.RootsOpts{
+			VaultPath:   vaultPath,
+			SessionNote: rootsSessionNoteFlag,
+			Stdout:      os.Stdout,
+		})
+	},
 }
 
 var doctorVaultFlag string
@@ -548,6 +589,7 @@ func main() {
 	rootCmd.AddCommand(recallCmd)
 	rootCmd.AddCommand(commitCmd)
 	doctorCmd.Flags().StringVar(&doctorVaultFlag, "vault", "", "path to the vault (default: discovered from $PWD)")
+	rootCmd.AddCommand(rootsCmd)
 	rootCmd.AddCommand(doctorCmd)
 
 	precommitCmd.AddCommand(precommitInstallCmd)
