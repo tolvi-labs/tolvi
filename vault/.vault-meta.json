@@ -1,0 +1,6 @@
+{
+  "workspace": "tolvi-labs",
+  "repo": "tolvi",
+  "embedding_model": "nomic-embed-text",
+  "schema_version": 2
+}

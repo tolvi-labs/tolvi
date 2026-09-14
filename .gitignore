@@ -37,7 +37,8 @@ tolvi-build-plan.md
 # contain local paths and internal process, kept out of the public repo.
 docs/superpowers/
 
-# Per-repo engineering vault — maintainer-only sessions, decisions, patterns.
-# The PUBLIC synthetic demo vault lives at examples/sample-vault/ and IS
-# committed; this `vault/` is local working notes and must not ship.
-/vault/
+# Per-repo engineering vault. Contributor-fed and world-safe: it holds this
+# repo's decisions and, in single-root mode, a contributor's own session notes.
+# Maintainer session context routes to a private org root instead and never
+# lands here — see the vault topology decisions. The synthetic demo vault at
+# examples/sample-vault/ remains the canonical example for consumers.
