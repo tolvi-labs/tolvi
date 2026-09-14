@@ -48,7 +48,7 @@ Flags:
                           avoid clobbering user customizations.
   --with-hooks            Also install Claude Code session hooks:
                             • SessionStart  → tolvi-recall fires before each session
-                            • PreToolUse    → tolvi-sync blocks git commit until vault is synced
+                            • PreToolUse    → tolvi-sync warns when the vault is unsynced
   --hooks-scope <scope>   Where to wire the hooks:
                             user    — \$HOME/.claude/settings.json (activates in all
                                       repos with a vault — recommended)
@@ -335,7 +335,7 @@ PYEOF
   echo "Hooks installed ($scope scope)."
   if [[ "$scope" == "user" ]]; then
     echo "  tolvi-recall fires on every session start in any repo with a vault/."
-    echo "  tolvi-sync blocks git commit until a session note exists for today."
+    echo "  tolvi-sync warns when today's session note is missing, and never blocks a commit."
   else
     echo "  tolvi-recall and tolvi-sync fire in this project only."
     echo "  Commit $settings_file to share with teammates."

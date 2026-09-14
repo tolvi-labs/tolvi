@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# PreToolUse(Bash(git commit*)) hook — enforce vault sync before every commit.
+# PreToolUse(Bash(git commit*)) hook — warn about an unsynced vault, never block.
 #
 # Behavior:
-#   1. Auto-stages any modified vault/ files so they're always in the commit.
-#   2. Blocks the commit if no session note exists for today, instructing Claude
-#      to write one first.
-#   3. Allows the commit once a session note is present.
+#   1. Auto-stages any modified vault/ files so they land in this commit.
+#   2. Asks the CLI where today's session note belongs, so the gate and the
+#      write cannot disagree about which file counts.
+#   3. Allows the commit either way, adding context when the note is missing.
+#
+# Warn-only is deliberate. A missed vault entry is recoverable; a blocked
+# commit is not acceptable friction, and a hook that fails closed turns any bug
+# in it into an inability to commit at all. Fail-open here is the stated
+# precondition for ever promoting this back to blocking.
 set -euo pipefail
 
 TODAY="$(date +%Y-%m-%d)"
@@ -22,7 +27,7 @@ find_vault() {
 VAULT="$(find_vault "$PWD" 2>/dev/null)" || exit 0
 REPO_ROOT="$(dirname "$VAULT")"
 
-# Auto-stage any unstaged vault changes so they land in this commit
+# Auto-stage any unstaged vault changes so they land in this commit.
 cd "$REPO_ROOT"
 UNSTAGED="$(git diff --name-only -- vault/ 2>/dev/null || true)"
 UNTRACKED="$(git ls-files --others --exclude-standard vault/ 2>/dev/null || true)"
@@ -30,11 +35,22 @@ if [[ -n "$UNSTAGED" || -n "$UNTRACKED" ]]; then
   git add vault/
 fi
 
-# Block if no session note for today
-SESSION_FILE="$VAULT/sessions/$TODAY.md"
+# Where does today's note belong? The CLI owns the routing rule; this hook must
+# not re-derive it, because a hook and a CLI that disagree is the class of bug
+# the multi-root resolver exists to end. Without the binary, fall back to the
+# repo's own vault, which is correct in single-root mode and wrong only on a
+# routed repo that has not installed the CLI.
+SESSION_FILE=""
+if command -v tolvi >/dev/null 2>&1; then
+  SESSION_FILE="$(tolvi roots --session-note 2>/dev/null || true)"
+fi
+[[ -z "$SESSION_FILE" ]] && SESSION_FILE="$VAULT/sessions/$TODAY.md"
+
+json_escape() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+
 if [[ ! -f "$SESSION_FILE" ]] || ! grep -q "^## " "$SESSION_FILE" 2>/dev/null; then
-  printf '{"decision":"block","reason":"No session note for %s. Write a brief session entry to vault/sessions/%s.md (use `tolvi sync session` or the template at vault/templates/session.md — what changed, what is left open), stage it, then commit. The vault will be included in the commit automatically."}' \
-    "$TODAY" "$TODAY"
+  printf '{"decision":"allow","additionalContext":"No session note for %s at %s. The commit is proceeding; write the note with `tolvi sync session` or /tolvi-sync so the vault keeps pace with the code."}' \
+    "$TODAY" "$(json_escape "$SESSION_FILE")"
   exit 0
 fi
 
