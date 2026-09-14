@@ -77,7 +77,7 @@ tolvi commit [flags]
 | `-m`, `--message` | none | Commit message; if omitted, git opens `$EDITOR` |
 | `--vault` | walks up from cwd | Path to vault dir |
 
-If a session note exists for today (`vault/sessions/<today>.md` with a `## ` block), `tolvi commit` auto-stages `vault/` and commits it alongside whatever you already staged. It never runs `git add -A`. If no note exists, it refuses (exit code 3) and points you at `tolvi sync session` or the `/tolvi-commit` skill.
+If a session note exists for today (`vault/sessions/<today>.md` with a `##` block), `tolvi commit` auto-stages `vault/` and commits it alongside whatever you already staged. It never runs `git add -A`. If no note exists, it refuses (exit code 3) and points you at `tolvi sync session` or the `/tolvi-commit` skill.
 
 ### Pre-commit hook
 

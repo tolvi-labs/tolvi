@@ -67,15 +67,13 @@ Otherwise read the vault directly, using the commands below **verbatim**. They a
 
 Output:
 
-```
-RECALL SUMMARY
-──────────────────────────────────────────
-Last session:  [date — heading]
-Left open:
-  [bullet per item, or none]
-Decisions:     [N relevant | none]
-  [slug — title  (status: X if not active)]
-──────────────────────────────────────────
-```
+    RECALL SUMMARY
+    ──────────────────────────────────────────
+    Last session:  [date — heading]
+    Left open:
+      [bullet per item, or none]
+    Decisions:     [N relevant | none]
+      [slug — title  (status: X if not active)]
+    ──────────────────────────────────────────
 
 Then ask what to focus on.
