@@ -51,10 +51,8 @@ If the config file is absent (an external contributor, or a private repo), behav
 
 From the repo root, stage the vault notes and your work together so they land in one commit:
 
-```bash
-git add -A
-git status --short
-```
+    git add -A
+    git status --short
 
 Show the staged status. If there is nothing to commit, stop and say so.
 
@@ -64,9 +62,7 @@ Commit with a clear, imperative message. Match the repo's existing commit conven
 
 ## Step 4 — Verify no attribution slipped in
 
-```bash
-git log -1 --pretty=%B | grep -iE 'co-authored-by|generated with \[?claude|🤖|noreply@anthropic' && echo "FORBIDDEN ATTRIBUTION FOUND" || echo "attribution check: clean"
-```
+    git log -1 --pretty=%B | grep -iE 'co-authored-by|generated with \[?claude|🤖|noreply@anthropic' && echo "FORBIDDEN ATTRIBUTION FOUND" || echo "attribution check: clean"
 
 If the check matches, rewrite the message with `git commit --amend` to strip the offending lines, then re-run it until it prints `attribution check: clean`. The pattern targets trailer forms only, so a legitimate mention of "Claude Code" in a description does not trip it.
 
