@@ -4,11 +4,19 @@
   "title": "Tolvi decision frontmatter",
   "description": "Frontmatter schema for files in vault/decisions/.",
   "type": "object",
-  "required": ["tags", "date", "status", "repo"],
+  "required": [
+    "tags",
+    "date",
+    "status",
+    "repo"
+  ],
   "properties": {
     "tags": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "minItems": 1,
       "uniqueItems": true,
       "description": "Tags describing the doc. The first tag SHOULD be 'decision'. Case-sensitive; no duplicates."
@@ -20,7 +28,14 @@
     },
     "status": {
       "type": "string",
-      "enum": ["active", "in-progress", "superseded", "deprecated", "draft", "historical"]
+      "enum": [
+        "active",
+        "in-progress",
+        "superseded",
+        "deprecated",
+        "draft",
+        "historical"
+      ]
     },
     "repo": {
       "type": "string",
@@ -43,6 +58,22 @@
       "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
       "maxLength": 80,
       "description": "Optional. Slug of a newer decision that replaces this one. Required when status is 'superseded'."
+    },
+    "user_impact": {
+      "type": "string",
+      "description": "Who feels this decision and how much. Free text rather than an enum: the useful answer is usually a phrase, and a fixed scale invites picking a label over saying what changes."
+    },
+    "product_area": {
+      "type": "string",
+      "description": "The part of the product this decision governs, as the authoring team names it. Free text, since the areas differ per project and a shared enum would be wrong for everyone."
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "private"
+      ],
+      "description": "Whether this doc is internal. `private` routes it to the nearest declared private root above its scope; absent or `public` keeps it in the root that owns its scope. Sessions do not carry this field: they always route private except in single-root mode, so the resolver never consults it for them."
     }
   },
   "patternProperties": {

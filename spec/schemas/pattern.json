@@ -4,30 +4,57 @@
   "title": "Tolvi pattern frontmatter",
   "description": "Frontmatter schema for files in vault/patterns/. Patterns are intentionally timeless - no date or repo required.",
   "type": "object",
-  "required": ["tags", "status"],
+  "required": [
+    "tags",
+    "status"
+  ],
   "properties": {
     "tags": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "minItems": 1,
       "uniqueItems": true,
       "description": "Tags describing the pattern. The first tag SHOULD be 'pattern'. Case-sensitive; no duplicates."
     },
     "status": {
       "type": "string",
-      "enum": ["active", "in-progress", "superseded", "deprecated", "draft", "historical"]
+      "enum": [
+        "active",
+        "in-progress",
+        "superseded",
+        "deprecated",
+        "draft",
+        "historical"
+      ]
     },
     "languages": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "uniqueItems": true,
       "description": "Optional list of programming languages this pattern applies to."
     },
     "frameworks": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "uniqueItems": true,
       "description": "Optional list of frameworks/libraries this pattern applies to."
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "private"
+      ],
+      "description": "Whether this doc is internal. `private` routes it to the nearest declared private root above its scope; absent or `public` keeps it in the root that owns its scope. Sessions do not carry this field: they always route private except in single-root mode, so the resolver never consults it for them."
     }
   },
   "patternProperties": {
