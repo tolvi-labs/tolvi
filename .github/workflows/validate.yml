@@ -21,10 +21,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Runs the pinned devDependency rather than the action, so CI and a local
+      # `npm run validate` lint with the same version. Two copies of a rule that
+      # can drift is the failure this repo keeps paying for.
       - name: Markdown lint
-        uses: DavidAnson/markdownlint-cli2-action@v16
-        with:
-          globs: '**/*.md'
+        run: npm run validate:markdown
 
       - name: Validate sample vault against schemas
         run: npm run validate:schemas
