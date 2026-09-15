@@ -30,8 +30,21 @@ if [[ "$SESSION_SOURCE" == "clear" ]]; then
   exit 0
 fi
 
-if command -v tolvi &>/dev/null; then
-  exec tolvi recall --format hook-json --vault "$VAULT"
+# Resolve the tolvi binary. `command -v` alone is not enough: hooks run in a
+# non-interactive shell, which does not source ~/.zshrc or ~/.bashrc, so a
+# PATH export living there is invisible here even though it works in a
+# terminal. Falling back to the Go bin directory finds the binary that
+# `go install` actually produced.
+find_tolvi() {
+  if command -v tolvi >/dev/null 2>&1; then command -v tolvi; return 0; fi
+  for candidate in "${GOBIN:-}" "${GOPATH:-$HOME/go}/bin" "$HOME/go/bin" /usr/local/bin /opt/homebrew/bin; do
+    [ -n "$candidate" ] && [ -x "$candidate/tolvi" ] && { echo "$candidate/tolvi"; return 0; }
+  done
+  return 1
+}
+
+if TOLVI_BIN="$(find_tolvi)"; then
+  exec "$TOLVI_BIN" recall --format hook-json --vault "$VAULT"
 fi
 
 # Fallback: build a minimal hook-json summary from raw vault files

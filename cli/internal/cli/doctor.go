@@ -49,7 +49,7 @@ type DoctorOpts struct {
 const claudeInstallHint = "bash skills/tolvi/install.sh --with-hooks   # from a tolvi checkout"
 
 const goBinHint = `go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
-     export PATH="$PATH:$(go env GOPATH)/bin"   # add to ~/.zshrc or ~/.bashrc`
+     export PATH="$PATH:$(go env GOPATH)/bin"   # add to ~/.zshenv, not ~/.zshrc`
 
 // RunDoctor inspects the local setup, writes a report, and returns the
 // checks it ran. A failing check is reported, never fatal: the caller
