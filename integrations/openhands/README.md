@@ -4,7 +4,7 @@ A `.openhands_instructions` template that teaches [OpenHands](https://www.all-ha
 
 ## Tier
 
-OpenHands is a **Tier 3 (skeleton)** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../claude-code/).
+OpenHands is a **Tier 3 (skeleton)** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../../skills/tolvi/).
 
 ## Prerequisites
 
