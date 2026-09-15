@@ -11,7 +11,7 @@ import (
 //
 // Three roles describe the real topology. A fourth, "personal", was designed
 // for a directory that turned out to be an org root rather than a cross-org
-// cross-org one; it is rejected by LoadRoots rather than left half-declared.
+// one; it is rejected by LoadRoots rather than left half-declared.
 type RootRole string
 
 const (
@@ -124,7 +124,7 @@ func LoadRoots(path string) (Roots, error) {
 //
 // Selecting the org root by workspace is what makes isolation structural: a
 // repo declaring an isolated workspace can never resolve another workspace's
-// workspace's root, with no flag to forget.
+// root, with no flag to forget.
 func (r Roots) Chain(id Identity, repoVault string) Chain {
 	c := Chain{id: id, declared: r.declared}
 	c.roots = append(c.roots, Root{Role: RoleRepo, Path: repoVault})

@@ -16,8 +16,23 @@
 set -euo pipefail
 
 if [ -z "${BRAND_BLOCKLIST:-}" ]; then
-  echo "BRAND_BLOCKLIST is not set; skipping brand-isolation check."
-  echo "Set the BRAND_BLOCKLIST repo variable (a pipe-separated grep -E pattern) to enforce it."
+  # Loud on purpose. This check is the only one in the suite that cannot run
+  # without a secret, so a local `npm run validate` exits 0 having never
+  # checked a thing. That is easy to read as "brand isolation passed" when it
+  # means "brand isolation was not examined", and reading it the wrong way is
+  # how forbidden terms reached a public repo in September 2026.
+  echo ""
+  echo "  ############################################################"
+  echo "  #  BRAND-ISOLATION CHECK SKIPPED — NOT PASSED              #"
+  echo "  #                                                          #"
+  echo "  #  BRAND_BLOCKLIST is unset, so nothing was examined.      #"
+  echo "  #  A clean run here is NOT evidence this repo is clean.    #"
+  echo "  #  CI enforces it; a green local validate does not.        #"
+  echo "  #                                                          #"
+  echo "  #  To check locally, export BRAND_BLOCKLIST (the pattern   #"
+  echo "  #  lives in the repo variable of the same name).           #"
+  echo "  ############################################################"
+  echo ""
   exit 0
 fi
 PATTERN="$BRAND_BLOCKLIST"
