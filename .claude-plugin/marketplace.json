@@ -1,0 +1,75 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "tolvi",
+  "owner": {
+    "name": "Tolvi Labs",
+    "url": "https://tolvilabs.com"
+  },
+  "plugins": [
+    {
+      "name": "tolvi",
+      "source": {
+        "source": "github",
+        "repo": "tolvi-labs/tolvi"
+      },
+      "description": "Read, write, and ask questions of a Tolvi engineering vault: decisions, sessions and patterns as plain Markdown your agents read as context.",
+      "author": {
+        "name": "Tolvi Labs"
+      },
+      "category": "Developer Tools",
+      "homepage": "https://tolvilabs.com/"
+    },
+    {
+      "name": "tolvi-guild",
+      "source": {
+        "source": "github",
+        "repo": "tolvi-labs/guild"
+      },
+      "description": "Substrate-grounded brainstorming and planning: works out the how against the guardrails already in your codebase, and asks where the code is silent.",
+      "author": {
+        "name": "Tolvi Labs"
+      },
+      "category": "Developer Tools",
+      "homepage": "https://tolvilabs.com/guild"
+    },
+    {
+      "name": "tolvi-bastion",
+      "source": {
+        "source": "github",
+        "repo": "tolvi-labs/bastion"
+      },
+      "description": "A pre-code crucible: interrogates a plan against your vault before any code exists, hardens it, and deposits the rationale as decisions.",
+      "author": {
+        "name": "Tolvi Labs"
+      },
+      "category": "Developer Tools",
+      "homepage": "https://tolvilabs.com/bastion"
+    },
+    {
+      "name": "tolvi-magellan",
+      "source": {
+        "source": "github",
+        "repo": "tolvi-labs/magellan"
+      },
+      "description": "Executor-agnostic plan compiler: turns an approved brief into a context-compiled task DAG that carries exactly the decisions and refs each task needs.",
+      "author": {
+        "name": "Tolvi Labs"
+      },
+      "category": "Developer Tools",
+      "homepage": "https://tolvilabs.com/magellan"
+    },
+    {
+      "name": "tolvi-solo",
+      "source": {
+        "source": "github",
+        "repo": "tolvi-labs/tolvi-solo"
+      },
+      "description": "A vault for solo builders: capture decisions, patterns and session notes as plain Markdown, with no server setup.",
+      "author": {
+        "name": "Tolvi Labs"
+      },
+      "category": "Developer Tools",
+      "homepage": "https://tolvilabs.com/tolvi-solo"
+    }
+  ]
+}
