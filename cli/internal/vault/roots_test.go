@@ -231,9 +231,9 @@ func TestReadRootsDedupesSharedPaths(t *testing.T) {
 }
 
 func TestLoadRootsRejectsTheDroppedPersonalRole(t *testing.T) {
-	// The fourth role was inferred from a directory that turned out to be a
-	// org root, not a personal one. Three roles describe the real
-	// topology; declaring the old one should fail loudly rather than be ignored.
+	// The fourth role was inferred from a directory that turned out to be an
+	// org root, not a personal one. Three roles describe the real topology;
+	// declaring the old one should fail loudly rather than be ignored.
 	if _, err := LoadRoots(writeRoots(t, `{"roots":[{"role":"personal","path":"/x"}]}`)); err == nil {
 		t.Fatal("expected an error: the personal role no longer exists")
 	}
@@ -256,7 +256,7 @@ func TestTargetIsAlwaysReadable(t *testing.T) {
 	identities := []Identity{
 		{Workspace: "tolvi-labs", Repo: "tolvi"},
 		{Workspace: "tolvi-labs", Repo: "marketing-site"},
-		{Workspace: "acme", Repo: "acme-web"},
+		{Workspace: "acme", Repo: "birdie-os-web"},
 		{Workspace: "birdie-os", Repo: "birdie-os-web", Product: "birdie-os"},
 		{Workspace: "isolated-org", Repo: "isolated-web"},
 		{Workspace: "unconfigured-org", Repo: "some-repo"},
