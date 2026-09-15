@@ -93,4 +93,4 @@ The file is **read-only context**. It doesn't auto-run anything and doesn't proa
 
 ## Tier
 
-Cursor is a **Tier 2 (light)** integration in the [Tolvi integrations tier list](../README.md). The agent uses its own primitives (Cursor's built-in read/edit/run tools) to invoke the CLI; there's no custom Tolvi-specific tool wiring. For a deeper integration with custom slash commands, see [Claude Code](../claude-code/) (Tier 1).
+Cursor is a **Tier 2 (light)** integration in the [Tolvi integrations tier list](../README.md). The agent uses its own primitives (Cursor's built-in read/edit/run tools) to invoke the CLI; there's no custom Tolvi-specific tool wiring. For a deeper integration with custom slash commands, see [Claude Code](../../skills/tolvi/) (Tier 1).

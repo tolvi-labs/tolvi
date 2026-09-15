@@ -4,7 +4,7 @@ A `CONVENTIONS.md` template that teaches [Aider](https://aider.chat) about Tolvi
 
 ## Tier
 
-Aider is a **Tier 3 (skeleton)** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap that should let Aider participate in vault read/write flows; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../claude-code/). If you find yourself wanting more, copy from there.
+Aider is a **Tier 3 (skeleton)** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap that should let Aider participate in vault read/write flows; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../../skills/tolvi/). If you find yourself wanting more, copy from there.
 
 ## Prerequisites
 
