@@ -40,9 +40,20 @@ jobs:
           npm run validate:schemas
           npm run validate:schema-parity
 
+      # Skip rather than fail when the version is already on the registry. A
+      # release workflow that cannot be re-run is a release workflow you are
+      # afraid to re-run, and the first version of this package was published
+      # by hand because npm cannot bootstrap a trusted publisher over OIDC.
+      # Tagging that version afterwards should record the release, not error.
       - name: Publish to npm
         working-directory: spec
-        run: npm publish --provenance --access public
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@tolvi-labs/spec@$VERSION" version >/dev/null 2>&1; then
+            echo "::notice::@tolvi-labs/spec@$VERSION is already on the registry; skipping publish."
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
