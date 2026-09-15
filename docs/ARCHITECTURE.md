@@ -34,7 +34,7 @@ The CLI owns local capture and the local index. `tolvi sync` writes a doc into t
 
 The server owns the multi-tenant index and the HTTP API. It accepts documents over `POST /v1/sync`, chunks and embeds them, stores them in Postgres with pgvector, and serves `POST /v1/search` and `POST /v1/ask`. It does not write to anyone's `vault/` directory; the CLI (or CI, or any other client implementing the format) is the source of writes.
 
-The format spec is the only contract crossing the boundary. Both arms implement parsing and validation against `spec/tolvi-format-v1.md`. There is no shared parsing library. (See section 4.)
+The format spec is the only contract crossing the boundary. Both arms implement parsing and validation against `spec/tolvi-format-v2.md`. There is no shared parsing library. (See section 4.)
 
 ## 2. Trust and auth model
 
@@ -60,11 +60,11 @@ If the local embed step fails (Ollama down), `tolvi sync` still writes the file 
 
 ## 4. Component boundaries
 
-The CLI is Go, single static binary, cross-platform. The server is TypeScript on Fastify, Node 20+. They do not share a parsing library. Each implements `tolvi-format-v1` parsing and validation in its own language, against the published JSON Schemas under `spec/schemas/`.
+The CLI is Go, single static binary, cross-platform. The server is TypeScript on Fastify, Node 20+. They do not share a parsing library. Each implements `tolvi-format-v2` parsing and validation in its own language, against the published JSON Schemas under `spec/schemas/`.
 
 This is a deliberate trade-off. A shared library written in either language would constrain the other to embed a runtime, and would push toward a polyglot toolchain in every consumer. Code duplication of a small, well-specified parser is the smaller cost. The spec — including the JSON Schemas — is the contract.
 
-The same boundary applies to future SDKs and third-party clients. Anything that conforms to `tolvi-format-v1` is a valid producer. Anything that can read JSON Schema + markdown frontmatter is a valid consumer.
+The same boundary applies to future SDKs and third-party clients. Anything that conforms to `tolvi-format-v2` is a valid producer. Anything that can read JSON Schema + markdown frontmatter is a valid consumer.
 
 ## 5. What's deferred to Phase 9
 

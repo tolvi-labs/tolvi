@@ -103,6 +103,37 @@ Flags for `tolvi precommit install`:
 
 Remove with `tolvi precommit uninstall`. Refuses to remove a non-tolvi hook unless `--force`.
 
+### `tolvi roots`
+
+Show the chain of vault roots this repo resolves to, nearest scope first, and where today's session note belongs.
+
+```bash
+tolvi roots [flags]
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--session-note` | off | Print only the absolute path of today's session note |
+| `--vault` | walks up from cwd | Path to vault dir |
+
+Roots are declared once per machine in `~/.config/tolvi/roots.json` and are never committed; a repo commits only its identity (`workspace`, `repo`, and optionally `product`) in `.vault-meta.json`. A doc lands in the root that owns its scope when public, and in the nearest declared private root above its scope when private.
+
+With no `roots.json` at all the vault runs in single-root mode: everything stays in the repo's own `vault/`, which is what an external contributor wants. A `roots.json` that exists but lacks the root a doc needs refuses the write rather than falling back to the public vault.
+
+This is the one place the routing rule lives. The commit hook and the slash commands call it rather than deriving their own answer, so a hook and the CLI cannot disagree about where a note belongs.
+
+### `tolvi doctor`
+
+Check that the local setup is sound and print the command that fixes whatever is not: whether the binary is reachable as `tolvi` on PATH, whether a vault resolves from here, whether `ANTHROPIC_API_KEY` is set, and whether the Claude Code allow rules are in place.
+
+```bash
+tolvi doctor [vault-health]
+```
+
+It then scans the vault's contents for the defects that stop a note being found: empty tags, unrecognized status values, duplicate titles, unfilled template placeholders, and escaped unicode. Pass `vault-health` to run only that content scan.
+
+Exit codes differ by what is being asserted. A plain run exits non-zero when a setup check fails, because that is what stops the tools working; content findings are reported but do not change it. `tolvi doctor vault-health` exits non-zero when the scan finds a high-severity defect.
+
 ### `tolvi version`
 
 Prints the binary version (baked at release time via `-ldflags`).

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Tolvi server — multi-tenant Fastify + Postgres + pgvector implementation of tolvi-format-v1.",
+  "description": "Tolvi server — multi-tenant Fastify + Postgres + pgvector implementation of tolvi-format-v2.",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=20"

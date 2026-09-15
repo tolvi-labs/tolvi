@@ -37,31 +37,29 @@ Otherwise read the vault directly, using the commands below **verbatim**. They a
 
    If nothing prints, say so and stop.
 
-2. **Check for a private vault** — an internal-dev checkout routes its session notes elsewhere:
+2. **Ask where this repo's roots are** — a repo whose workspace declares an org root keeps its session notes there, not in the local `vault/sessions/`:
 
-       cat vault/.vault-routing.local.json 2>/dev/null
+       tolvi roots
 
-   If this prints a `private_vault` path, this is a routed vault: session notes live there, not in the local `vault/sessions/`, and decisions are split across both roots. Read the `workspace` value out of `vault/.vault-meta.json` — it is the suffix routed notes are named with — and use the routed commands in steps 3 and 4. If nothing prints, use the plain ones.
+   That prints the chain nearest-first and the absolute path today's session note belongs at. If the binary is unreachable, read only the local `vault/` below and say plainly that any shared root was not read.
 
 3. **Sessions** — date-named files, so the newest sorts last:
 
        ls -1 vault/sessions/ | tail -3
 
-   Routed vaults instead read the private root, filtered to this workspace's own notes, since every repo in the org shares it:
+   For each non-repo root the chain printed, read its `sessions/` too, keeping only files ending `-<repo>.md` where `<repo>` is the `repo` value from `vault/.vault-meta.json`. A shared root holds every repo's notes, and an unsuffixed name there belongs to that root's host repo, not to this one.
 
-       ls -1 <private_vault>/sessions/ | rg -- '-<workspace>\.md$' | tail -3
-
-   Either way, read the newest file with the Read tool (no shell needed) and surface its latest `## [HH:MM] Session — ...` heading plus any `### Left open` items.
+   Either way, read the newest file with the Read tool (no shell needed) and surface its latest `## [HH:MM] Session — ...` heading plus any `### Left open` items. Blocks are appended by concurrent sessions and are not necessarily in order, so take the greatest `[HH:MM]`, not the last one in the file.
 
 4. **Decisions** — one call covers status and title across every decision:
 
        rg -N --no-heading -H --sort path '^(status:|# )' vault/decisions/ | tail -40
 
-   Routed vaults run that against `<private_vault>/decisions/` as well, adding `repo:` to the pattern so you can tell which repo each one belongs to:
+   Run it against each shared root's `decisions/` as well, adding `repo:` to the pattern so you can tell which repo each one belongs to:
 
-       rg -N --no-heading -H --sort path '^(status:|repo:|# )' <private_vault>/decisions/ | tail -60
+       rg -N --no-heading -H --sort path '^(status:|repo:|# )' <root>/decisions/ | tail -60
 
-   Output interleaves `path:status:` with `path:# Title` per file. Skip any whose `status` is `superseded`, `deprecated`, or `draft` (missing = `active`), and from the private root keep only those whose `repo` matches `<workspace>` — the rest belong to sibling repos. Surface up to ~10 active across both roots, newest first, as `slug — title`.
+   Output interleaves `path:status:` with `path:# Title` per file. Skip any whose `status` is `superseded`, `deprecated`, or `draft` (missing = `active`), and from a shared root keep only those whose `repo` matches this repo's. A doc there with no `repo` is scoped to the container and belongs to no single repo. Surface up to ~10 active across all roots, newest first, as `slug — title`.
 
 5. **Patterns** — not loaded at recall; query on demand with `tolvi ask`.
 

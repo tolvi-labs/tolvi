@@ -60,7 +60,7 @@ export async function buildApp(cfg: Config): Promise<FastifyInstance> {
       info: {
         title: 'Tolvi Server API',
         description:
-          'HTTP API for the Tolvi server. See spec/tolvi-format-v1.md for the vault format contract.',
+          'HTTP API for the Tolvi server. See spec/tolvi-format-v2.md for the vault format contract.',
         version: '0.1.0',
       },
       servers: [{ url: 'http://localhost:3000', description: 'local dev' }],

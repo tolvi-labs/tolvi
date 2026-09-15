@@ -79,4 +79,4 @@ Triggered by adoption signal — see the README for details on how the OSS and a
 
 ## Versioning
 
-The vault format is independently versioned (`tolvi-format-v1`, `tolvi-format-v2`, …). Format-version compatibility is documented in [`spec/tolvi-format-v1.md`](./spec/tolvi-format-v1.md).
+The vault format is independently versioned (`tolvi-format-v1`, `tolvi-format-v2`, …). Format-version compatibility is documented in [`spec/tolvi-format-v2.md`](./spec/tolvi-format-v2.md).

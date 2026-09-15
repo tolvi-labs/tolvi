@@ -43,7 +43,7 @@ type HealthReport struct {
 	OverallPct   float64
 }
 
-// knownStatuses is the tolvi-format-v1 status vocabulary. An absent status
+// knownStatuses is the tolvi-format status vocabulary, frozen since v1. An absent status
 // means `active` by convention, so only a present-but-unrecognized value is
 // a defect.
 var knownStatuses = map[string]bool{

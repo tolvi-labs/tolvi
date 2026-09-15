@@ -10,7 +10,7 @@ import (
 
 // preferredKeyOrder defines the canonical ordering for known frontmatter
 // keys when rendering. Keys not listed appear after, in alphabetical order.
-// Matches the order used in tolvi-format-v1 spec examples.
+// Matches the order used in the tolvi-format spec examples.
 var preferredKeyOrder = []string{
 	"tags",
 	"date",

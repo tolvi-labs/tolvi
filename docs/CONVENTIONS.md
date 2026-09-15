@@ -1,6 +1,6 @@
 # Vault conventions
 
-This document describes how vault content is organized on disk, what frontmatter each doc type carries, and the small set of conventions that consumers (CLI, server, agents) rely on. The normative version of these rules lives in [`spec/tolvi-format-v1.md`](../spec/tolvi-format-v1.md); this document is the contributor-facing companion that explains the *why*.
+This document describes how vault content is organized on disk, what frontmatter each doc type carries, and the small set of conventions that consumers (CLI, server, agents) rely on. The normative version of these rules lives in [`spec/tolvi-format-v2.md`](../spec/tolvi-format-v2.md); this document is the contributor-facing companion that explains the *why*.
 
 ## 1. Vault directory layout
 
@@ -28,7 +28,7 @@ Each repo that uses Tolvi has a `vault/` directory at the repo root:
 
 ## 2. Status enum
 
-Every doc carries a `status:` field in frontmatter. The enum has six values and is frozen for `tolvi-format-v1`:
+Every doc carries a `status:` field in frontmatter. The enum has six values and is frozen:
 
 | Status | Meaning | Surfaced by default? |
 |---|---|---|
@@ -205,7 +205,7 @@ Recommended rules for generators:
 - Extract each line's title from the doc's H1 if present; otherwise the first H2; otherwise fall back to the filename slug with hyphens replaced by spaces.
 - Sort decisions by filename descending (which, given the `YYYY-MM-DD-slug.md` naming rule in Section 1, sorts newest-first).
 - Sort patterns by filename ascending (patterns are timeless; alphabetical is the natural order).
-- Apply the default status filter from `spec/tolvi-format-v1.md` Section 9: exclude `superseded`, `deprecated`, and `draft` from the index.
+- Apply the default status filter from `spec/tolvi-format-v2.md` Section 9: exclude `superseded`, `deprecated`, and `draft` from the index.
 - Be idempotent — replace the content between the `VAULT-INDEX:START` and `VAULT-INDEX:END` markers in place; append the block at the end of the file if no markers exist.
 
 When to skip the index:

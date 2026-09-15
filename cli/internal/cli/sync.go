@@ -19,7 +19,7 @@ type AssembleOpts struct {
 }
 
 // AssembleFrontmatter builds a Frontmatter map per the doc-type rules of
-// tolvi-format-v1. Fields included depend on type:
+// tolvi-format-v2. Fields included depend on type:
 //
 //	decision: tags, date, repo, status
 //	session:  tags, date, status

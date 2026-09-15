@@ -1,5 +1,5 @@
 /**
- * Score-formula constants matching tolvi-format-v1 §9 (RAG defaults).
+ * Score-formula constants matching tolvi-format-v2 §9 (RAG defaults).
  * Single edit point if the spec evolves to v1.x.
  */
 export const RECENCY_FLOOR = 0.8;
