@@ -68,9 +68,25 @@ while IFS= read -r file; do
   fi
 done < <(git ls-files)
 
+# Commit messages are published too, and this check never looked at them. A
+# message naming a protected term is as public as a file containing one, and
+# harder to remove later: fixing it means rewriting history rather than editing
+# a file. Two such messages sat in public history for months while CI stayed
+# green, including, with some irony, the message of the commit that removed
+# forbidden terms from the files.
+while IFS= read -r line; do
+  sha="${line%% *}"
+  if git log -1 --pretty='%s%n%b' "$sha" | grep -iqE "$PATTERN" 2>/dev/null; then
+    echo "FAIL: forbidden term in commit message: $sha"
+    git log -1 --pretty='%s%n%b' "$sha" | grep -inE "$PATTERN" | head -3 | sed 's/^/    /'
+    FOUND=1
+  fi
+done < <(git log --all --pretty='%H %s')
+
 if [ "$FOUND" -ne 0 ]; then
   echo ""
   echo "Brand-isolation check failed. The forbidden terms above must be removed,"
+  echo "or, for a commit message, stripped with a git filter-repo --replace-message pass."
   echo "or the file must be added to the allowlist in .github/scripts/brand-isolation-check.sh."
   echo "See CONTRIBUTING.md 'Brand isolation' section for details."
   exit 1
