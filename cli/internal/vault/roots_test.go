@@ -21,7 +21,7 @@ func writeRoots(t *testing.T, body string) string {
 // three workspaces and one product root.
 const tolviLabsRoots = `{
   "roots": [
-    {"role": "org", "workspace": "tolvi-labs", "path": "/vaults/acme-site/vault"},
+    {"role": "org", "workspace": "tolvi-labs", "path": "/vaults/acme-org/vault"},
     {"role": "org", "workspace": "acme", "path": "/vaults/acme-shared/vault"},
     {"role": "org", "workspace": "isolated-org", "path": "/vaults/isolated-org/vault"},
     {"role": "product", "product": "acme", "path": "/vaults/acme-vault/vault"}
@@ -97,7 +97,7 @@ func TestChainSelectsOrgRootByWorkspace(t *testing.T) {
 	if !ok {
 		t.Fatal("expected an org root in the chain")
 	}
-	if org.Path != "/vaults/acme-site/vault" {
+	if org.Path != "/vaults/acme-org/vault" {
 		t.Errorf("org root = %q, want the tolvi-labs root", org.Path)
 	}
 }
@@ -136,11 +136,11 @@ func TestTargetResolutionTable(t *testing.T) {
 		want       string
 	}{
 		{"public decision stays in the repo vault", "decision", "", "/repo/vault"},
-		{"private decision routes to the org root", "decision", "private", "/vaults/acme-site/vault"},
+		{"private decision routes to the org root", "decision", "private", "/vaults/acme-org/vault"},
 		{"public pattern stays in the repo vault", "pattern", "", "/repo/vault"},
-		{"private pattern routes to the org root", "pattern", "private", "/vaults/acme-site/vault"},
-		{"a session always routes private", "session", "", "/vaults/acme-site/vault"},
-		{"an explicitly private session routes private too", "session", "private", "/vaults/acme-site/vault"},
+		{"private pattern routes to the org root", "pattern", "private", "/vaults/acme-org/vault"},
+		{"a session always routes private", "session", "", "/vaults/acme-org/vault"},
+		{"an explicitly private session routes private too", "session", "private", "/vaults/acme-org/vault"},
 	}
 
 	for _, tc := range cases {
