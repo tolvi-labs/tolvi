@@ -1,0 +1,35 @@
+{
+  "name": "tolvi",
+  "version": "0.1.2",
+  "description": "Read, write, and ask questions of a Tolvi engineering vault",
+  "author": {
+    "name": "Tolvi Labs",
+    "url": "https://tolvilabs.com"
+  },
+  "homepage": "https://tolvilabs.com/",
+  "repository": "https://github.com/tolvi-labs/tolvi",
+  "license": "Apache-2.0",
+  "keywords": [
+    "vault",
+    "decisions",
+    "context",
+    "engineering-memory"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Tolvi",
+    "shortDescription": "Read, write, and ask questions of a Tolvi engineering vault",
+    "longDescription": "Capture decisions, sessions and patterns as plain Markdown your agents read as context, then recall them before the next decision. Git-native, no server required.",
+    "developerName": "Tolvi Labs",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://tolvilabs.com",
+    "privacyPolicyURL": "https://tolvilabs.com/privacy",
+    "termsOfServiceURL": "https://tolvilabs.com/terms",
+    "brandColor": "#84CC16"
+  }
+}

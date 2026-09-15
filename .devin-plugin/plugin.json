@@ -1,0 +1,18 @@
+{
+  "name": "tolvi",
+  "version": "0.1.2",
+  "description": "Read, write, and ask questions of a Tolvi engineering vault",
+  "author": {
+    "name": "Tolvi Labs",
+    "url": "https://tolvilabs.com"
+  },
+  "homepage": "https://tolvilabs.com/",
+  "repository": "https://github.com/tolvi-labs/tolvi",
+  "license": "Apache-2.0",
+  "keywords": [
+    "vault",
+    "decisions",
+    "context",
+    "engineering-memory"
+  ]
+}

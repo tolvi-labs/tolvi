@@ -1,0 +1,6 @@
+name: tolvi
+version: 0.1.2
+description: Read, write, and ask questions of a Tolvi engineering vault
+author: Tolvi Labs
+# No provides_hooks: this plugin ships skills, not a Python hook implementation.
+# Declaring a hook it does not implement would fail at load rather than degrade.
