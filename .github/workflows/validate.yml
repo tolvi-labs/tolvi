@@ -33,6 +33,9 @@ jobs:
       - name: Schema copy parity
         run: npm run validate:schema-parity
 
+      - name: Spec package version agreement
+        run: npm run validate:spec-package
+
       - name: Brand-isolation guard
         run: npm run validate:brand
         env:

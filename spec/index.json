@@ -1,0 +1,10 @@
+{
+  "format": "tolvi-format-v2",
+  "schemaVersion": 2,
+  "schemas": {
+    "decision": "./schemas/decision.json",
+    "pattern": "./schemas/pattern.json",
+    "session": "./schemas/session.json",
+    "vault-meta": "./schemas/vault-meta.json"
+  }
+}

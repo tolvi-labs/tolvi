@@ -9,13 +9,14 @@
   "scripts": {
     "validate:schemas": "node .github/scripts/validate-schema.js",
     "validate:brand": ".github/scripts/brand-isolation-check.sh",
-    "validate": "npm run validate:schemas && npm run validate:schema-parity && npm run validate:brand && npm run validate:installers && npm run validate:preflight && npm run validate:vault-health && npm run validate:prose && npm run validate:markdown",
+    "validate": "npm run validate:schemas && npm run validate:schema-parity && npm run validate:spec-package && npm run validate:brand && npm run validate:installers && npm run validate:preflight && npm run validate:vault-health && npm run validate:prose && npm run validate:markdown",
     "validate:installers": ".github/scripts/installer-remediation-check.sh",
     "validate:preflight": ".github/scripts/preflight-sync-check.sh",
     "validate:vault-health": ".github/scripts/vault-health-parity-check.sh",
     "validate:prose": ".github/scripts/readme-em-dash-check.sh",
     "validate:schema-parity": ".github/scripts/schema-copy-parity-check.sh",
-    "validate:markdown": "markdownlint-cli2 \"**/*.md\""
+    "validate:markdown": "markdownlint-cli2 \"**/*.md\"",
+    "validate:spec-package": ".github/scripts/spec-package-check.sh"
   },
   "devDependencies": {
     "ajv": "^8.17.1",
