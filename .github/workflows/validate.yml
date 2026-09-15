@@ -36,6 +36,9 @@ jobs:
       - name: Spec package version agreement
         run: npm run validate:spec-package
 
+      - name: Plugin manifest agreement
+        run: npm run validate:plugin-manifests
+
       - name: Brand-isolation guard
         run: npm run validate:brand
         env:
