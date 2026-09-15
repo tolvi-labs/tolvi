@@ -1,0 +1,52 @@
+name: spec-release
+
+on:
+  push:
+    tags:
+      - 'spec-v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify tag matches package.json version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#spec-v}"
+          PKG_VERSION=$(node -p "require('./spec/package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match spec/package.json version $PKG_VERSION"
+            exit 1
+          fi
+
+      # The package ships the format contract, so its major version IS the
+      # format version. A 3.x package carrying v2 schemas would leave consumers
+      # pinning a major that means nothing.
+      - name: Verify package major matches the format version
+        run: npm run validate:spec-package
+
+      - name: Validate the schemas it ships
+        run: |
+          npm ci
+          npm run validate:schemas
+          npm run validate:schema-parity
+
+      - name: Publish to npm
+        working-directory: spec
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
