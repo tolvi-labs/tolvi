@@ -405,7 +405,7 @@ check_cli() {
       go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
 
   Then make it reachable, which 'go install' does not do for you:
-      export PATH="\$PATH:\$(go env GOPATH)/bin"     # add to ~/.zshrc or ~/.bashrc
+      export PATH="\$PATH:\$(go env GOPATH)/bin"     # add to ~/.zshenv, not ~/.zshrc
 
   Verify with:  tolvi doctor
 EOF
