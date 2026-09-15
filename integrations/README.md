@@ -24,7 +24,7 @@ All integrations assume:
 
 - The `tolvi` CLI is installed and in `$PATH` (or the agent degrades gracefully).
 - A vault exists at `<repo>/vault/` with a valid `.vault-meta.json` (created by `tolvi init`).
-- The Tolvi format spec is at [`spec/tolvi-format-v1.md`](../spec/tolvi-format-v1.md).
+- The Tolvi format spec is at [`spec/tolvi-format-v2.md`](../spec/tolvi-format-v2.md).
 
 ## Adding a new integration
 

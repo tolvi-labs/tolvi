@@ -13,7 +13,7 @@ Two architectures, one format:
 - **Local arm (CLI)** uses CAG - whole vault → Anthropic context via prompt caching. Zero infrastructure beyond an API key.
 - **Server arm** uses RAG - pgvector + Ollama embeddings, multi-tenant, self-hostable via Docker Compose. For teams who outgrow the local context window or want a shared index.
 
-The vault format (`tolvi-format-v1`) is the contract between the two arms and the only thing agents need to learn.
+The vault format (`tolvi-format-v2`) is the contract between the two arms and the only thing agents need to learn.
 
 ## Quickstart
 
@@ -30,9 +30,16 @@ export ANTHROPIC_API_KEY=sk-ant-...
 tolvi init
 tolvi sync decision "Why we chose Postgres" --body "pgvector + JSON support tipped it"
 tolvi ask "what did we decide about Postgres"
+tolvi recall                    # what was I doing? recent sessions + active decisions, no API call
+
+# 4. Check the setup, and see where docs are routed:
+tolvi doctor
+tolvi roots
 ```
 
 For Claude Code users, the skill at [`integrations/claude-code/`](./integrations/claude-code/) lets you do the same thing in natural language inside a Claude Code session (`/tolvi` slash command).
+
+`tolvi roots` is worth knowing early if you use more than one repo. Roots are declared once per machine in `~/.config/tolvi/roots.json` and never committed, so a repo commits only who it is and the machine decides where its docs live. With no `roots.json` everything stays in the repo's own `vault/`, which is the default and what a contributor wants.
 
 For optional pre-commit nudges that flag commits touching decision-likely files (deps, infra, tooling, large diffs):
 
@@ -53,7 +60,7 @@ Rule of thumb: **mechanical for known, controlled capture; the skill for synthes
 
 | Surface | Where | Status |
 |---|---|---|
-| **Format spec** `tolvi-format-v1` | [`spec/tolvi-format-v1.md`](./spec/tolvi-format-v1.md), [`spec/schemas/`](./spec/schemas/) | ✅ |
+| **Format spec** `tolvi-format-v2` | [`spec/tolvi-format-v2.md`](./spec/tolvi-format-v2.md), [`spec/schemas/`](./spec/schemas/) | ✅ |
 | **CLI** (`init`, `sync`, `ask`, `recall`, `commit`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
 | **Server** (Fastify + Postgres + pgvector, multi-tenant, OpenAPI) | [`server/`](./server/), [`spec/openapi.json`](./spec/openapi.json) | ✅ Phase 2 |
 | **TypeScript SDK** `@tolvi-labs/sdk` (typed client over the server's HTTP API) | [`sdk/`](./sdk/) | ✅ Phase 5.A |

@@ -37,15 +37,17 @@ Never add a `Co-Authored-By` trailer, a `Generated with Claude Code` line, the �
 
 Run the full /tolvi-sync flow: reconstruct the session and write the session log, plus any decisions and patterns, to the vault following the schema. Apply the **authority gate** — capture what was tried or considered in this session, including reasoned rejections; exclude unqualified chatter from outside the session.
 
-### Vault routing (public repos with a private vault)
+### Vault routing
 
-While running that sync flow, before writing any session note or decision, check for a local routing config file `vault/.vault-routing.local.json` in the repo being committed (it is git-ignored and present only on internal-dev checkouts of a public repo). If it exists, read its `private_vault` path and route:
+Ask the CLI where each doc belongs rather than reading any config yourself:
 
-- Session notes ALWAYS go to `<private_vault>/sessions/YYYY-MM-DD-<workspace>.md` (workspace-suffixed to avoid cross-repo collisions) — NEVER into the public repo's own `vault/`.
-- Decisions default to the repo's own `vault/decisions/` (public, contributor-facing). Write a decision to `<private_vault>/decisions/` with `visibility: private` in its frontmatter instead whenever it is internal or strategic — business, cross-repo coordination, unreleased products, or roadmap. When in doubt, write it private.
-- Never write a session note or a `visibility: private` decision into the public repo's `vault/`.
+    tolvi roots --session-note
 
-If the config file is absent (an external contributor, or a private repo), behave exactly as before: everything goes to the local `vault/`, so contributor PRs keep feeding the public vault normally. The `tolvi` CLI reads the same `vault/.vault-routing.local.json` itself, so both capture paths route identically with no extra flags; `--open-source` and `--private-vault <path>` still override it, and `tolvi sync --private` marks a decision private.
+Roots are declared once in a machine-local `~/.config/tolvi/roots.json`; a repo commits only its identity (`workspace`, `repo`, optional `product`) in `vault/.vault-meta.json`.
+
+- Session notes go where that command says. Where the workspace declares an org root that is `<org-root>/sessions/YYYY-MM-DD-<repo>.md`, never the repo's own `vault/`. With no `roots.json` the vault is in single-root mode and the note belongs in `vault/sessions/YYYY-MM-DD.md`, which is what an external contributor wants: their note ships with their PR.
+- Decisions default to the repo's own `vault/decisions/`, which is public and contributor-facing. Write one to the org root with `visibility: private` whenever it is internal or strategic — business, cross-repo coordination, unreleased products, or roadmap. When in doubt, write it private.
+- A `roots.json` that exists but lacks the root a doc needs refuses the write rather than falling back to the public vault. Absent config is a legitimate contributor state; a gap in present config is a misconfiguration, and falling back is how an internal note gets published.
 
 ## Step 2 — Stage
 

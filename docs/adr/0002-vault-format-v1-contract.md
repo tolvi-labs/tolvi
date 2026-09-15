@@ -1,7 +1,9 @@
 # 0002 — Vault format v1 contract
 
-**Status:** accepted
+**Status:** accepted; the contract it describes was revised by `tolvi-format-v2` on 2026-09-14
 **Date:** 2026-05-09
+
+> **Later note (2026-09-14).** The decision recorded here still holds: a strict spec with frozen defaults remains the right contract, and v2 was produced by following the versioning rules this ADR put in place rather than by working around them. What changed is the contract's content, not its shape — `tolvi-format-v2` adds vault identity (`repo`, `product`) and document `visibility`, and requires `schema_version` to be `2`. The text below is left as written, as the record of what was decided in May.
 
 ## Context
 

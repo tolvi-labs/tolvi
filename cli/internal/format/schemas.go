@@ -1,5 +1,5 @@
 // Package format provides frontmatter parsing/rendering and JSON Schema
-// validation against the four tolvi-format-v1 schemas, embedded at build
+// validation against the four tolvi-format-v2 schemas, embedded at build
 // time so the CLI works offline.
 package format
 
