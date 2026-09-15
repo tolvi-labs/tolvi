@@ -19,7 +19,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-INSTALLER="$REPO_ROOT/integrations/claude-code/install.sh"
+INSTALLER="$REPO_ROOT/skills/tolvi/install.sh"
 
 if [[ ! -f "$INSTALLER" ]]; then
   echo "FAIL: installer not found at $INSTALLER" >&2

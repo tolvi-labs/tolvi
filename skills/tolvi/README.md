@@ -22,7 +22,7 @@ Type `/tolvi` once at the start of a session, then ask the vault questions or ca
 From the root of your `tolvi-labs/tolvi` checkout:
 
 ```bash
-cd integrations/claude-code
+cd skills/tolvi
 bash install.sh
 ```
 
@@ -41,7 +41,7 @@ Default mode is **symlink**, so `git pull` on this repo updates the skill automa
 ```bash
 # From the root of your tolvi-labs/tolvi checkout:
 mkdir -p ~/.claude/skills/tolvi
-ln -s "$(pwd)/integrations/claude-code/SKILL.md" ~/.claude/skills/tolvi/SKILL.md
+ln -s "$(pwd)/skills/tolvi/SKILL.md" ~/.claude/skills/tolvi/SKILL.md
 ```
 
 ## Use
@@ -86,7 +86,7 @@ Use the CLI command for controlled, known capture; use the skill to synthesize t
 Install Claude Code hooks to automate the session bookends:
 
 ```bash
-cd integrations/claude-code
+cd skills/tolvi
 bash install.sh --with-hooks
 ```
 
@@ -120,7 +120,7 @@ User scope is recommended: recall fires in any repo with a vault without any per
 ## Uninstall
 
 ```bash
-cd integrations/claude-code
+cd skills/tolvi
 bash install.sh --uninstall
 ```
 

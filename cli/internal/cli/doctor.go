@@ -46,7 +46,7 @@ type DoctorOpts struct {
 // claudeInstallHint points at the repo's Claude Code installer. There is no
 // top-level `tolvi install` subcommand; the allow rules are merged by the
 // shell installer, so the remediation has to name it.
-const claudeInstallHint = "bash integrations/claude-code/install.sh --with-hooks   # from a tolvi checkout"
+const claudeInstallHint = "bash skills/tolvi/install.sh --with-hooks   # from a tolvi checkout"
 
 const goBinHint = `go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
      export PATH="$PATH:$(go env GOPATH)/bin"   # add to ~/.zshrc or ~/.bashrc`

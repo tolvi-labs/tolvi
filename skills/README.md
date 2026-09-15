@@ -1,11 +1,15 @@
-# Agent integrations
+# Skills
 
-> **Status:** Phase 4 (not yet shipped). Track progress in [`ROADMAP.md`](../ROADMAP.md).
+Claude Code skills published by this repo, one directory per skill, which is where Claude Code expects to find them.
 
-This directory will hold drop-in integration files for AI coding agents:
+- [`tolvi/`](./tolvi/): the Tolvi skill. read, write, and ask questions of a vault in natural language, plus the `/tolvi-recall`, `/tolvi-sync` and `/tolvi-commit` slash commands and the session hooks that make capture ambient. Install with [`tolvi/install.sh`](./tolvi/install.sh).
 
-- `claude-code/`: skill files for Claude Code (capture-on-finish, recall-before-decide, ask-in-context)
-- `cursor/`: `.cursorrules` template + workflow examples
-- `aider/`, `openhands/`, `continue/`: skeleton integrations
+The plugin declares itself in [`../.claude-plugin/plugin.json`](../.claude-plugin/plugin.json).
 
-Once these ship, adding three lines to a `CLAUDE.md` (or equivalent agent-config file) gives the project a queryable, version-controlled history of every architectural decision the agents make.
+## Other agents
+
+Integrations for agents that are not Claude Code live in [`../integrations/`](../integrations/). Aider, Continue, Cursor and OpenHands each take a conventions file rather than a skill directory.
+
+## Sibling skills
+
+The rest of the stack ships from its own repos, each with its own manifest and `skills/` directory: [bastion](https://github.com/tolvi-labs/bastion), [guild](https://github.com/tolvi-labs/guild), and [magellan](https://github.com/tolvi-labs/magellan).
