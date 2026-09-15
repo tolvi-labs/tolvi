@@ -1,0 +1,21 @@
+version: 1
+tracks:
+  - name: solo
+    triggers:
+      - "cli/internal/cli/init.go"
+      - "cli/internal/packs/**"
+      - "integrations/claude-code/**"
+      - "packs/**"
+      - ".github/scripts/**"
+    substrate:
+      kind: repo
+      path: "../tolvi-solo"
+      look: ["packs/", "install.sh", "scripts/", "commands/"]
+  - name: tap
+    triggers:
+      - "cli/.goreleaser.yaml"
+      - "cli/cmd/tolvi/version.go"
+    substrate:
+      kind: repo
+      path: "../homebrew-tap"
+      look: ["Casks/", "README.md"]

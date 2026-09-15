@@ -67,9 +67,9 @@ The mid-brainstorm pause captured above has resolved. Brainstorm was resumed in 
 
 **Finalized artifacts:**
 
-- **Design spec:** [`docs/superpowers/specs/2026-05-22-typescript-sdk-design.md`](../../docs/superpowers/specs/2026-05-22-typescript-sdk-design.md) — 687 lines, 11 sections (§0 summary through §10 cross-references). Covers repo layout, API surface, error hierarchy, type-gen + drift detection, testing strategy, CI + release flow, and docs scope. The three 2026-05-22 locks (hand-written client over generated types, `sdk/` subdirectory, universal ESM-only runtime) are recorded as §1 "Foundational decisions (locked)" and were not re-debated.
+- **Design spec:** `docs/superpowers/specs/2026-05-22-typescript-sdk-design.md` (a local engineering artifact, not committed) — 687 lines, 11 sections (§0 summary through §10 cross-references). Covers repo layout, API surface, error hierarchy, type-gen + drift detection, testing strategy, CI + release flow, and docs scope. The three 2026-05-22 locks (hand-written client over generated types, `sdk/` subdirectory, universal ESM-only runtime) are recorded as §1 "Foundational decisions (locked)" and were not re-debated.
 
-- **Implementation plan:** [`docs/superpowers/plans/2026-05-22-typescript-sdk.md`](../../docs/superpowers/plans/2026-05-22-typescript-sdk.md) — 2,726 lines, 18 TDD-shaped tasks + a final code review. Each task has exact file paths, real code in every step, verification commands with expected output, and ends with `git add` + `git status` (manual-commit convention; implementer subagents never run `git commit`).
+- **Implementation plan:** `docs/superpowers/plans/2026-05-22-typescript-sdk.md` (a local engineering artifact, not committed) — 2,726 lines, 18 TDD-shaped tasks + a final code review. Each task has exact file paths, real code in every step, verification commands with expected output, and ends with `git add` + `git status` (manual-commit convention; implementer subagents never run `git commit`).
 
 - **Implementation status:** Task 1 (sdk/ scaffolding) shipped via subagent-driven development on 2026-05-24. Both stage reviews (spec compliance + code quality) approved. Tasks 2–18 + final review remain queued.
 
