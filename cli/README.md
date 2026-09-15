@@ -62,7 +62,7 @@ recall:
   include_patterns: false
 ```
 
-See [`integrations/claude-code/`](../integrations/claude-code/) for the Claude Code session hook that calls `tolvi recall --format hook-json` automatically on every session start.
+See [`skills/tolvi/`](../skills/tolvi/) for the Claude Code session hook that calls `tolvi recall --format hook-json` automatically on every session start.
 
 ### `tolvi commit`
 

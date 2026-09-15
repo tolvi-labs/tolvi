@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — install the Tolvi Claude Code skill and optional session hooks.
 #
-# Default: symlink integrations/claude-code/SKILL.md → ~/.claude/skills/tolvi/SKILL.md
+# Default: symlink skills/tolvi/SKILL.md → ~/.claude/skills/tolvi/SKILL.md
 # so `git pull` updates land automatically.
 #
 # Flags:
@@ -35,7 +35,7 @@ usage() {
 Usage: bash install.sh [--copy] [--uninstall] [--path <dir>] [--force]
                        [--with-hooks] [--hooks-scope user|project]
 
-Default: symlink integrations/claude-code/SKILL.md into
+Default: symlink skills/tolvi/SKILL.md into
          \$HOME/.claude/skills/tolvi/SKILL.md so that 'git pull' on the
          tolvi-labs/tolvi repo updates the skill automatically.
 
@@ -169,7 +169,7 @@ install_commands() {
 # /tolvi-bastion and /tolvi-guild ship as part of the suite.
 install_stack_skills() {
   local repo_root parent dest_base
-  repo_root="$(cd "$SCRIPT_DIR/../.." && pwd)"   # integrations/claude-code → repo root
+  repo_root="$(cd "$SCRIPT_DIR/../.." && pwd)"   # skills/tolvi → repo root
   parent="$(dirname "$repo_root")"               # the tolvi-labs/ workspace
   dest_base="${HOME}/.claude/skills"
   mkdir -p "$dest_base"

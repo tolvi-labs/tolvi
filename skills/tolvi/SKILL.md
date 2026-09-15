@@ -166,7 +166,7 @@ recall:
 
 Flag values override config-file values. Config-file values override compiled-in defaults.
 
-**Used by session hooks** — `integrations/claude-code/hooks/tolvi-recall` calls `tolvi recall --format hook-json` on every Claude Code `SessionStart`. Install with `bash install.sh --with-hooks`.
+**Used by session hooks** — `skills/tolvi/hooks/tolvi-recall` calls `tolvi recall --format hook-json` on every Claude Code `SessionStart`. Install with `bash install.sh --with-hooks`.
 
 ### `tolvi init`
 

@@ -53,4 +53,4 @@ Cite vault content with `[[slug]]`. Use exact slugs that exist in the vault — 
 - **`tolvi ask` reports vault too large**: suggest `--exclude-type session` or migrate to the server arm.
 - **No `ANTHROPIC_API_KEY`**: point the user at `~/.config/tolvi/config.yaml` or the env var.
 
-For the full skill content (with worked examples and richer behavioral rules), see the canonical Claude Code skill at <https://github.com/tolvi-labs/tolvi/blob/main/integrations/claude-code/SKILL.md>.
+For the full skill content (with worked examples and richer behavioral rules), see the canonical Claude Code skill at <https://github.com/tolvi-labs/tolvi/blob/main/skills/tolvi/SKILL.md>.

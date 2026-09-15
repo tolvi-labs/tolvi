@@ -4,7 +4,7 @@ tracks:
     triggers:
       - "cli/internal/cli/init.go"
       - "cli/internal/packs/**"
-      - "integrations/claude-code/**"
+      - "skills/tolvi/**"
       - "packs/**"
       - ".github/scripts/**"
     substrate:

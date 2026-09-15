@@ -37,7 +37,7 @@ tolvi doctor
 tolvi roots
 ```
 
-For Claude Code users, the skill at [`integrations/claude-code/`](./integrations/claude-code/) lets you do the same thing in natural language inside a Claude Code session (`/tolvi` slash command).
+For Claude Code users, the skill at [`skills/tolvi/`](./skills/tolvi/) lets you do the same thing in natural language inside a Claude Code session (`/tolvi` slash command).
 
 `tolvi roots` is worth knowing early if you use more than one repo. Roots are declared once per machine in `~/.config/tolvi/roots.json` and never committed, so a repo commits only who it is and the machine decides where its docs live. With no `roots.json` everything stays in the repo's own `vault/`, which is the default and what a contributor wants.
 
@@ -64,7 +64,7 @@ Rule of thumb: **mechanical for known, controlled capture; the skill for synthes
 | **CLI** (`init`, `sync`, `ask`, `recall`, `commit`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
 | **Server** (Fastify + Postgres + pgvector, multi-tenant, OpenAPI) | [`server/`](./server/), [`spec/openapi.json`](./spec/openapi.json) | ✅ Phase 2 |
 | **TypeScript SDK** `@tolvi-labs/sdk` (typed client over the server's HTTP API) | [`sdk/`](./sdk/) | ✅ Phase 5.A |
-| **Claude Code skill** (Tier 1 - `/tolvi` slash command) | [`integrations/claude-code/`](./integrations/claude-code/) | ✅ Phase 4 |
+| **Claude Code skill** (Tier 1 - `/tolvi` slash command) | [`skills/tolvi/`](./skills/tolvi/) | ✅ Phase 4 |
 | **Cursor `.cursorrules`** (Tier 2) | [`integrations/cursor/`](./integrations/cursor/) | ✅ Phase 4 |
 | **Aider / OpenHands / Continue** skeletons (Tier 3) | [`integrations/aider/`](./integrations/aider/), [`integrations/openhands/`](./integrations/openhands/), [`integrations/continue/`](./integrations/continue/) | ✅ Phase 4 |
 | **Sample vault** (synthetic, validates against the format spec) | [`examples/sample-vault/`](./examples/sample-vault/) | ✅ |
