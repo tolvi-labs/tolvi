@@ -47,6 +47,19 @@ For optional pre-commit nudges that flag commits touching decision-likely files 
 tolvi precommit install
 ```
 
+## The stack
+
+Every Tolvi tool installs from one marketplace:
+
+```bash
+/plugin marketplace add tolvi-labs/tolvi
+/plugin install tolvi-guild        # plan against your codebase
+/plugin install tolvi-bastion      # harden the plan before code
+/plugin install tolvi-magellan     # compile it into an executable task DAG
+```
+
+`tolvi` itself, and `tolvi-solo` for the server-free single-builder setup, install the same way. Each plugin also ships manifests for Codex, Cursor, Gemini, Devin and Hermes, so the skills work outside Claude Code too.
+
 ## Two ways to capture
 
 Tolvi captures at two altitudes, on purpose. They are complementary, not redundant:
