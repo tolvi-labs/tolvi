@@ -9,7 +9,7 @@ Per-agent setup for using a Tolvi vault from your AI coding tool of choice.
 | Claude Code | 1 (deep) | ✅ shipped | [`skills/tolvi/`](../skills/tolvi/) |
 | Codex | 2 (shared skill) | ✅ shipped | [`codex/`](./codex/) |
 | Cursor | 2 (shared skill) | ✅ shipped | [`cursor/`](./cursor/) |
-| Gemini CLI | 2 (shared skill) | ✅ shipped | [`gemini/`](./gemini/) |
+| Gemini CLI | 2 (shared skill) | ✅ shipped (install not yet verified) | [`gemini/`](./gemini/) |
 | OpenHands | 2 (shared skill) | ✅ shipped | [`openhands/`](./openhands/) |
 | Aider | 3 (conventions file) | ✅ shipped | [`aider/`](./aider/) |
 

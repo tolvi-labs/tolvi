@@ -9,7 +9,7 @@ Gemini CLI is a **Tier 2 (shared skill)** integration in the [Tolvi integrations
 ## Prerequisites
 
 - [Gemini CLI](https://geminicli.com) installed, with git available.
-- The `tolvi` CLI on your `PATH`:
+- The `tolvi` CLI on your `PATH` (recommended; without it the skill reads `vault/` directly):
 
   ```bash
   go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
@@ -23,10 +23,10 @@ Gemini CLI is a **Tier 2 (shared skill)** integration in the [Tolvi integrations
 ## Install
 
 ```bash
-gemini extensions install https://github.com/tolvi-labs/tolvi
+gemini extensions install https://github.com/tolvi-labs/tolvi --ref main
 ```
 
-The extension provides the Tolvi skill and loads `GEMINI-EXTENSION.md` as context in every session where it is active.
+Gemini CLI then offers to install with git clone because this repository's releases do not carry the extension; answer yes. Without `--ref main`, Gemini CLI installs from the latest GitHub release, which does not contain the extension. The extension provides the Tolvi skill and loads `GEMINI-EXTENSION.md` as context in every session where it is active.
 
 ## Use
 
@@ -41,6 +41,8 @@ Ask Gemini about the vault in plain language. It uses the skill when a request m
 ```bash
 gemini extensions update tolvi
 ```
+
+A git clone install updates from `main`.
 
 ## Uninstall
 
@@ -73,4 +75,4 @@ See the [CLI README](../../cli/) for the full config reference.
 
 ## Verification
 
-This install follows the Gemini CLI extension documentation at <https://geminicli.com/docs/extensions/reference/>, checked on 2026-09-16. It has not been run end to end with Gemini CLI.
+This install follows the Gemini CLI extension documentation at <https://geminicli.com/docs/extensions/reference/>, checked on 2026-09-16. It has not been run end to end with Gemini CLI. The install command with `--ref main` has not been run.

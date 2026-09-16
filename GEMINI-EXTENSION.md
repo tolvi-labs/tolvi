@@ -11,4 +11,4 @@ go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
 export PATH="$PATH:$(go env GOPATH)/bin"
 ```
 
-This file is context for people using the extension. Contributor conventions for the tolvi repository itself live in `AGENTS.md`.
+This file is context for people using the extension.
