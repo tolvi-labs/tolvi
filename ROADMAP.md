@@ -61,7 +61,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 - ✅ Public repository (Apache 2.0)
 - ✅ Hosted docs site live at `tolvilabs.com/docs`
 - 📅 Homebrew tap, npm/PyPI publishes, Docker Hub image
-- 📅 5–15 friendly users from the maintainer's network
+- 📅 A small invited cohort of early users
 - 📅 Daily metric tracking
 
 ### Phase 7 — Iterate 📅

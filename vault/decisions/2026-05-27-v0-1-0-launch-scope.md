@@ -15,7 +15,7 @@ product_area: Release / Distribution
 
 ## Why
 
-Phase 6 is a soft launch to 5-15 friendly developers from the maintainer's network. For an audience that small and that close to the project, every additional distribution channel beyond the essentials adds setup work (new repos, new tokens, new external accounts) that delays the first ship without meaningfully changing whether those particular users can install. The decision picks the minimum channel set that satisfies the cohort's actual install habits and explicitly defers the rest to before the wider public launch (Phase 8 / Show HN), when impersonation defense and registry coverage start to matter materially.
+Phase 6 is a soft launch to a small invited cohort. For an audience that small and that close to the project, every additional distribution channel beyond the essentials adds setup work (new repos, new tokens, new external accounts) that delays the first ship without meaningfully changing whether those particular users can install. The decision picks the minimum channel set that satisfies the cohort's actual install habits and explicitly defers the rest to before the wider public launch (Phase 8 / Show HN), when impersonation defense and registry coverage start to matter materially.
 
 ## How
 
