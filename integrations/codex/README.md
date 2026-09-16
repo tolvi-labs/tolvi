@@ -87,4 +87,4 @@ See the [CLI README](../../cli/) for the full config reference.
 
 ## Verification
 
-This install follows the Codex Agent Skills documentation at <https://developers.openai.com/codex/skills>, checked on 2026-09-16. It has not been run end to end with Codex.
+Verified end to end on 2026-09-16 with Codex CLI 0.154.0 (`npx @openai/codex`): installed with `install.sh --agents` in a repo with a vault, the agent listed the tolvi skill (and did not in the same repo without it), and answered a vault question from the recorded decision.
