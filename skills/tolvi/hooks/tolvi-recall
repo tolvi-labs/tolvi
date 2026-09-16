@@ -37,19 +37,22 @@ find_vault() {
   return 1
 }
 
-# A Cursor plugin hook's working directory is not documented, so start from the
-# workspace root Cursor reports when there is one.
+# Cursor recall only reads the vault of the workspace Cursor reports. A
+# missing, empty, malformed or non-directory workspace root means no recall,
+# never a fallback to the hook's own working directory, which is not
+# documented and may be the plugin's own checkout rather than the user's repo.
 START_DIR="$PWD"
 if [[ -n "$IS_CURSOR" ]]; then
   WORKSPACE_ROOT="$(printf '%s' "$HOOK_INPUT" | python3 -c 'import json,sys
 try:
-    r=json.load(sys.stdin).get("workspace_roots") or []
-    print(r[0] if r and isinstance(r[0],str) else "")
+    r=json.load(sys.stdin).get("workspace_roots")
+    print(r[0] if isinstance(r,list) and r and isinstance(r[0],str) else "")
 except Exception:
     print("")' 2>/dev/null || true)"
-  if [[ -n "$WORKSPACE_ROOT" && -d "$WORKSPACE_ROOT" ]]; then
-    START_DIR="$WORKSPACE_ROOT"
+  if [[ -z "$WORKSPACE_ROOT" || ! -d "$WORKSPACE_ROOT" ]]; then
+    exit 0
   fi
+  START_DIR="$WORKSPACE_ROOT"
 fi
 
 VAULT="$(find_vault "$START_DIR" 2>/dev/null)" || exit 0

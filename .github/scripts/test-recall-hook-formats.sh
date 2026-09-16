@@ -24,6 +24,19 @@ printf '{"workspace":"fixture","repo":"fixture","embedding_model":"nomic-embed-t
 printf -- '---\ntags: [session]\ndate: 2026-09-01\nstatus: active\n---\n\n## [09:00] Session\n' > "$FIXTURE/vault/sessions/2026-09-01.md"
 printf -- '---\ntags: [decision]\ndate: 2026-09-01\nrepo: fixture\nstatus: active\n---\n\n# Use Postgres for the primary datastore\n' > "$FIXTURE/vault/decisions/2026-09-01-use-postgres.md"
 
+# Preflight: find_tolvi in the hook also checks /usr/local/bin and
+# /opt/homebrew/bin directly, which env -i PATH="...:/usr/bin:/bin" below
+# cannot hide. A real tolvi binary at either path would make the fallback
+# checks in this test find it instead of exercising the direct vault read
+# they pin, and fail in a way that looks like a hook bug rather than a
+# machine-specific condition.
+for sys_bin in /usr/local/bin/tolvi /opt/homebrew/bin/tolvi; do
+  if [[ -x "$sys_bin" ]]; then
+    echo "FAIL: $sys_bin exists, and the recall hook finds it even with a minimal PATH, so this test cannot exercise the direct vault read it pins. Run it in CI or on a machine without that binary." >&2
+    exit 1
+  fi
+done
+
 CLAUDE_STARTUP='{"hook_event_name":"SessionStart","source":"startup"}'
 CLAUDE_CLEAR='{"hook_event_name":"SessionStart","source":"clear"}'
 CURSOR_PAYLOAD="{\"hook_event_name\":\"sessionStart\",\"cursor_version\":\"2.6.0\",\"composer_mode\":\"agent\",\"workspace_roots\":[\"$FIXTURE\"]}"
@@ -81,5 +94,15 @@ OUT="$(run_hook "$WORK/novault" "$CLAUDE_STARTUP")"
 OUT="$(run_hook "$WORK/novault" "{\"cursor_version\":\"2.6.0\",\"workspace_roots\":[\"$WORK/novault\"]}")"
 [[ -z "$OUT" ]] || fail "Cursor payload with no vault should print nothing. Got: $OUT"
 echo "✓ No vault prints nothing for either agent"
+
+echo "→ Cursor payload with no workspace_roots, run from inside the fixture repo"
+OUT="$(run_hook "$FIXTURE" "{\"cursor_version\":\"2.6.0\"}")"
+[[ -z "$OUT" ]] || fail "Cursor payload with no workspace_roots should print nothing, even from inside a repo with a vault. Got: $OUT"
+echo "✓ Cursor with no workspace_roots prints nothing, even from inside the fixture repo"
+
+echo "→ Cursor payload with workspace_roots not a list, run from inside the fixture repo"
+OUT="$(run_hook "$FIXTURE" "{\"cursor_version\":\"2.6.0\",\"workspace_roots\":\"$FIXTURE\"}")"
+[[ -z "$OUT" ]] || fail "Cursor payload with workspace_roots as a string should print nothing, even from inside a repo with a vault. Got: $OUT"
+echo "✓ Cursor with non-list workspace_roots prints nothing, even from inside the fixture repo"
 
 echo "✓ All recall hook format checks passed."
