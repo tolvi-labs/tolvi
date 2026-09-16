@@ -66,6 +66,8 @@ codex plugin marketplace upgrade tolvi
 codex plugin add tolvi@tolvi
 ```
 
+Updating the plugin this way has not been verified yet.
+
 A project install is a copy, so after pulling the tolvi repo, re-run it with `--force`:
 
 ```bash

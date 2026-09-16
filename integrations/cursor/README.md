@@ -52,7 +52,7 @@ This repository is also a Cursor plugin. To install it locally, put a copy in Cu
 git clone https://github.com/tolvi-labs/tolvi ~/.cursor/plugins/local/tolvi
 ```
 
-Run **Developer: Reload Window**, then check that Tolvi appears under **Customize**. To update, run `git pull` in `~/.cursor/plugins/local/tolvi` and reload; to uninstall, delete that folder and reload. The plugin install has not been verified yet; see Verification below.
+Run **Developer: Reload Window**, then check that Tolvi appears under **Customize**. To update, run `git pull` in `~/.cursor/plugins/local/tolvi` and reload; to uninstall, delete that folder and reload. The plugin install has not been verified yet; see Verification below. If you also installed the Claude Code session hooks and Cursor is set to include third-party configs, use one or the other in Cursor, not both, or recall context arrives twice.
 
 ## Use
 
