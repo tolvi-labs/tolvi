@@ -33,6 +33,7 @@ WITH_HOOKS="false"
 HOOKS_SCOPE=""   # "user" | "project" — empty means prompt
 AGENTS="false"
 PATH_SET="false"
+NO_GIT_ROOT="false"
 
 usage() {
   cat <<EOF
@@ -110,7 +111,12 @@ if [[ "$AGENTS" == "true" ]]; then
   # tolvi checkout is broken for everyone else, so agent installs always copy.
   MODE="copy"
   if [[ "$PATH_SET" != "true" ]]; then
-    DEST_BASE="$(find_project_root)/.agents/skills"
+    root="$(find_project_root)"
+    if [[ ! -e "$root/.git" ]]; then
+      NO_GIT_ROOT="true"
+      echo "install.sh: no git repository found above $(pwd); installing the skill under the current directory" >&2
+    fi
+    DEST_BASE="$root/.agents/skills"
   fi
 fi
 
@@ -466,7 +472,7 @@ EOF
 if [[ "$AGENTS" == "true" ]]; then
   echo ""
   echo "Next steps:"
-  if [[ "$PATH_SET" != "true" ]]; then
+  if [[ "$PATH_SET" != "true" && "$NO_GIT_ROOT" != "true" ]]; then
     echo "  - Commit ${DEST_DIR} so everyone on the team gets the skill."
   fi
   echo "  - Codex, Cursor and OpenHands load the skill when a request matches its description."

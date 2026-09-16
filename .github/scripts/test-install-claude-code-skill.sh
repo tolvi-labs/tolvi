@@ -93,7 +93,7 @@ git -C "$AGENT_REPO" init -q
 AGENT_FILE="$AGENT_REPO/.agents/skills/tolvi/SKILL.md"
 
 echo "→ Running --agents install from a subdirectory of a git repo"
-( cd "$AGENT_REPO/src/deep" && HOME="$AGENT_HOME" bash "$INSTALLER" --agents >/dev/null )
+STDERR=$( cd "$AGENT_REPO/src/deep" && HOME="$AGENT_HOME" bash "$INSTALLER" --agents 2>&1 >/dev/null )
 if [[ -L "$AGENT_FILE" || ! -f "$AGENT_FILE" ]]; then
   echo "FAIL: expected a regular file (not a symlink) at $AGENT_FILE" >&2
   exit 1
@@ -104,6 +104,10 @@ if ! cmp -s "$AGENT_FILE" "$SOURCE_SKILL"; then
 fi
 if [[ -e "$AGENT_HOME/.claude" ]]; then
   echo "FAIL: --agents wrote Claude Code files under HOME ($AGENT_HOME/.claude exists)" >&2
+  exit 1
+fi
+if [[ "$STDERR" == *"no git repository found"* ]]; then
+  echo "FAIL: --agents inside a git repository should not warn about a missing git repository, got: $STDERR" >&2
   exit 1
 fi
 echo "✓ --agents install lands a copy at the repository root and nothing under HOME"
@@ -122,6 +126,23 @@ if ! cmp -s "$AGENT_FILE" "$SOURCE_SKILL"; then
   exit 1
 fi
 echo "✓ --agents refuses to overwrite without --force"
+
+echo "→ Running --agents --force to update an existing install"
+echo "local edit" >> "$AGENT_FILE"
+if cmp -s "$AGENT_FILE" "$SOURCE_SKILL"; then
+  echo "FAIL: the local edit to $AGENT_FILE did not take effect" >&2
+  exit 1
+fi
+( cd "$AGENT_REPO" && HOME="$AGENT_HOME" bash "$INSTALLER" --agents --force >/dev/null )
+if [[ -L "$AGENT_FILE" || ! -f "$AGENT_FILE" ]]; then
+  echo "FAIL: expected a regular file (not a symlink) at $AGENT_FILE after --force" >&2
+  exit 1
+fi
+if ! cmp -s "$AGENT_FILE" "$SOURCE_SKILL"; then
+  echo "FAIL: --force did not restore $AGENT_FILE to match $SOURCE_SKILL" >&2
+  exit 1
+fi
+echo "✓ --agents --force updates an existing install"
 
 echo "→ Running --agents --with-hooks"
 HOOKS_REPO="$AGENT_HOME/hooks-project"
@@ -144,12 +165,26 @@ echo "✓ --agents rejects --with-hooks"
 echo "→ Running --agents outside any git repository"
 NOGIT_DIR="$AGENT_HOME/no-git"
 mkdir -p "$NOGIT_DIR"
-( cd "$NOGIT_DIR" && HOME="$AGENT_HOME" bash "$INSTALLER" --agents >/dev/null )
+if STDOUT=$( cd "$NOGIT_DIR" && HOME="$AGENT_HOME" bash "$INSTALLER" --agents 2>"$AGENT_HOME/nogit.stderr" ); then
+  :
+else
+  echo "FAIL: --agents outside a git repository should still exit 0" >&2
+  exit 1
+fi
+NOGIT_STDERR="$(cat "$AGENT_HOME/nogit.stderr")"
 if [[ ! -f "$NOGIT_DIR/.agents/skills/tolvi/SKILL.md" ]]; then
   echo "FAIL: without a git repo, --agents should install under the current directory" >&2
   exit 1
 fi
-echo "✓ --agents falls back to the current directory"
+if [[ "$NOGIT_STDERR" != *"no git repository found"* ]]; then
+  echo "FAIL: expected a 'no git repository found' warning on stderr, got: $NOGIT_STDERR" >&2
+  exit 1
+fi
+if [[ "$STDOUT" == *"so everyone on the team gets the skill"* ]]; then
+  echo "FAIL: without a git repo there is nothing to commit, but stdout suggested committing: $STDOUT" >&2
+  exit 1
+fi
+echo "✓ --agents falls back to the current directory and warns about the missing git repository"
 
 echo "→ Running --agents --path for a personal install"
 PERSONAL="$AGENT_HOME/personal-skills"
@@ -159,6 +194,25 @@ if [[ -L "$PERSONAL/tolvi/SKILL.md" || ! -f "$PERSONAL/tolvi/SKILL.md" ]]; then
   exit 1
 fi
 echo "✓ --agents --path installs a copy at the given base"
+
+# Plain --uninstall (no --agents) targets the Claude Code destination
+# ($HOME/.claude/skills), not the agents destination, so it should be a no-op
+# against $AGENT_FILE. Placed here, before "--uninstall --agents" below: the
+# Claude Code uninstall path only removes a Claude Code install (none exists
+# under AGENT_HOME, since nothing above ever installed one there), and it does
+# not mkdir anything, so it has no side effects on the later HOME/.claude
+# absence check or on the --agents uninstall that follows.
+echo "→ Running plain --uninstall (no --agents)"
+HOME="$AGENT_HOME" bash "$INSTALLER" --uninstall >/dev/null
+if [[ -L "$AGENT_FILE" || ! -f "$AGENT_FILE" ]]; then
+  echo "FAIL: plain --uninstall (no --agents) should not touch $AGENT_FILE" >&2
+  exit 1
+fi
+if ! cmp -s "$AGENT_FILE" "$SOURCE_SKILL"; then
+  echo "FAIL: plain --uninstall (no --agents) left $AGENT_FILE modified" >&2
+  exit 1
+fi
+echo "✓ plain --uninstall leaves the agents install in place"
 
 echo "→ Running --uninstall --agents"
 ( cd "$AGENT_REPO/src/deep" && HOME="$AGENT_HOME" bash "$INSTALLER" --uninstall --agents >/dev/null )
