@@ -5,7 +5,7 @@ description: Read, write, and ask questions of a Tolvi engineering vault. Use wh
 
 # Tolvi
 
-Tolvi is a per-repo engineering knowledge vault — decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. This skill teaches your coding agent how to read, write, and query a Tolvi vault, and when to use the `tolvi` CLI versus direct file operations. It is the same skill for Claude Code, Codex, Cursor and OpenHands; sections marked Claude Code only describe slash commands and session hooks that the other agents do not have.
+Tolvi is a per-repo engineering knowledge vault: decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. This skill teaches your coding agent how to read, write, and query a Tolvi vault, and when to use the `tolvi` CLI versus direct file operations. It is the same skill for Claude Code, Codex, Cursor and OpenHands; sections marked Claude Code only describe slash commands and session hooks that the other agents do not have.
 
 When you finish loading this skill, briefly acknowledge it (one sentence) and wait for the user's actual request. Do not auto-scan the vault or auto-invoke any CLI command.
 
@@ -20,7 +20,7 @@ When you finish loading this skill, briefly acknowledge it (one sentence) and wa
 **Anti-triggers:**
 
 - The repo has no `vault/.vault-meta.json` — offer `tolvi init` instead, with confirmation before running
-- The user is asking about *code*, not *project knowledge* — use your normal file reading and search tools
+- The user is asking about *code*, not *project knowledge*: use your normal file reading and search tools
 
 ## Vault structure
 
@@ -244,7 +244,7 @@ Link related docs with `[[slug]]` within the same vault (the `[[repo:slug]]` cro
 
 ### Writing mechanics
 
-Prefer `tolvi sync <type> <title> --body "..."` per doc — it does atomic write, frontmatter validation, slug derivation, and same-day session append for you. Write the markdown file directly only when the CLI is unavailable or the user asks; if you do, validate the frontmatter against the rules above before writing.
+Prefer `tolvi sync <type> <title> --body "..."` per doc: it does atomic write, frontmatter validation, slug derivation, and same-day session append for you. Write the markdown file directly only when the CLI is unavailable or the user asks; if you do, validate the frontmatter against the rules above before writing.
 
 ## Behavioral rules
 
