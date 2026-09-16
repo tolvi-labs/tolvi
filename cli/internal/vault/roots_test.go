@@ -24,7 +24,7 @@ const tolviLabsRoots = `{
     {"role": "org", "workspace": "tolvi-labs", "path": "/vaults/acme-org/vault"},
     {"role": "org", "workspace": "acme", "path": "/vaults/acme-shared/vault"},
     {"role": "org", "workspace": "isolated-org", "path": "/vaults/isolated-org/vault"},
-    {"role": "product", "product": "acme", "path": "/vaults/acme-vault/vault"}
+    {"role": "product", "product": "bravo-os", "path": "/vaults/bravo-vault/vault"}
   ]
 }`
 
@@ -72,9 +72,9 @@ func TestLoadRootsRejectsOrgRootWithoutWorkspace(t *testing.T) {
 // --- Chain ---
 
 func TestChainOrdersRootsNearestFirst(t *testing.T) {
-	c := loadTolviLabs(t).Chain(Identity{Workspace: "acme", Repo: "acme-web", Product: "acme"}, "/repo/vault")
+	c := loadTolviLabs(t).Chain(Identity{Workspace: "bravo-os", Repo: "bravo-web", Product: "bravo-os"}, "/repo/vault")
 
-	// acme-web declares no matching org root, so the chain is repo + product.
+	// bravo-web declares no matching org root, so the chain is repo + product.
 	want := []RootRole{RoleRepo, RoleProduct}
 	got := make([]RootRole, 0, len(c.Roots()))
 	for _, r := range c.Roots() {
@@ -159,13 +159,13 @@ func TestTargetResolutionTable(t *testing.T) {
 func TestTargetPrefersProductOverOrgForPrivateDocs(t *testing.T) {
 	// "The nearest declared private root above its scope" — product sits
 	// between repo and org, so a repo that declares one routes there.
-	c := loadTolviLabs(t).Chain(Identity{Workspace: "acme", Repo: "acme-web", Product: "acme"}, "/repo/vault")
+	c := loadTolviLabs(t).Chain(Identity{Workspace: "bravo-os", Repo: "bravo-web", Product: "bravo-os"}, "/repo/vault")
 
 	got, err := c.Target("decision", "private")
 	if err != nil {
 		t.Fatalf("Target: %v", err)
 	}
-	if got.Path != "/vaults/acme-vault/vault" {
+	if got.Path != "/vaults/bravo-vault/vault" {
 		t.Errorf("private decision routed to %q, want the product root", got.Path)
 	}
 }
@@ -256,8 +256,8 @@ func TestTargetIsAlwaysReadable(t *testing.T) {
 	identities := []Identity{
 		{Workspace: "tolvi-labs", Repo: "tolvi"},
 		{Workspace: "tolvi-labs", Repo: "acme-site"},
-		{Workspace: "acme", Repo: "acme-web"},
-		{Workspace: "acme", Repo: "acme-web", Product: "acme"},
+		{Workspace: "acme", Repo: "bravo-web"},
+		{Workspace: "bravo-os", Repo: "bravo-web", Product: "bravo-os"},
 		{Workspace: "isolated-org", Repo: "isolated-web"},
 		{Workspace: "unconfigured-org", Repo: "some-repo"},
 	}

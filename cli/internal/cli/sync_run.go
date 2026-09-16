@@ -116,6 +116,7 @@ func RunSync(opts SyncOpts) error {
 		Title:     opts.Title,
 		Slug:      slug,
 		Workspace: meta.Workspace,
+		Repo:      meta.Repo,
 		Date:      opts.Date,
 		Status:    opts.Status,
 	})
@@ -125,7 +126,7 @@ func RunSync(opts SyncOpts) error {
 
 	// Body.
 	var body []byte
-	if opts.NoEdit {
+	if opts.NoEdit && opts.BodyFlag == "" {
 		body = []byte("\n")
 	} else {
 		captured, err := CaptureBody(CaptureOpts{
@@ -236,7 +237,7 @@ func appendSessionBlock(opts SyncOpts, path string) error {
 	))
 
 	var newBlock []byte
-	if opts.NoEdit {
+	if opts.NoEdit && opts.BodyFlag == "" {
 		newBlock = blockTemplate
 	} else {
 		captured, err := CaptureBody(CaptureOpts{

@@ -131,7 +131,7 @@ Key flags:
 Key flags:
 
 - `--body "..."` — pass the body inline; skips the `$EDITOR` flow
-- `--no-edit` — write a skeleton-only file (no body capture)
+- `--no-edit` — skip `$EDITOR`; writes a skeleton-only file unless `--body` is given
 - `--slug <name>` — override the auto-derived slug
 - `--status <value>` — frontmatter status (default: `active`)
 - `--print-path` — output only the resulting path to stdout (useful for piping)

@@ -14,6 +14,7 @@ type AssembleOpts struct {
 	Title     string    // free-form title (used for slug generation only; not stored as a field)
 	Slug      string    // pre-computed slug (caller-derived from Title or --slug flag)
 	Workspace string    // from vault.Meta.Workspace
+	Repo      string    // from vault.Meta.Repo; empty for a container vault
 	Date      time.Time // typically time.Now()
 	Status    string    // defaults to "active"
 }
@@ -35,7 +36,11 @@ func AssembleFrontmatter(opts AssembleOpts) format.Frontmatter {
 	switch opts.DocType {
 	case "decision":
 		fm["date"] = opts.Date.Format("2006-01-02")
-		fm["repo"] = opts.Workspace
+		repo := opts.Repo
+		if repo == "" {
+			repo = opts.Workspace // a container vault names no repo
+		}
+		fm["repo"] = repo
 	case "session":
 		fm["date"] = opts.Date.Format("2006-01-02")
 	case "pattern":

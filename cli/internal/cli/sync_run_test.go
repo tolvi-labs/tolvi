@@ -328,3 +328,114 @@ func TestAppendSessionBlock_ConcurrentAppendsKeepEveryBlock(t *testing.T) {
 		}
 	}
 }
+
+// --no-edit means "do not open $EDITOR". It must not discard a body the
+// caller supplied with --body; only with no body does it write a skeleton.
+func TestRunSync_NoEditWithBodyFlag_WritesBody(t *testing.T) {
+	vaultDir := mkVaultForTest(t)
+	var out bytes.Buffer
+	err := RunSync(SyncOpts{
+		VaultPath: vaultDir,
+		DocType:   "decision",
+		Title:     "Body survives no-edit",
+		Date:      time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC),
+		BodyFlag:  "## Why\nbecause the flag said so\n",
+		NoEdit:    true,
+		RunEditor: func(string) error { t.Fatal("editor must not run"); return nil },
+		Stdout:    &out,
+	})
+	if err != nil {
+		t.Fatalf("RunSync: %v", err)
+	}
+	data, _ := os.ReadFile(filepath.Join(vaultDir, "decisions", "2026-09-15-body-survives-no-edit.md"))
+	if !bytes.Contains(data, []byte("because the flag said so")) {
+		t.Errorf("body discarded under --no-edit: %s", data)
+	}
+}
+
+func TestRunSync_NoEditWithoutBody_WritesSkeleton(t *testing.T) {
+	vaultDir := mkVaultForTest(t)
+	var out bytes.Buffer
+	err := RunSync(SyncOpts{
+		VaultPath: vaultDir,
+		DocType:   "decision",
+		Title:     "Skeleton only",
+		Date:      time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC),
+		NoEdit:    true,
+		RunEditor: func(string) error { t.Fatal("editor must not run"); return nil },
+		Stdout:    &out,
+	})
+	if err != nil {
+		t.Fatalf("RunSync: %v", err)
+	}
+	data, _ := os.ReadFile(filepath.Join(vaultDir, "decisions", "2026-09-15-skeleton-only.md"))
+	if !bytes.Contains(data, []byte("status: active")) {
+		t.Errorf("skeleton frontmatter missing: %s", data)
+	}
+}
+
+func TestRunSync_Session_AppendNoEditWithBodyFlag_WritesBlock(t *testing.T) {
+	vaultDir := mkVaultForTest(t)
+	day := time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC)
+	var out bytes.Buffer
+	if err := RunSync(SyncOpts{
+		VaultPath: vaultDir, DocType: "session", Date: day,
+		BodyFlag: "## [09:00] Session - morning\n\nbody-A\n",
+		Stdout:   &out,
+	}); err != nil {
+		t.Fatalf("first sync: %v", err)
+	}
+	if err := RunSync(SyncOpts{
+		VaultPath: vaultDir, DocType: "session", Date: day,
+		BodyFlag: "## [14:00] Session - afternoon\n\nbody-B\n",
+		NoEdit:   true,
+		Stdout:   &out,
+	}); err != nil {
+		t.Fatalf("second sync: %v", err)
+	}
+	merged, _ := os.ReadFile(filepath.Join(vaultDir, "sessions", "2026-09-15.md"))
+	if !bytes.Contains(merged, []byte("body-B")) {
+		t.Errorf("appended block discarded under --no-edit: %s", merged)
+	}
+}
+
+// A decision's repo field names the repo, not the workspace that contains it.
+// recall filters shared roots on this field, so writing the workspace hides
+// the decision from the repo that authored it.
+func TestRunSync_Decision_RepoFieldIsMetaRepoNotWorkspace(t *testing.T) {
+	vaultDir := mkVaultForTest(t)
+	_ = vault.WriteMeta(vaultDir, vault.Meta{
+		Workspace: "acme", Repo: "ingest", EmbeddingModel: "nomic-embed-text",
+		SchemaVersion: vault.SupportedSchemaVersion,
+	})
+	var out bytes.Buffer
+	err := RunSync(SyncOpts{
+		VaultPath: vaultDir,
+		DocType:   "decision",
+		Title:     "Repo not workspace",
+		Date:      time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC),
+		BodyFlag:  "body\n",
+		Stdout:    &out,
+	})
+	if err != nil {
+		t.Fatalf("RunSync: %v", err)
+	}
+	data, _ := os.ReadFile(filepath.Join(vaultDir, "decisions", "2026-09-15-repo-not-workspace.md"))
+	if !bytes.Contains(data, []byte("repo: ingest\n")) {
+		t.Errorf("repo field should be the meta repo: %s", data)
+	}
+}
+
+// A container vault names no repo; the schema still requires one, so the
+// workspace stands in, which is the behavior such vaults already rely on.
+func TestAssembleFrontmatter_RepoFallsBackToWorkspace(t *testing.T) {
+	day := time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC)
+	withRepo := AssembleFrontmatter(AssembleOpts{DocType: "decision", Slug: "x", Workspace: "acme", Repo: "ingest", Date: day})
+	if got := withRepo.String("repo"); got != "ingest" {
+		t.Errorf("with repo: repo = %q, want ingest", got)
+	}
+	container := AssembleFrontmatter(AssembleOpts{DocType: "decision", Slug: "x", Workspace: "acme", Date: day})
+	if got := container.String("repo"); got != "acme" {
+		t.Errorf("container vault: repo = %q, want acme", got)
+	}
+}
