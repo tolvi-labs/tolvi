@@ -49,6 +49,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 - Cursor `.cursorrules` template (Tier 2 — light)
 - Aider, OpenHands, Continue skeleton conventions (Tier 3)
 - Reworked 2026-09-16: Codex, Cursor and OpenHands now install the Tier 1 skill with `install.sh --agents` (Tier 2), the Cursor and OpenHands rules files were retired, and Continue was removed after it was discontinued upstream.
+- Plugin installs 2026-09-16: a Codex marketplace file, a Gemini CLI extension context file, and a recall hook that answers Cursor in its own format; each integration README records which install paths were verified.
 
 ### Phase 5 — TypeScript SDK and docs ✅
 

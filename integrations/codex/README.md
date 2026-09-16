@@ -22,6 +22,17 @@ Codex is a **Tier 2 (shared skill)** integration in the [Tolvi integrations tier
 
 ## Install
 
+### As a plugin
+
+```bash
+codex plugin marketplace add tolvi-labs/tolvi
+codex plugin add tolvi@tolvi
+```
+
+This installs the Tolvi skill for you in every project. Start a new Codex session to pick it up.
+
+### Into a project
+
 Clone the tolvi repo once, then run the installer from anywhere inside your project:
 
 ```bash
@@ -32,7 +43,7 @@ bash /path/to/tolvi/skills/tolvi/install.sh --agents
 
 The installer finds your repository root and copies the skill to `.agents/skills/tolvi/SKILL.md`. Commit that directory so everyone on the team gets the skill.
 
-To install it for yourself only, in every project:
+To install it for yourself only, in every project, without the plugin:
 
 ```bash
 bash /path/to/tolvi/skills/tolvi/install.sh --agents --path ~/.agents/skills
@@ -48,13 +59,29 @@ Ask Codex about the vault in plain language. Codex uses the skill when a request
 
 ## Update
 
-The install is a copy, so after pulling the tolvi repo, re-run it with `--force`:
+For the plugin, refresh the marketplace and reinstall:
+
+```bash
+codex plugin marketplace upgrade tolvi
+codex plugin add tolvi@tolvi
+```
+
+A project install is a copy, so after pulling the tolvi repo, re-run it with `--force`:
 
 ```bash
 bash /path/to/tolvi/skills/tolvi/install.sh --agents --force
 ```
 
 ## Uninstall
+
+For the plugin:
+
+```bash
+codex plugin remove tolvi@tolvi
+codex plugin marketplace remove tolvi
+```
+
+For a project install:
 
 ```bash
 bash /path/to/tolvi/skills/tolvi/install.sh --uninstall --agents
@@ -88,3 +115,5 @@ See the [CLI README](../../cli/) for the full config reference.
 ## Verification
 
 Verified end to end on 2026-09-16 with Codex CLI 0.154.0 (`npx @openai/codex`): installed with `install.sh --agents` in a repo with a vault, the agent listed the tolvi skill (and did not in the same repo without it), and answered a vault question by reading the recorded decision. `tolvi ask` was not exercised, because no Anthropic API key was set.
+
+The plugin install was verified end to end on 2026-09-16 with Codex CLI 0.154.0: before the install the agent did not list the tolvi skill, and after `codex plugin add tolvi@tolvi` it did. The plugin was installed from a local checkout of this repository. Updating the plugin with `codex plugin marketplace upgrade tolvi` was not exercised.

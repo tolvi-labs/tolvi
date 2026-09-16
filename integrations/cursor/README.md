@@ -22,6 +22,8 @@ Cursor is a **Tier 2 (shared skill)** integration in the [Tolvi integrations tie
 
 ## Install
 
+### Into a project
+
 Clone the tolvi repo once, then run the installer from anywhere inside your project:
 
 ```bash
@@ -41,6 +43,16 @@ bash /path/to/tolvi/skills/tolvi/install.sh --agents --path ~/.cursor/skills
 Cursor also reads `~/.agents/skills`, so `--path ~/.agents/skills` gives Cursor, Codex and OpenHands one shared personal install.
 
 If you used the earlier Tolvi `.cursorrules` file, delete it from your repo root. It is no longer maintained.
+
+### As a plugin
+
+This repository is also a Cursor plugin. To install it locally, put a copy in Cursor's local plugins folder, then reload the window:
+
+```bash
+git clone https://github.com/tolvi-labs/tolvi ~/.cursor/plugins/local/tolvi
+```
+
+Run **Developer: Reload Window**, then check that Tolvi appears under **Customize**. To update, run `git pull` in `~/.cursor/plugins/local/tolvi` and reload; to uninstall, delete that folder and reload. The plugin install has not been verified yet; see Verification below.
 
 ## Use
 
@@ -92,3 +104,5 @@ See the [CLI README](../../cli/) for the full config reference.
 ## Verification
 
 This install follows the Cursor Agent Skills documentation at <https://cursor.com/docs/skills>, checked on 2026-09-16. It has not been run end to end with Cursor.
+
+The plugin install follows the Cursor plugin documentation at <https://cursor.com/docs/plugins>, checked on 2026-09-16. It has not been run end to end with Cursor.

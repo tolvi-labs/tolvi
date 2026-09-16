@@ -8,7 +8,7 @@ The plugin declares itself in [`../.claude-plugin/plugin.json`](../.claude-plugi
 
 ## Other agents
 
-Integrations for agents that are not Claude Code live in [`../integrations/`](../integrations/). Codex, Cursor and OpenHands install this same skill into a project with `tolvi/install.sh --agents`, and Aider takes a conventions file.
+Integrations for agents that are not Claude Code live in [`../integrations/`](../integrations/). Codex, Cursor, Gemini CLI and OpenHands use this same skill, through a plugin, an extension, or `tolvi/install.sh --agents`; each integration README gives the paths for its agent. Aider takes a conventions file.
 
 ## Sibling skills
 

@@ -9,6 +9,7 @@ Per-agent setup for using a Tolvi vault from your AI coding tool of choice.
 | Claude Code | 1 (deep) | ✅ shipped | [`skills/tolvi/`](../skills/tolvi/) |
 | Codex | 2 (shared skill) | ✅ shipped | [`codex/`](./codex/) |
 | Cursor | 2 (shared skill) | ✅ shipped | [`cursor/`](./cursor/) |
+| Gemini CLI | 2 (shared skill) | ✅ shipped | [`gemini/`](./gemini/) |
 | OpenHands | 2 (shared skill) | ✅ shipped | [`openhands/`](./openhands/) |
 | Aider | 3 (conventions file) | ✅ shipped | [`aider/`](./aider/) |
 
@@ -16,7 +17,7 @@ Continue was removed on 2026-09-16 because Continue was discontinued upstream.
 
 **Tier 1 (deep):** the Tolvi skill, plus the Claude Code slash commands `/tolvi-recall`, `/tolvi-sync` and `/tolvi-commit`, plus session hooks that recall the vault when a session starts and stage vault changes before each commit.
 
-**Tier 2 (shared skill):** the same `SKILL.md` as Tier 1, installed into a project's `.agents/skills/tolvi/` with `install.sh --agents`, for agents that support the Agent Skills standard. The agent reads, writes and asks questions of the vault through the skill. There are no slash commands or hooks.
+**Tier 2 (shared skill):** the same `SKILL.md` as Tier 1, for agents that support the Agent Skills standard. Codex installs it as a plugin, Cursor as a plugin, and Gemini CLI as an extension, and Codex, Cursor and OpenHands can also install it into a project's `.agents/skills/tolvi/` with `install.sh --agents`. The agent reads, writes and asks questions of the vault through the skill. Each agent's README says which of its install paths have been verified.
 
 **Tier 3 (conventions file):** a compact recap of the vault format that the agent loads as a conventions file. There is no skill; the agent uses its own tools.
 
