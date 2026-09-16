@@ -1,39 +1,83 @@
-# Tolvi: OpenHands integration (skeleton)
+# Tolvi: OpenHands integration
 
-A `.openhands_instructions` template that teaches [OpenHands](https://www.all-hands.dev) about Tolvi vault conventions. OpenHands reads this file from the project root as part of its repo-aware context.
+The shared Tolvi skill for [OpenHands](https://www.all-hands.dev). OpenHands supports the Agent Skills standard and loads repository skills from `.agents/skills/`, so installing the skill there teaches OpenHands how to read, write and ask questions of a Tolvi vault.
 
 ## Tier
 
-OpenHands is a **Tier 3 (skeleton)** integration in the [Tolvi integrations tier list](../README.md). The file ships a compact format-spec recap; it does not include the deeper behavioral guidance or worked examples of the Tier 1 [Claude Code skill](../../skills/tolvi/).
+OpenHands is a **Tier 2 (shared skill)** integration in the [Tolvi integrations tier list](../README.md). It gets the same `SKILL.md` as [Claude Code](../../skills/tolvi/), without the Claude Code slash commands or session hooks.
 
 ## Prerequisites
 
 - [OpenHands](https://www.all-hands.dev) installed and configured.
-- The `tolvi` CLI in `$PATH` (see <https://github.com/tolvi-labs/tolvi/releases>).
-- A Tolvi vault in your repo (`vault/.vault-meta.json`); run `tolvi init` otherwise.
+- The `tolvi` CLI on your `PATH` in the environment where OpenHands runs:
+
+  ```bash
+  go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
+  export PATH="$PATH:$(go env GOPATH)/bin"
+  ```
+
+  Or download a release binary from <https://github.com/tolvi-labs/tolvi/releases>.
+
+- A Tolvi vault in your repo (`vault/.vault-meta.json`). Run `tolvi init` if you do not have one yet.
 
 ## Install
 
-Copy `.openhands_instructions` from this directory to the **root of your project**:
+Clone the tolvi repo once, then run the installer from anywhere inside your project:
 
 ```bash
-cp /path/to/tolvi-labs/tolvi/integrations/openhands/.openhands_instructions .openhands_instructions
+git clone https://github.com/tolvi-labs/tolvi /path/to/tolvi
+cd /path/to/your-project
+bash /path/to/tolvi/skills/tolvi/install.sh --agents
 ```
 
-Or symlink so `git pull` on the Tolvi checkout flows through:
+The installer finds your repository root and copies the skill to `.agents/skills/tolvi/SKILL.md`. Commit that directory so OpenHands finds it in every workspace built from the repo.
+
+If you used the earlier Tolvi `.openhands_instructions` file, delete it from your repo root. It is no longer maintained.
+
+## Use
+
+Ask OpenHands about the vault in plain language. It uses the skill when a request matches its description, such as a question about decisions, sessions or patterns in a repo that has `vault/.vault-meta.json`.
+
+- "What did we decide about Postgres?"
+- "Write down that we chose PASETO over JWT."
+- "Show me the most recent session log."
+
+## Update
+
+The install is a copy, so after pulling the tolvi repo, re-run it with `--force`:
 
 ```bash
-ln -s /path/to/tolvi-labs/tolvi/integrations/openhands/.openhands_instructions .openhands_instructions
+bash /path/to/tolvi/skills/tolvi/install.sh --agents --force
 ```
-
-Commit the file so it's shared with everyone on the team.
 
 ## Uninstall
 
 ```bash
-rm .openhands_instructions
+bash /path/to/tolvi/skills/tolvi/install.sh --uninstall --agents
 ```
 
-## Caveat
+## Troubleshooting
 
-OpenHands's repo-instructions mechanism evolves (the project is under active development as the OpenDevin → OpenHands rebrand settles). If the install steps above don't match the current docs, defer to <https://docs.all-hands.dev> for canonical instructions; the file content stays the same.
+### OpenHands does not use the skill
+
+- Is the file at `.agents/skills/tolvi/SKILL.md` under your repository root, and is it committed? Check with `git ls-files .agents/skills/tolvi/`.
+- Start a new conversation, since OpenHands loads repository skills when a conversation starts.
+
+### `tolvi: command not found`
+
+The CLI is not on the `PATH` of the environment OpenHands runs in. Without it the skill falls back to reading `vault/` directly, and you lose `tolvi ask`.
+
+### `tolvi ask` errors about `ANTHROPIC_API_KEY`
+
+Set the `ANTHROPIC_API_KEY` environment variable, or write `~/.config/tolvi/config.yaml`:
+
+```yaml
+anthropic_api_key: sk-ant-...
+model: claude-sonnet-4-7
+```
+
+See the [CLI README](../../cli/) for the full config reference.
+
+## Verification
+
+This install follows the OpenHands Skills documentation at <https://docs.openhands.dev/overview/skills>, checked on 2026-09-16. It has not been run end to end with OpenHands.

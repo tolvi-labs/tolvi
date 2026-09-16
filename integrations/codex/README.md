@@ -1,14 +1,14 @@
-# Tolvi: Cursor integration
+# Tolvi: Codex integration
 
-The shared Tolvi skill for [Cursor](https://cursor.com). Cursor loads Agent Skills from `.agents/skills/` or `.cursor/skills/` in your project, so installing the skill there teaches Cursor's agent how to read, write and ask questions of a Tolvi vault.
+The shared Tolvi skill for [Codex](https://developers.openai.com/codex). Codex loads Agent Skills from `.agents/skills/` in your project, so installing the skill there teaches Codex how to read, write and ask questions of a Tolvi vault.
 
 ## Tier
 
-Cursor is a **Tier 2 (shared skill)** integration in the [Tolvi integrations tier list](../README.md). It gets the same `SKILL.md` as [Claude Code](../../skills/tolvi/), without the Claude Code slash commands or session hooks.
+Codex is a **Tier 2 (shared skill)** integration in the [Tolvi integrations tier list](../README.md). It gets the same `SKILL.md` as [Claude Code](../../skills/tolvi/), without the Claude Code slash commands or session hooks.
 
 ## Prerequisites
 
-- [Cursor](https://cursor.com) installed.
+- Codex installed.
 - The `tolvi` CLI on your `PATH`:
 
   ```bash
@@ -35,14 +35,12 @@ The installer finds your repository root and copies the skill to `.agents/skills
 To install it for yourself only, in every project:
 
 ```bash
-bash /path/to/tolvi/skills/tolvi/install.sh --agents --path ~/.cursor/skills
+bash /path/to/tolvi/skills/tolvi/install.sh --agents --path ~/.agents/skills
 ```
-
-If you used the earlier Tolvi `.cursorrules` file, delete it from your repo root. It is no longer maintained.
 
 ## Use
 
-Ask Cursor's agent about the vault in plain language. It uses the skill when a request matches its description, such as a question about decisions, sessions or patterns in a repo that has `vault/.vault-meta.json`. You can also type `/tolvi` in the agent chat to load it.
+Ask Codex about the vault in plain language. Codex uses the skill when a request matches its description, such as a question about decisions, sessions or patterns in a repo that has `vault/.vault-meta.json`. You can also name the Tolvi skill in your prompt.
 
 - "What did we decide about Postgres?"
 - "Write down that we chose PASETO over JWT."
@@ -66,11 +64,11 @@ For a personal install, add the same `--path` you installed with.
 
 ## Troubleshooting
 
-### Cursor does not use the skill
+### Codex does not use the skill
 
 - Is the file at `.agents/skills/tolvi/SKILL.md` under your repository root? Check with `ls .agents/skills/tolvi/`.
-- Cursor discovers skills when it starts, so reload the window after installing.
-- Type `/tolvi` in the agent chat to load the skill directly.
+- If Codex was already running when you installed, start a new session.
+- Name the Tolvi skill in your prompt.
 
 ### `tolvi: command not found`
 
@@ -89,4 +87,4 @@ See the [CLI README](../../cli/) for the full config reference.
 
 ## Verification
 
-This install follows the Cursor Agent Skills documentation at <https://cursor.com/docs/skills>, checked on 2026-09-16. It has not been run end to end with Cursor.
+This install follows the Codex Agent Skills documentation at <https://developers.openai.com/codex/skills>, checked on 2026-09-16. It has not been run end to end with Codex.

@@ -1,22 +1,24 @@
 # Tolvi integrations
 
-Per-agent configuration files for using a Tolvi vault from your AI coding tool of choice.
+Per-agent setup for using a Tolvi vault from your AI coding tool of choice.
 
 ## Status
 
 | Integration | Tier | Status | Directory |
 |---|---|---|---|
 | Claude Code | 1 (deep) | ✅ shipped | [`skills/tolvi/`](../skills/tolvi/) |
-| Cursor | 2 (light) | ✅ shipped | [`cursor/`](./cursor/) |
-| Aider | 3 (skeleton) | ✅ shipped | [`aider/`](./aider/) |
-| OpenHands | 3 (skeleton) | ✅ shipped | [`openhands/`](./openhands/) |
-| Continue | 3 (skeleton) | ✅ shipped | [`continue/`](./continue/) |
+| Codex | 2 (shared skill) | ✅ shipped | [`codex/`](./codex/) |
+| Cursor | 2 (shared skill) | ✅ shipped | [`cursor/`](./cursor/) |
+| OpenHands | 2 (shared skill) | ✅ shipped | [`openhands/`](./openhands/) |
+| Aider | 3 (conventions file) | ✅ shipped | [`aider/`](./aider/) |
 
-**Tier 1 (deep):** Custom skill files with slash commands, format-spec awareness, and CLI orchestration. The agent can read, write, and ask questions of the vault as a first-class workflow.
+Continue was removed on 2026-09-16 because Continue was discontinued upstream.
 
-**Tier 2 (light):** Static configuration (e.g., `.cursorrules`) that teaches the agent about the vault format. No tool wiring; the agent uses its own primitives.
+**Tier 1 (deep):** the Tolvi skill, plus the Claude Code slash commands `/tolvi-recall`, `/tolvi-sync` and `/tolvi-commit`, plus session hooks that recall the vault when a session starts and stage vault changes before each commit.
 
-**Tier 3 (skeleton):** Per-tool README snippets or convention files showing the agent the vault layout. Symbolic: it proves Tolvi is agent-agnostic without per-tool investment.
+**Tier 2 (shared skill):** the same `SKILL.md` as Tier 1, installed into a project's `.agents/skills/tolvi/` with `install.sh --agents`, for agents that support the Agent Skills standard. The agent reads, writes and asks questions of the vault through the skill. There are no slash commands or hooks.
+
+**Tier 3 (conventions file):** a compact recap of the vault format that the agent loads as a conventions file. There is no skill; the agent uses its own tools.
 
 ## Common conventions
 
@@ -28,8 +30,7 @@ All integrations assume:
 
 ## Adding a new integration
 
-1. Create `integrations/<agent-name>/`.
-2. Add the agent's primary config artifact (skill, rules, conventions doc).
-3. Add a `README.md` documenting install + uninstall.
-4. Update this top-level table.
-5. If the integration ships installable scripts, add a CI smoke test under `.github/scripts/`.
+1. If the agent supports Agent Skills, add no new config artifact: create `integrations/<agent-name>/README.md` documenting `install.sh --agents` for that agent, where it looks for skills, update, uninstall, and how the install was verified.
+2. Otherwise, create `integrations/<agent-name>/` with the agent's primary config artifact (rules or conventions file) and a `README.md` documenting install and uninstall.
+3. Update the table above.
+4. If the integration ships installable scripts, add a CI smoke test under `.github/scripts/`.
