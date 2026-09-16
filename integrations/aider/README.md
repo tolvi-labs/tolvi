@@ -46,3 +46,7 @@ rm CONVENTIONS.md
 ## Caveat
 
 Aider's convention-loading mechanism evolves. If the install steps above don't match the current Aider docs, defer to <https://aider.chat/docs/usage/conventions.html> for the canonical instructions; the file content stays the same.
+
+## Verification
+
+This install follows the Aider conventions documentation at <https://aider.chat/docs/usage/conventions.html>, checked on 2026-09-16. It has not been run end to end with Aider.
