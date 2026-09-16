@@ -87,4 +87,4 @@ See the [CLI README](../../cli/) for the full config reference.
 
 ## Verification
 
-Verified end to end on 2026-09-16 with Codex CLI 0.154.0 (`npx @openai/codex`): installed with `install.sh --agents` in a repo with a vault, the agent listed the tolvi skill (and did not in the same repo without it), and answered a vault question from the recorded decision.
+Verified end to end on 2026-09-16 with Codex CLI 0.154.0 (`npx @openai/codex`): installed with `install.sh --agents` in a repo with a vault, the agent listed the tolvi skill (and did not in the same repo without it), and answered a vault question by reading the recorded decision. `tolvi ask` was not exercised, because no Anthropic API key was set.
