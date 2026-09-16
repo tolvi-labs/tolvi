@@ -12,7 +12,7 @@ Thanks for your interest. Tolvi is an open-source project under [Apache 2.0](./L
 
 ## Brand isolation
 
-All content in this repo is brand-neutral. The single exception is the [`NOTICE`](./NOTICE) file, which contains the project's attribution.
+All content in this repo is brand-neutral. The only exceptions are the [`NOTICE`](./NOTICE) file, which contains the project's attribution, and the copyright line in [`LICENSE`](./LICENSE).
 
 **Do not reference** parent organizations, sibling products, or specific deployments anywhere else — including code, docs, examples, sample content, code comments, commit messages, branch names, or PR descriptions.
 

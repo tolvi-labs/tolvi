@@ -42,6 +42,10 @@ PATTERN="$BRAND_BLOCKLIST"
 #   - This script: provided so an incidental value never trips the check on itself
 ALLOWLIST_PATHS=(
   'NOTICE'
+  'LICENSE'                                 # attribution, same category as NOTICE
+  'cli/LICENSE'                             # per-package copies of LICENSE
+  'sdk/LICENSE'
+  'spec/LICENSE'
   '.github/scripts/brand-isolation-check.sh'
 )
 
