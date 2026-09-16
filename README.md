@@ -6,7 +6,7 @@ Capture engineering decisions where they happen. Query them later in plain Engli
 
 ## What Tolvi is
 
-A per-repo engineering knowledge vault - decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. A CLI lets you write and read it from the terminal; a server lets a team share an indexed view; agent integrations (Claude Code, Cursor, Aider, OpenHands, Continue) teach AI tools to use the vault first-class.
+A per-repo engineering knowledge vault - decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. A CLI lets you write and read it from the terminal; a server lets a team share an indexed view; agent integrations (Claude Code, Codex, Cursor, OpenHands, Aider) teach AI tools to use the vault first-class.
 
 Two architectures, one format:
 
@@ -78,8 +78,8 @@ Rule of thumb: **mechanical for known, controlled capture; the skill for synthes
 | **Server** (Fastify + Postgres + pgvector, multi-tenant, OpenAPI) | [`server/`](./server/), [`spec/openapi.json`](./spec/openapi.json) | ✅ Phase 2 |
 | **TypeScript SDK** `@tolvi-labs/sdk` (typed client over the server's HTTP API) | [`sdk/`](./sdk/) | ✅ Phase 5.A |
 | **Claude Code skill** (Tier 1 - `/tolvi` slash command) | [`skills/tolvi/`](./skills/tolvi/) | ✅ Phase 4 |
-| **Cursor `.cursorrules`** (Tier 2) | [`integrations/cursor/`](./integrations/cursor/) | ✅ Phase 4 |
-| **Aider / OpenHands / Continue** skeletons (Tier 3) | [`integrations/aider/`](./integrations/aider/), [`integrations/openhands/`](./integrations/openhands/), [`integrations/continue/`](./integrations/continue/) | ✅ Phase 4 |
+| **Codex / Cursor / OpenHands** on the shared skill (Tier 2) | [`integrations/codex/`](./integrations/codex/), [`integrations/cursor/`](./integrations/cursor/), [`integrations/openhands/`](./integrations/openhands/) | ✅ Phase 4, reworked 2026-09-16 |
+| **Aider** conventions file (Tier 3) | [`integrations/aider/`](./integrations/aider/) | ✅ Phase 4 |
 | **Sample vault** (synthetic, validates against the format spec) | [`examples/sample-vault/`](./examples/sample-vault/) | ✅ |
 | **Docs site** (narrative guides + reference) | [`tolvilabs.com/docs`](https://tolvilabs.com/docs) | ✅ Phase 5.B |
 

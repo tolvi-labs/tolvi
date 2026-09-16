@@ -141,4 +141,4 @@ Prints the binary version (baked at release time via `-ldflags`).
 ## See also
 
 - [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md): the local-arm component in context
-- [`../integrations/`](../integrations/): per-agent integration files (Claude Code skill, Cursor `.cursorrules`, Aider/OpenHands/Continue conventions)
+- [`../integrations/`](../integrations/): per-agent integration docs (the Claude Code skill, shared with Codex, Cursor and OpenHands, and the Aider conventions file)

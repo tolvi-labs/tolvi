@@ -40,7 +40,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 ### Phase 3.x — CLI follow-ups
 
 - ✅ `tolvi precommit install` — non-blocking git pre-commit nudge that flags commits touching dependency manifests, infra config, tooling config, or large diffs
-- 📅 `tolvi vault-index` — regenerate the per-vault index block in an agent conventions file (`CLAUDE.md`, `.cursorrules`, etc.) from doc frontmatter and titles; idempotent; intended for use as a pre-commit hook or session-end step. Convention is documented in [`docs/CONVENTIONS.md`](./docs/CONVENTIONS.md) Section 7 and [`docs/adr/0003-vault-index-and-tldr-system.md`](./docs/adr/0003-vault-index-and-tldr-system.md)
+- 📅 `tolvi vault-index` — regenerate the per-vault index block in an agent conventions file (`CLAUDE.md`, `AGENTS.md`, etc.) from doc frontmatter and titles; idempotent; intended for use as a pre-commit hook or session-end step. Convention is documented in [`docs/CONVENTIONS.md`](./docs/CONVENTIONS.md) Section 7 and [`docs/adr/0003-vault-index-and-tldr-system.md`](./docs/adr/0003-vault-index-and-tldr-system.md)
 - ✅ OpenAPI response schemas on all v1 data-plane routes (`spec/openapi.json` now describes both requests and responses end-to-end; unblocks Phase 5 SDK)
 
 ### Phase 4 — Agent integrations ✅
@@ -48,6 +48,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 - Claude Code skill (Tier 1 — deep): `/tolvi` slash command with format-spec awareness, CLI orchestration, behavioral rules
 - Cursor `.cursorrules` template (Tier 2 — light)
 - Aider, OpenHands, Continue skeleton conventions (Tier 3)
+- Reworked 2026-09-16: Codex, Cursor and OpenHands now install the Tier 1 skill with `install.sh --agents` (Tier 2), the Cursor and OpenHands rules files were retired, and Continue was removed after it was discontinued upstream.
 
 ### Phase 5 — TypeScript SDK and docs ✅
 

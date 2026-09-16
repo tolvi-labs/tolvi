@@ -178,7 +178,7 @@ Adopt PASETO v4 (public, Ed25519) for service-to-service tokens. Removes the JWT
 
 ### Vault index in agent conventions files
 
-Every agent integration loads a per-tool conventions file at session start — `CLAUDE.md` for Claude Code, `.cursorrules` for Cursor, `CONVENTIONS.md` for Aider, `.openhands_instructions` for OpenHands, `.continuerules` for Continue. Injecting a generated index of vault docs into that file lets the agent resolve "where is the decision about X" to an exact filename without filesystem search.
+Every agent integration loads a per-tool conventions file at session start: `CLAUDE.md` for Claude Code, `AGENTS.md` for Codex, Cursor and OpenHands, and `CONVENTIONS.md` for Aider. Injecting a generated index of vault docs into that file lets the agent resolve "where is the decision about X" to an exact filename without filesystem search.
 
 The index is a delimited block within the conventions file:
 
