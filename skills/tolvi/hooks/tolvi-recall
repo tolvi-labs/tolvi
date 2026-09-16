@@ -6,6 +6,28 @@ set -euo pipefail
 # Capture the hook payload once so we can branch on the SessionStart source.
 HOOK_INPUT="$(cat 2>/dev/null || true)"
 
+# Cursor sends cursor_version with every hook payload and composer_mode with
+# sessionStart; Claude Code sends neither. Cursor's sessionStart reads
+# additional_context, while Claude Code reads hookSpecificOutput.additionalContext,
+# so the answer's shape follows the caller.
+IS_CURSOR="$(printf '%s' "$HOOK_INPUT" | python3 -c 'import json,sys
+try:
+    d=json.load(sys.stdin)
+    print("1" if isinstance(d,dict) and ("cursor_version" in d or "composer_mode" in d) else "")
+except Exception:
+    print("")' 2>/dev/null || true)"
+
+# Re-emit a Claude Code hook-json blob in Cursor's shape, or print nothing.
+to_cursor() {
+  python3 -c 'import json,sys
+try:
+    ctx=json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"]
+except Exception:
+    sys.exit(0)
+if isinstance(ctx,str) and ctx:
+    print(json.dumps({"additional_context": ctx}))' 2>/dev/null || true
+}
+
 find_vault() {
   local dir="${1:-$PWD}"
   while [[ "$dir" != "/" ]]; do
@@ -15,7 +37,22 @@ find_vault() {
   return 1
 }
 
-VAULT="$(find_vault "$PWD" 2>/dev/null)" || exit 0
+# A Cursor plugin hook's working directory is not documented, so start from the
+# workspace root Cursor reports when there is one.
+START_DIR="$PWD"
+if [[ -n "$IS_CURSOR" ]]; then
+  WORKSPACE_ROOT="$(printf '%s' "$HOOK_INPUT" | python3 -c 'import json,sys
+try:
+    r=json.load(sys.stdin).get("workspace_roots") or []
+    print(r[0] if r and isinstance(r[0],str) else "")
+except Exception:
+    print("")' 2>/dev/null || true)"
+  if [[ -n "$WORKSPACE_ROOT" && -d "$WORKSPACE_ROOT" ]]; then
+    START_DIR="$WORKSPACE_ROOT"
+  fi
+fi
+
+VAULT="$(find_vault "$START_DIR" 2>/dev/null)" || exit 0
 
 # On /clear, don't emit a summary — direct Claude to run the full /tolvi-recall command,
 # so a cleared session gets the rich recall skill output rather than the lightweight digest.
@@ -25,7 +62,7 @@ try:
 except Exception:
     print("")' 2>/dev/null || true)"
 
-if [[ "$SESSION_SOURCE" == "clear" ]]; then
+if [[ -z "$IS_CURSOR" && "$SESSION_SOURCE" == "clear" ]]; then
   printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"The conversation context was just cleared (/clear). Before anything else in your next response, run the /tolvi-recall command in full and present its complete RECALL SUMMARY, not a lightweight summary. If the next user message is already a task, run recall first, then continue with that task."}}'
   exit 0
 fi
@@ -44,7 +81,11 @@ find_tolvi() {
 }
 
 if TOLVI_BIN="$(find_tolvi)"; then
-  exec "$TOLVI_BIN" recall --format hook-json --vault "$VAULT"
+  if [[ -z "$IS_CURSOR" ]]; then
+    exec "$TOLVI_BIN" recall --format hook-json --vault "$VAULT"
+  fi
+  { "$TOLVI_BIN" recall --format hook-json --vault "$VAULT" 2>/dev/null || true; } | to_cursor
+  exit 0
 fi
 
 # Fallback: build a minimal hook-json summary from raw vault files
@@ -72,5 +113,13 @@ context=""
 
 [[ -z "$context" ]] && exit 0
 
-printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}' \
-  "$(echo -e "$context" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])')"
+emit_fallback() {
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}' \
+    "$(echo -e "$context" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])')"
+}
+
+if [[ -n "$IS_CURSOR" ]]; then
+  emit_fallback | to_cursor
+else
+  emit_fallback
+fi

@@ -50,6 +50,9 @@ jobs:
       - name: Claude Code hook merge idempotency
         run: bash .github/scripts/test-install-hook-idempotency.sh
 
+      - name: Recall hook output formats
+        run: bash .github/scripts/test-recall-hook-formats.sh
+
       - name: Link checker
         uses: lycheeverse/lychee-action@v2
         with:
