@@ -38,6 +38,8 @@ To install it for yourself only, in every project:
 bash /path/to/tolvi/skills/tolvi/install.sh --agents --path ~/.cursor/skills
 ```
 
+Cursor also reads `~/.agents/skills`, so `--path ~/.agents/skills` gives Cursor, Codex and OpenHands one shared personal install.
+
 If you used the earlier Tolvi `.cursorrules` file, delete it from your repo root. It is no longer maintained.
 
 ## Use

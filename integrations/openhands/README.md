@@ -32,6 +32,12 @@ bash /path/to/tolvi/skills/tolvi/install.sh --agents
 
 The installer finds your repository root and copies the skill to `.agents/skills/tolvi/SKILL.md`. Commit that directory so OpenHands finds it in every workspace built from the repo.
 
+To install it for yourself only, in every project:
+
+```bash
+bash /path/to/tolvi/skills/tolvi/install.sh --agents --path ~/.agents/skills
+```
+
 If you used the earlier Tolvi `.openhands_instructions` file, delete it from your repo root. It is no longer maintained.
 
 ## Use
@@ -55,6 +61,8 @@ bash /path/to/tolvi/skills/tolvi/install.sh --agents --force
 ```bash
 bash /path/to/tolvi/skills/tolvi/install.sh --uninstall --agents
 ```
+
+For a personal install, add the same `--path` you installed with.
 
 ## Troubleshooting
 
