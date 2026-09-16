@@ -5,22 +5,22 @@ description: Read, write, and ask questions of a Tolvi engineering vault. Use wh
 
 # Tolvi
 
-Tolvi is a per-repo engineering knowledge vault — decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. This skill teaches Claude Code how to read, write, and query a Tolvi vault, and when to use the `tolvi` CLI versus direct file operations.
+Tolvi is a per-repo engineering knowledge vault — decisions, sessions, and patterns stored as Markdown with YAML frontmatter under `<repo>/vault/`. This skill teaches your coding agent how to read, write, and query a Tolvi vault, and when to use the `tolvi` CLI versus direct file operations. It is the same skill for Claude Code, Codex, Cursor and OpenHands; sections marked Claude Code only describe slash commands and session hooks that the other agents do not have.
 
-When you (Claude) finish loading this skill, briefly acknowledge it (one sentence) and wait for the user's actual request. Do not auto-scan the vault or auto-invoke any CLI command.
+When you finish loading this skill, briefly acknowledge it (one sentence) and wait for the user's actual request. Do not auto-scan the vault or auto-invoke any CLI command.
 
 ## When to use this skill
 
 **Triggers:**
 
-- Explicit: user types `/tolvi`
+- Explicit: the user types `/tolvi` (Claude Code only), or names the Tolvi skill in a request
 - Implicit: user asks "what did we decide about X", "what session notes do we have on Y", "write a decision about Z", or references `[[some-slug]]` in a request
 - Repo state: cwd or an ancestor contains `vault/.vault-meta.json`
 
 **Anti-triggers:**
 
 - The repo has no `vault/.vault-meta.json` — offer `tolvi init` instead, with confirmation before running
-- The user is asking about *code*, not *project knowledge* — use Read/Grep tools normally
+- The user is asking about *code*, not *project knowledge* — use your normal file reading and search tools
 
 ## Vault structure
 
@@ -109,7 +109,7 @@ Search defaults to `active | in-progress | historical`. The other three are filt
 
 ## CLI commands
 
-The `tolvi` binary is the substrate. Shell out via the Bash tool. If `tolvi` is not in `$PATH`, suggest installation (see Escape hatches below).
+The `tolvi` binary is the substrate. Shell out to it with your shell tool. If `tolvi` is not in `$PATH`, suggest installation (see Escape hatches below).
 
 ### `tolvi ask <query>`
 
@@ -147,7 +147,7 @@ Key flags:
 
 - `--format human|hook-json` — output format:
   - `human` (default): plain-text `RECALL SUMMARY` block matching the `/recall` skill's output
-  - `hook-json`: Claude Code `SessionStart` hook blob (`{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`)
+  - `hook-json` (Claude Code only): Claude Code `SessionStart` hook blob (`{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`)
 - `--session-count <n>` — number of recent sessions to surface (default: 3)
 - `--decision-count <n>` — max recent active decisions to surface (default: 10)
 - `--max-bytes <n>` — hard cap on the `additionalContext` string in hook-json output; content is truncated with a notice when the vault is large (default: 8000)
@@ -166,7 +166,7 @@ recall:
 
 Flag values override config-file values. Config-file values override compiled-in defaults.
 
-**Used by session hooks** — `skills/tolvi/hooks/tolvi-recall` calls `tolvi recall --format hook-json` on every Claude Code `SessionStart`. Install with `bash install.sh --with-hooks`.
+**Used by session hooks (Claude Code only):** `skills/tolvi/hooks/tolvi-recall` calls `tolvi recall --format hook-json` on every Claude Code `SessionStart`. Install with `bash install.sh --with-hooks`.
 
 ### `tolvi init`
 
@@ -244,13 +244,13 @@ Link related docs with `[[slug]]` within the same vault (the `[[repo:slug]]` cro
 
 ### Writing mechanics
 
-Prefer `tolvi sync <type> <title> --body "..."` per doc — it does atomic write, frontmatter validation, slug derivation, and same-day session append for you. Compose markdown with the Write tool directly only when the CLI is unavailable or the user asks; if you do, validate the frontmatter against the rules above before writing.
+Prefer `tolvi sync <type> <title> --body "..."` per doc — it does atomic write, frontmatter validation, slug derivation, and same-day session append for you. Write the markdown file directly only when the CLI is unavailable or the user asks; if you do, validate the frontmatter against the rules above before writing.
 
 ## Behavioral rules
 
 These are *preferences*, not hard gates. Use judgment.
 
-### Reading a specific vault doc → use the Read tool
+### Reading a specific vault doc → read the file
 
 For "show me the postgres decision" or any exact-doc request, read the file directly. Direct read is faster than shelling out for one file.
 
@@ -260,21 +260,21 @@ For semantic queries ("what did we decide about X", "any patterns for Y"), shell
 
 ### Writing a new doc → prefer `tolvi sync`
 
-The CLI handles atomic write, frontmatter validation against the embedded JSON Schema, slug auto-generation, and session same-day append. Composing markdown + Write tool directly is acceptable when:
+The CLI handles atomic write, frontmatter validation against the embedded JSON Schema, slug auto-generation, and session same-day append. Writing the markdown file directly is acceptable when:
 
 - The CLI is missing from `$PATH`
-- The user explicitly asks for a direct Write
+- The user explicitly asks for a direct file write
 - You're iterating on a draft the user has not yet committed to capturing
 
-When using direct Write, validate the frontmatter mentally against the rules above before writing. Frontmatter-validation failures cause silent vault corruption that's annoying to debug.
+When writing the file directly, validate the frontmatter mentally against the rules above before writing. Frontmatter-validation failures cause silent vault corruption that's annoying to debug.
 
 ### Citing vault content
 
 When summarizing or quoting vault content in a response, cite with `[[slug]]`. Use exact slugs that exist in the vault — verify by reading the matching file before citing. Don't invent slugs.
 
-### Pre-commit vault sync
+### Pre-commit vault sync (Claude Code only)
 
-Before every `git commit` in a Tolvi-vaulted repo, the `tolvi-sync` Claude Code `PreToolUse` hook fires. It auto-stages any modified `vault/` files so they land in the commit, then asks `tolvi roots --session-note` where today's note belongs and checks whether it is there. If it is missing the hook says so and **allows the commit anyway** — a missed vault entry is recoverable, a blocked commit is not acceptable friction, and a hook that fails closed turns any bug in it into an inability to commit. This happens automatically when hooks are installed (`bash install.sh --with-hooks`).
+Before every `git commit` in a Tolvi-vaulted repo, the `tolvi-sync` Claude Code `PreToolUse` hook fires. It auto-stages any modified `vault/` files so they land in the commit, then asks `tolvi roots --session-note` where today's note belongs and checks whether it is there. If it is missing the hook says so and **allows the commit anyway**: a missed vault entry is recoverable, a blocked commit is not acceptable friction, and a hook that fails closed turns any bug in it into an inability to commit. This happens automatically when hooks are installed (`bash install.sh --with-hooks`).
 
 ## Escape hatches
 
@@ -306,4 +306,4 @@ The CLI errors at approximately 180,000 estimated tokens. Suggest one of:
 
 ### Vault has invalid frontmatter in a file
 
-`tolvi ask` prints a warning on stderr and skips the invalid file. Suggest the user inspect the file via Read; offer to help fix the frontmatter against the rules above. The vault remains queryable for the other files.
+`tolvi ask` prints a warning on stderr and skips the invalid file. Suggest the user inspect the file; offer to help fix the frontmatter against the rules above. The vault remains queryable for the other files.
