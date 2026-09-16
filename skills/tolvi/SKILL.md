@@ -13,7 +13,7 @@ When you finish loading this skill, briefly acknowledge it (one sentence) and wa
 
 **Triggers:**
 
-- Explicit: the user types `/tolvi` (Claude Code only), or names the Tolvi skill in a request
+- Explicit: the user types `/tolvi` in an agent that supports skill slash commands, such as Claude Code or Cursor, or names the Tolvi skill in a request
 - Implicit: user asks "what did we decide about X", "what session notes do we have on Y", "write a decision about Z", or references `[[some-slug]]` in a request
 - Repo state: cwd or an ancestor contains `vault/.vault-meta.json`
 
@@ -146,7 +146,7 @@ Emit a session-resumption summary — recent sessions and decisions — without 
 Key flags:
 
 - `--format human|hook-json` — output format:
-  - `human` (default): plain-text `RECALL SUMMARY` block matching the `/recall` skill's output
+  - `human` (default): plain-text `RECALL SUMMARY` block matching the Claude Code `/tolvi-recall` command's output
   - `hook-json` (Claude Code only): Claude Code `SessionStart` hook blob (`{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`)
 - `--session-count <n>` — number of recent sessions to surface (default: 3)
 - `--decision-count <n>` — max recent active decisions to surface (default: 10)
