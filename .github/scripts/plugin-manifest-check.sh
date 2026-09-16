@@ -53,6 +53,35 @@ if (fs.existsSync(gem)) {
   }
 }
 
+const mkt = ".agents/plugins/marketplace.json";
+const codexName = fs.existsSync(".codex-plugin/plugin.json")
+  ? JSON.parse(fs.readFileSync(".codex-plugin/plugin.json", "utf8")).name
+  : undefined;
+if (codexName !== undefined) {
+  if (!fs.existsSync(mkt)) {
+    console.log(`✗ ${mkt}: missing, so codex plugin marketplace add cannot find the ${codexName} plugin`);
+    fail = 1;
+  } else {
+    const mm = JSON.parse(fs.readFileSync(mkt, "utf8"));
+    const entry = (mm.plugins || []).find((p) => p.name === codexName);
+    if (!entry) {
+      console.log(`✗ ${mkt}: lists no plugin named ${codexName}`);
+      fail = 1;
+    } else if (!(entry.source && entry.source.source === "local" && entry.source.path === "./")) {
+      console.log(`✗ ${mkt}: ${codexName} must be a local source at ./, the repository root that holds .codex-plugin`);
+      fail = 1;
+    }
+  }
+}
+
+if (fs.existsSync(gem)) {
+  const g = JSON.parse(fs.readFileSync(gem, "utf8"));
+  if (g.contextFileName === "GEMINI.md") {
+    console.log(`✗ ${gem}: contextFileName is GEMINI.md, the contributor guide pointer, so extension users would load contributor rules`);
+    fail = 1;
+  }
+}
+
 const entries = Object.entries(seen);
 if (entries.length === 0) { console.log("no plugin manifests here; nothing to check"); process.exit(0); }
 const [refKey, ref] = entries[0];
