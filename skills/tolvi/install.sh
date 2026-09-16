@@ -13,6 +13,8 @@
 #   --hooks-scope <scope>   user (default) | project  — where hooks are wired:
 #                             user:    ~/.claude/settings.json (all Tolvi repos)
 #                             project: .claude/settings.json  (this repo only)
+#   --agents                Install the shared Agent Skill for Codex, Cursor and
+#                             OpenHands: copy SKILL.md into <repo root>/.agents/skills/tolvi/
 #   -h, --help              Print usage
 
 set -euo pipefail
@@ -29,11 +31,13 @@ ACTION="install"
 FORCE="false"
 WITH_HOOKS="false"
 HOOKS_SCOPE=""   # "user" | "project" — empty means prompt
+AGENTS="false"
+PATH_SET="false"
 
 usage() {
   cat <<EOF
 Usage: bash install.sh [--copy] [--uninstall] [--path <dir>] [--force]
-                       [--with-hooks] [--hooks-scope user|project]
+                       [--with-hooks] [--hooks-scope user|project] [--agents]
 
 Default: symlink skills/tolvi/SKILL.md into
          \$HOME/.claude/skills/tolvi/SKILL.md so that 'git pull' on the
@@ -55,6 +59,14 @@ Flags:
                             project — .claude/settings.json in the current directory
                                       (this repo only; committable)
                           Omit to be prompted interactively.
+  --agents                Install the shared Agent Skill for Codex, Cursor and
+                          OpenHands instead of the Claude Code install. Copies
+                          SKILL.md into <repo root>/.agents/skills/tolvi/, where
+                          the repo root is the nearest ancestor containing .git
+                          (or the current directory). Never symlinks, and installs
+                          no slash commands, stack skills or hooks. --path sets a
+                          different base, such as ~/.agents/skills. Combine with
+                          --uninstall to remove it.
   -h, --help              Show this help.
 
 EOF
@@ -64,14 +76,43 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --copy)         MODE="copy";        shift ;;
     --uninstall)    ACTION="uninstall"; shift ;;
-    --path)         DEST_BASE="$2";     shift 2 ;;
+    --path)         DEST_BASE="$2";     PATH_SET="true"; shift 2 ;;
     --force)        FORCE="true";       shift ;;
     --with-hooks)   WITH_HOOKS="true";  shift ;;
     --hooks-scope)  HOOKS_SCOPE="$2";   shift 2 ;;
+    --agents)       AGENTS="true";      shift ;;
     -h|--help)      usage; exit 0 ;;
     *)              echo "install.sh: unknown flag: $1" >&2; usage; exit 1 ;;
   esac
 done
+
+# Nearest ancestor of the current directory that contains .git, or the current
+# directory when there is none. Agents look for .agents/skills at the repo root.
+find_project_root() {
+  local d
+  d="$(pwd)"
+  while [[ "$d" != "/" ]]; do
+    if [[ -e "$d/.git" ]]; then
+      echo "$d"
+      return 0
+    fi
+    d="$(dirname "$d")"
+  done
+  pwd
+}
+
+if [[ "$AGENTS" == "true" ]]; then
+  if [[ "$WITH_HOOKS" == "true" || -n "$HOOKS_SCOPE" ]]; then
+    echo "install.sh: --with-hooks and --hooks-scope are Claude Code only and cannot be combined with --agents" >&2
+    exit 1
+  fi
+  # A project install is committed, and a committed symlink into one person's
+  # tolvi checkout is broken for everyone else, so agent installs always copy.
+  MODE="copy"
+  if [[ "$PATH_SET" != "true" ]]; then
+    DEST_BASE="$(find_project_root)/.agents/skills"
+  fi
+fi
 
 DEST_DIR="$DEST_BASE/tolvi"
 DEST_FILE="$DEST_DIR/SKILL.md"
@@ -108,6 +149,11 @@ if [[ "$ACTION" == "uninstall" ]]; then
     else
       echo "install.sh: $DEST_DIR is not empty (contains user-added files); leaving in place" >&2
     fi
+  fi
+
+  # An agents install never placed slash commands or stack skills.
+  if [[ "$AGENTS" == "true" ]]; then
+    exit 0
   fi
 
   # Remove installed slash commands (only our own files).
@@ -358,7 +404,11 @@ if [[ -e "$DEST_FILE" || -L "$DEST_FILE" ]]; then
 fi
 
 mkdir -p "$DEST_DIR"
-echo "✓ Detected Claude Code skill directory: $DEST_BASE"
+if [[ "$AGENTS" == "true" ]]; then
+  echo "✓ Agent skill directory: $DEST_BASE"
+else
+  echo "✓ Detected Claude Code skill directory: $DEST_BASE"
+fi
 
 if [[ "$MODE" == "symlink" ]]; then
   ln -s "$SOURCE_SKILL" "$DEST_FILE"
@@ -374,11 +424,13 @@ if [[ ! -r "$DEST_FILE" ]]; then
 fi
 echo "✓ Verifying: $DEST_FILE is readable ✓"
 
-install_commands
-install_stack_skills
+if [[ "$AGENTS" != "true" ]]; then
+  install_commands
+  install_stack_skills
 
-if [[ "$WITH_HOOKS" == "true" ]]; then
-  install_hooks
+  if [[ "$WITH_HOOKS" == "true" ]]; then
+    install_hooks
+  fi
 fi
 
 # Verify the binary is reachable BY NAME, not merely installed. `go install`
@@ -411,10 +463,19 @@ check_cli() {
 EOF
 }
 
-cat <<EOF
+if [[ "$AGENTS" == "true" ]]; then
+  echo ""
+  echo "Next steps:"
+  if [[ "$PATH_SET" != "true" ]]; then
+    echo "  - Commit ${DEST_DIR} so everyone on the team gets the skill."
+  fi
+  echo "  - Codex, Cursor and OpenHands load the skill when a request matches its description."
+else
+  cat <<EOF
 
 Next steps:
   - In any Claude Code session, type /tolvi to load the skill.
 EOF
+fi
 
 check_cli
