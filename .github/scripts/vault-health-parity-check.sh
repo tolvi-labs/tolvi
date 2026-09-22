@@ -2,7 +2,7 @@
 # Vault-health parity check. The checks exist twice on purpose:
 #
 #   - Go, in cli/internal/cli/vaulthealth.go, embedded in `tolvi doctor`.
-#     Native so doctor has no Python/uv/PyYAML dependency; shelling out would
+#     Native so doctor has no Python dependency; shelling out would
 #     give doctor its own silent-degradation path, which is the failure it
 #     exists to detect.
 #   - Python, in tolvi-solo's skills/vault-health/, for users who run the
@@ -11,7 +11,7 @@
 # Two implementations drift. This runs both over a fixture with a known defect
 # in every dimension and fails if their findings or grades disagree.
 #
-# Skips cleanly when the tolvi-solo sibling checkout or uv is absent, so it
+# Skips cleanly when the tolvi-solo sibling checkout or python3 is absent, so it
 # never blocks a contributor who only has this repo.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
@@ -21,8 +21,8 @@ if [ ! -f "$PY" ]; then
   echo "vault-health parity: no tolvi-solo sibling checkout; skipping."
   exit 0
 fi
-if ! command -v uv &>/dev/null; then
-  echo "vault-health parity: uv not installed; skipping."
+if ! command -v python3 &>/dev/null; then
+  echo "vault-health parity: python3 not installed; skipping."
   exit 0
 fi
 
@@ -40,6 +40,11 @@ printf -- '---\ntags: [d]\nstatus: active\n---\n\n# Choose Postgres\n'          
 printf -- '---\ntags: [d]\nstatus: active\n---\n\n# Choose Postgres\n'                                   > "$v/decisions/2026-01-05-dupe-b.md"
 printf -- '---\ntags: [d]\nstatus: active\n---\n\n# Escapes\n\nIt says caf\\u00e9 here.\n'               > "$v/decisions/2026-01-06-escaped.md"
 printf -- '---\ntags: [d]\nstatus: active\n---\n\n# A clean one\n\nNothing wrong here.\n'                > "$v/decisions/2026-01-07-clean.md"
+
+# The Python script parses frontmatter with its own standard-library subset of
+# YAML, so both implementations must also parse a clean note written in every
+# frontmatter shape real vaults use.
+printf -- '---\ntags:\n  [\n    d,\n    e(f),\n  ]\ndate: "2026-01-08"\nstatus: active # set by hand\nmetadata:\n  type: decision\n  related:\n  - a\n  - b\n---\n\n# Every shape\n' > "$v/decisions/2026-01-08-shapes.md"
 
 # Compare the facts both implementations must agree on, not their layout:
 # the overall grade, each per-dimension grade, and which files carry findings.
@@ -60,7 +65,7 @@ files() {
 }
 
 go_out="$(cd cli && go run ./cmd/tolvi doctor vault-health --vault "$v" 2>&1 || true)"
-py_out="$(uv run --with pyyaml python "$PY" "$v" 2>&1 || true)"
+py_out="$(python3 "$PY" "$v" 2>&1 || true)"
 
 fail=0
 compare() {
