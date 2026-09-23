@@ -44,3 +44,13 @@ Packs are the sharper problem. They are the obvious thing for `tolvi init` to of
 ## Outcome
 
 The CLI becomes consumable by tools rather than only by people, and no sibling product loses its identity to get there. What remains is additive: a registry file, four schemas, a `pack.json` per pack, two vendoring checks, and one new command.
+
+## Amendment, 2026-09-23
+
+A crucible on this work pressed two of the choices above. Both stand, with their reasoning recorded here so the same objections are not re-argued from scratch.
+
+**Publishing four schemas, challenged against `2026-09-13-meta-v2-bumps-schema-version-not-id`.** That decision refused to buy stability for consumers that do not exist, and it verified the claim rather than assuming it. The objection was that publishing schemas for output nothing consumes yet repeats the mistake it warned about. It does not: that decision tested for a precondition, and the precondition is now met. A consumer is committed, with an approved design, and it reads all four shapes. The principle is intact and the situation is different, which is the distinction worth keeping. If the consumer were dropped, the schemas would become exactly the speculative stability that decision refuses.
+
+**`tolvi init` writing machine-global state.** `init` is a per-repo command, and appending to `~/.config/tolvi/repos.json` makes it touch machine-wide state, which is a new failure surface for a command people already rely on. The contract: **the registry write is best-effort.** A failure warns, names `tolvi repos scan` as the repair, and never fails `init`. The vault is the deliverable; the registry is a cache over vaults that a full scan can rebuild from nothing. An `init` that succeeded at provisioning and then reported failure because an index could not be updated would be lying about what happened.
+
+**The integration-tree duplication in the fourth bullet above was challenged and upheld, for a reason that changed mid-flight.** The crucible argued the copy into `cli/` was optional because relocation was available. It was, until `c7d3cad` shipped `.claude-plugin/plugin.json` and moved the tree to `skills/tolvi/`, which the plugin loader requires at the repo root. The duplication is now forced rather than chosen. See `2026-09-23-duplicate-and-pin-is-a-mitigation-not-a-default` for when that mitigation applies, and for the `go:embed` `all:` trap that the underscore-prefixed `_preflight.md` sets.
