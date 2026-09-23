@@ -1,5 +1,5 @@
 name: tolvi
-version: 0.1.2
+version: 0.2.0
 description: Read, write, and ask questions of a Tolvi engineering vault
 author: Tolvi Labs
 # No provides_hooks: this plugin ships skills, not a Python hook implementation.

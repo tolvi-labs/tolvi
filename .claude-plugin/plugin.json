@@ -1,7 +1,7 @@
 {
   "name": "tolvi",
   "description": "Read, write, and ask questions of a Tolvi engineering vault: decisions, sessions, and patterns as plain Markdown your agents read as context.",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "author": {
     "name": "Tolvi Labs",
     "url": "https://tolvilabs.com"
