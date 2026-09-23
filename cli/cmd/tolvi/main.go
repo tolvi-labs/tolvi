@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -515,7 +516,10 @@ which is what the commit gate calls.`,
 	},
 }
 
-var doctorVaultFlag string
+var (
+	doctorVaultFlag string
+	doctorJSONFlag  bool
+)
 
 var doctorCmd = &cobra.Command{
 	Use:   "doctor [vault-health]",
@@ -535,7 +539,11 @@ Pass "vault-health" to run only the content scan.
 Exit codes differ by what is being asserted. A plain run exits non-zero when a
 SETUP check fails, because that is what stops the tools working; content
 findings are reported but do not change it. "tolvi doctor vault-health" exits
-non-zero when the scan finds any high-severity defect.`,
+non-zero when the scan finds any high-severity defect.
+
+--json emits the same result as machine-readable JSON instead of the report,
+against the published schemas in spec/schemas/. Exit codes are unchanged, so a
+caller can read either the code or the "ok" field.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cwd, _ := os.Getwd()
 		home, _ := os.UserHomeDir()
@@ -557,9 +565,23 @@ non-zero when the scan finds any high-severity defect.`,
 		}
 
 		if only == "vault-health" {
+			if doctorJSONFlag {
+				// The text report goes to the writer doctor was given; JSON
+				// owns stdout alone, so nothing interleaves with it.
+				opts.Stdout = io.Discard
+			}
 			rep, err := clicmd.DoctorVaultHealth(opts)
 			if err != nil {
 				return err
+			}
+			if doctorJSONFlag {
+				if err := clicmd.PrintVaultHealthJSON(os.Stdout, version, rep); err != nil {
+					return err
+				}
+				if clicmd.HealthHighSeverity(rep) > 0 {
+					os.Exit(clicmd.ExitVaultState)
+				}
+				return nil
 			}
 			if err := clicmd.RenderVaultHealth(os.Stdout, rep); err != nil {
 				return err
@@ -570,9 +592,20 @@ non-zero when the scan finds any high-severity defect.`,
 			return nil
 		}
 
+		if doctorJSONFlag {
+			// --json reports the setup checks; the content scan has its own
+			// shape and its own invocation.
+			opts.Stdout = io.Discard
+			opts.SkipVaultHealth = true
+		}
 		checks, err := clicmd.RunDoctor(opts)
 		if err != nil {
 			return err
+		}
+		if doctorJSONFlag {
+			if err := clicmd.PrintDoctorJSON(os.Stdout, version, checks); err != nil {
+				return err
+			}
 		}
 		if clicmd.DoctorFailures(checks) > 0 {
 			os.Exit(clicmd.ExitConfig)
@@ -589,6 +622,7 @@ func main() {
 	rootCmd.AddCommand(recallCmd)
 	rootCmd.AddCommand(commitCmd)
 	doctorCmd.Flags().StringVar(&doctorVaultFlag, "vault", "", "path to the vault (default: discovered from $PWD)")
+	doctorCmd.Flags().BoolVar(&doctorJSONFlag, "json", false, "emit JSON against spec/schemas/ instead of the text report")
 	rootCmd.AddCommand(rootsCmd)
 	rootCmd.AddCommand(doctorCmd)
 

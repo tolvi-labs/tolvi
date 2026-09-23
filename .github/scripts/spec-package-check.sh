@@ -34,15 +34,22 @@ if [ ! -f "spec/tolvi-format-v$schema_const.md" ]; then
   fail=1
 fi
 
-# Every schema the manifest advertises must actually ship.
+# Every schema the manifest advertises must actually ship, under either key.
+# `schemas` is the vault format, pinned to the package major. `outputs` is the
+# CLI's --json contract, which moves with the CLI instead: it is extended
+# additively within a package major, and a breaking change ships as a new file
+# rather than as a silent edit, so a pin on the format never drags an
+# incompatible output shape along with it.
 node -e '
 const idx = require("./spec/index.json");
 const fs = require("fs");
 let bad = 0;
-for (const [name, rel] of Object.entries(idx.schemas)) {
-  if (!fs.existsSync("spec/" + rel.replace("./", ""))) {
-    console.log(`✗ index.json advertises ${name} at ${rel}, which does not exist`);
-    bad++;
+for (const key of ["schemas", "outputs"]) {
+  for (const [name, rel] of Object.entries(idx[key] ?? {})) {
+    if (!fs.existsSync("spec/" + rel.replace("./", ""))) {
+      console.log(`✗ index.json advertises ${key}.${name} at ${rel}, which does not exist`);
+      bad++;
+    }
   }
 }
 process.exit(bad ? 1 : 0);

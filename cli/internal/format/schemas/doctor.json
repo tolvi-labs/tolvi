@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tolvilabs.com/tolvi/spec/schemas/doctor.json",
+  "title": "tolvi doctor --json output",
+  "description": "The machine-readable form of `tolvi doctor`. Setup checks only; the content scan has its own schema at vault-health.json. Check ids are stable across releases, so consumers key on id rather than on name, which is display text and may be reworded.",
+  "type": "object",
+  "required": [
+    "tolvi_version",
+    "ok",
+    "checks"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "tolvi_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The CLI that produced this output, as `tolvi version` reports it. 'dev' for an unreleased build. A consumer that needs a newer contract compares against this rather than parsing output it cannot trust."
+    },
+    "ok": {
+      "type": "boolean",
+      "description": "True when every check passed. Equivalent to the process exit code being zero, restated here so a consumer reading only stdout does not need it."
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One entry per setup assertion, in the order doctor runs them.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "ok",
+          "detail",
+          "fix"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "path",
+              "vault",
+              "api_key",
+              "claude_permissions"
+            ],
+            "description": "Stable identifier for the assertion. Adding a check adds a value here; renaming one is a breaking change to this contract."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable label, as the text report prints it. Display only."
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string",
+            "description": "What was actually found, for example the resolved vault path or the binary location. May be empty."
+          },
+          "fix": {
+            "type": "string",
+            "description": "The command that repairs a failing check. Empty when the check passed."
+          }
+        }
+      }
+    }
+  }
+}

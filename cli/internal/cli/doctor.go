@@ -13,10 +13,20 @@ import (
 
 // Check is one setup assertion and, when it fails, the command that fixes it.
 type Check struct {
+	// ID is the stable key the published --json contract exposes
+	// (spec/schemas/doctor.json). Name is display text and may be reworded;
+	// ID may not. It is assigned in RunDoctor, beside the ordering, so a
+	// check cannot ship without one.
+	ID     string
 	Name   string
 	OK     bool
 	Detail string // what was actually found
 	Fix    string // remediation; empty when OK
+}
+
+func withID(id string, c Check) Check {
+	c.ID = id
+	return c
 }
 
 // DoctorOpts carries the ambient state doctor inspects. Every source of
@@ -61,10 +71,10 @@ func RunDoctor(opts DoctorOpts) ([]Check, error) {
 	var checks []Check
 	if opts.Only != "vault-health" {
 		checks = []Check{
-			checkPath(opts),
-			checkVault(opts),
-			checkAPIKey(opts),
-			checkClaudePermissions(opts),
+			withID("path", checkPath(opts)),
+			withID("vault", checkVault(opts)),
+			withID("api_key", checkAPIKey(opts)),
+			withID("claude_permissions", checkClaudePermissions(opts)),
 		}
 		if err := writeDoctorReport(opts.Stdout, checks); err != nil {
 			return checks, err

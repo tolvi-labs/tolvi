@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tolvilabs.com/tolvi/spec/schemas/vault-health.json",
+  "title": "tolvi doctor vault-health --json output",
+  "description": "The machine-readable form of `tolvi doctor vault-health`: the content scan, its findings, and the grade per dimension. Findings are always an array, empty when a vault is clean, so a consumer never has to special-case null.",
+  "type": "object",
+  "required": [
+    "tolvi_version",
+    "vault_path",
+    "files_scanned",
+    "overall_grade",
+    "overall_pct",
+    "high_severity",
+    "grades",
+    "findings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "tolvi_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The CLI that produced this output, as `tolvi version` reports it. 'dev' for an unreleased build."
+    },
+    "vault_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path of the vault that was scanned."
+    },
+    "files_scanned": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Documents read, including those whose frontmatter could not be parsed."
+    },
+    "overall_grade": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Letter grade for the vault as a whole, for example 'A+' or 'B-'."
+    },
+    "overall_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "The score behind overall_grade."
+    },
+    "high_severity": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of high-severity findings. `tolvi doctor vault-health` exits non-zero when this is above zero; medium and low findings are advisory."
+    },
+    "grades": {
+      "type": "object",
+      "description": "One entry per scored dimension, keyed by dimension name.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "pct",
+          "letter"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "letter": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "Every defect found, in report order. Empty for a clean vault.",
+      "items": {
+        "type": "object",
+        "required": [
+          "check_id",
+          "severity",
+          "file",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Which check produced the finding, for example 'empty-tags' or 'duplicate-title'."
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Path of the document the finding is about, relative to the vault."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What is wrong, phrased for a person."
+          }
+        }
+      }
+    }
+  }
+}

@@ -6,11 +6,13 @@ The public format contract for Tolvi vaults.
 
 - [`tolvi-format-v2.md`](./tolvi-format-v2.md): the normative spec. **Read this first.**
 - [`tolvi-format-v1.md`](./tolvi-format-v1.md): the previous version, frozen and preserved as the contract v1 vaults were written against.
-- [`schemas/`](./schemas/): machine-readable JSON Schemas (Draft 2020-12) for validating vault content.
+- [`schemas/`](./schemas/): machine-readable JSON Schemas (Draft 2020-12). `index.json` splits them by what they describe: `schemas` validates vault content, and `outputs` describes what the CLI prints with `--json`.
 
 ## Stability
 
 `tolvi-format-v2` is the current contract; `tolvi-format-v1` is frozen and sits alongside it. Breaking changes require a `tolvi-format-v3` revision in this directory, with documented migration tooling. The schemas in `./schemas/` track the current version.
+
+**Output schemas move with the CLI, not with the format.** The package's major version is the format version, so an output shape cannot use it to signal a break. Those schemas are therefore extended additively within a package major, and a breaking change ships as a new file rather than as an edit to an existing one. A consumer pinned to `@tolvi-labs/spec@^2` for the format is never handed an output shape that stopped being what it validated against.
 
 Every consumer (CLI, server, SDKs, third-party tools) implements parsing and validation against the spec. The spec is the only artifact crossing language boundaries. There is no shared parsing library.
 

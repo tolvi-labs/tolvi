@@ -32,6 +32,17 @@ var SessionSchema []byte
 //go:embed schemas/pattern.json
 var PatternSchema []byte
 
+// Output-contract schemas. These describe what commands print with --json
+// rather than what a vault document contains, so they are versioned with the
+// CLI rather than with tolvi-format. They are embedded so the CLI's own tests
+// can validate real output against the published shape.
+
+//go:embed schemas/doctor.json
+var DoctorSchema []byte
+
+//go:embed schemas/vault-health.json
+var VaultHealthSchema []byte
+
 // ValidatorForDocType returns a compiled JSON Schema validator for one
 // of "decision" | "session" | "pattern". Unknown types return an error.
 func ValidatorForDocType(docType string) (*jsonschema.Schema, error) {

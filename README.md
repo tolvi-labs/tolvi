@@ -34,6 +34,7 @@ tolvi recall                    # what was I doing? recent sessions + active dec
 
 # 4. Check the setup, and see where docs are routed:
 tolvi doctor
+tolvi doctor --json             # same checks, machine-readable, for scripts and tools
 tolvi roots
 ```
 

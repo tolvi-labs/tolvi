@@ -6,5 +6,9 @@
     "pattern": "./schemas/pattern.json",
     "session": "./schemas/session.json",
     "vault-meta": "./schemas/vault-meta.json"
+  },
+  "outputs": {
+    "doctor": "./schemas/doctor.json",
+    "vault-health": "./schemas/vault-health.json"
   }
 }
