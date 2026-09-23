@@ -14,6 +14,7 @@ import (
 	clicmd "github.com/tolvi-labs/tolvi/cli/internal/cli"
 	"github.com/tolvi-labs/tolvi/cli/internal/config"
 	"github.com/tolvi-labs/tolvi/cli/internal/llm"
+	"github.com/tolvi-labs/tolvi/cli/internal/registry"
 	"github.com/tolvi-labs/tolvi/cli/internal/vault"
 )
 
@@ -41,11 +42,18 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return clicmd.RunInit(clicmd.InitOpts{
+		if err := clicmd.RunInit(clicmd.InitOpts{
 			Cwd:       cwd,
 			Workspace: initWorkspaceFlag,
 			Stdout:    os.Stdout,
-		})
+		}); err != nil {
+			return err
+		}
+		// Best-effort: the vault is what init delivers, and the registry is a
+		// cache a scan can rebuild, so a failure here warns on stderr and
+		// never fails the command.
+		clicmd.RegisterAfterInit(os.Stderr, registry.ConfigPath(), cwd)
+		return nil
 	},
 }
 
@@ -614,9 +622,74 @@ caller can read either the code or the "ok" field.`,
 	},
 }
 
+var reposJSONFlag bool
+
+var reposCmd = &cobra.Command{
+	Use:   "repos",
+	Short: "The repos on this machine that have a vault",
+	Long: `repos maintains a machine-local index at ~/.config/tolvi/repos.json, beside
+roots.json and never committed. ` + "`tolvi init`" + ` registers a repo; scan finds ones
+that were never registered.
+
+The index is a cache, not a source of truth. Each repo's own .vault-meta.json
+is the truth, so entries are verified when they are read: a repo that has moved
+is reported as stale rather than trusted, and forgetting it is a deliberate
+step rather than something a read does silently.`,
+}
+
+var reposListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List registered repos, verified against the disk",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return clicmd.RunReposList(clicmd.ReposOpts{
+			RegistryPath: registry.ConfigPath(),
+			JSON:         reposJSONFlag,
+			Stdout:       os.Stdout,
+			Version:      version,
+		})
+	},
+}
+
+var reposScanCmd = &cobra.Command{
+	Use:   "scan [dir...]",
+	Short: "Rebuild the index from what is on disk",
+	Long: `scan searches the directories given and registers every repo that has a
+readable vault. With no argument it searches the directories holding this
+machine's declared roots, which is the set it already knows about; a machine
+with no roots.json is asked to name a directory rather than having one guessed
+for it.
+
+scan replaces the index, so a repo that is gone stops being listed.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return clicmd.RunReposScan(clicmd.ReposOpts{
+			RegistryPath: registry.ConfigPath(),
+			Dirs:         args,
+			Stdout:       os.Stdout,
+			Version:      version,
+		})
+	},
+}
+
+var reposForgetCmd = &cobra.Command{
+	Use:   "forget <path>",
+	Short: "Drop one repo from the index",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return clicmd.RunReposForget(clicmd.ReposOpts{
+			RegistryPath: registry.ConfigPath(),
+			Dirs:         args,
+			Stdout:       os.Stdout,
+			Version:      version,
+		})
+	},
+}
+
 func main() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
+	reposCmd.AddCommand(reposListCmd, reposScanCmd, reposForgetCmd)
+	reposListCmd.Flags().BoolVar(&reposJSONFlag, "json", false, "emit JSON against spec/schemas/repos-list.json")
+	rootCmd.AddCommand(reposCmd)
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(askCmd)
 	rootCmd.AddCommand(recallCmd)

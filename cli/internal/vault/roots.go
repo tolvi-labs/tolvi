@@ -73,6 +73,11 @@ type Roots struct {
 // vault in front of them.
 func (r Roots) Declared() bool { return r.declared }
 
+// All returns every declared root, in declaration order. It is a copy, so a
+// caller enumerating roots (a repo scan, for instance) cannot mutate what the
+// resolver reads.
+func (r Roots) All() []Root { return append([]Root(nil), r.roots...) }
+
 // LoadRoots reads the machine-local roots declaration.
 //
 // A missing file yields an undeclared Roots — single-root mode, where every doc

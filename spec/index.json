@@ -9,6 +9,7 @@
   },
   "outputs": {
     "doctor": "./schemas/doctor.json",
-    "vault-health": "./schemas/vault-health.json"
+    "vault-health": "./schemas/vault-health.json",
+    "repos-list": "./schemas/repos-list.json"
   }
 }

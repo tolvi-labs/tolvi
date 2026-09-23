@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tolvilabs.com/tolvi/spec/schemas/repos-list.json",
+  "title": "tolvi repos list --json output",
+  "description": "The machine-readable list of repos registered on this machine. The registry is a cache over each repo's .vault-meta.json, so entries are verified when they are read: a repo that moved is reported with status 'stale' rather than dropped. Routing answers are computed by the resolver and returned here, so a consumer never re-derives where a document belongs.",
+  "type": "object",
+  "required": [
+    "tolvi_version",
+    "repos"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "tolvi_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The CLI that produced this output, as `tolvi version` reports it. 'dev' for an unreleased build."
+    },
+    "repos": {
+      "type": "array",
+      "description": "Registered repos, sorted by path. Empty when nothing is registered, never null.",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "workspace",
+          "status",
+          "registered"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Absolute path of the repo that owns the vault."
+          },
+          "workspace": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Workspace from the repo's .vault-meta.json, as recorded at registration."
+          },
+          "repo": {
+            "type": "string",
+            "description": "Repo name within the workspace. Absent for a container vault that serves a whole workspace and names no repo."
+          },
+          "product": {
+            "type": "string",
+            "description": "Product group, when the repo declares one."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "stale"
+            ],
+            "description": "'ok' when a vault with a readable meta is still at path. 'stale' when it is not: the entry is kept so it can be reported and forgotten deliberately, never deleted silently."
+          },
+          "vault_path": {
+            "type": "string",
+            "description": "Absolute path of the repo's own vault. Absent for a stale entry, which has no vault to point at."
+          },
+          "session_note": {
+            "type": "string",
+            "description": "Absolute path where today's session note belongs, computed by the resolver, which may be a shared root rather than this repo's vault. Absent for a stale entry, and absent when routing refuses to answer."
+          },
+          "registered": {
+            "type": "string",
+            "minLength": 1,
+            "description": "RFC 3339 timestamp of when the repo was first registered. Re-registering keeps the original."
+          }
+        }
+      }
+    }
+  }
+}

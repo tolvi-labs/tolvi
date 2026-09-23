@@ -96,3 +96,34 @@ func encode(w io.Writer, v any) error {
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
 }
+
+// repos-list is the third published output shape. It lives here beside the
+// other emitters so the wire structs for every --json command are in one file.
+
+type reposListJSON struct {
+	TolviVersion string       `json:"tolvi_version"`
+	Repos        []repoRowJSN `json:"repos"`
+}
+
+type repoRowJSN struct {
+	Path        string `json:"path"`
+	Workspace   string `json:"workspace"`
+	Repo        string `json:"repo,omitempty"`
+	Product     string `json:"product,omitempty"`
+	Status      string `json:"status"`
+	VaultPath   string `json:"vault_path,omitempty"`
+	SessionNote string `json:"session_note,omitempty"`
+	Registered  string `json:"registered"`
+}
+
+func printReposListJSON(w io.Writer, version string, rows []repoSummary) error {
+	out := reposListJSON{TolviVersion: version, Repos: make([]repoRowJSN, 0, len(rows))}
+	for _, r := range rows {
+		out.Repos = append(out.Repos, repoRowJSN{
+			Path: r.Path, Workspace: r.Workspace, Repo: r.Repo, Product: r.Product,
+			Status: r.Status, VaultPath: r.VaultPath, SessionNote: r.SessionNote,
+			Registered: r.Registered,
+		})
+	}
+	return encode(w, out)
+}

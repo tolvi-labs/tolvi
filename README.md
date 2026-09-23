@@ -36,9 +36,15 @@ tolvi recall                    # what was I doing? recent sessions + active dec
 tolvi doctor
 tolvi doctor --json             # same checks, machine-readable, for scripts and tools
 tolvi roots
+
+# 5. See every repo on this machine that has a vault:
+tolvi repos list
+tolvi repos scan ~/src          # register ones that were never registered
 ```
 
 For Claude Code users, the skill at [`skills/tolvi/`](./skills/tolvi/) lets you do the same thing in natural language inside a Claude Code session (`/tolvi` slash command).
+
+`tolvi repos` keeps a machine-local index at `~/.config/tolvi/repos.json`, beside `roots.json` and never committed. `tolvi init` registers a repo as it provisions it, and `tolvi repos scan <dir>` picks up ones that predate the index. The index is a cache over each repo's own `.vault-meta.json`, so entries are verified when they are read: a repo you moved is listed as stale rather than trusted, and `tolvi repos forget <path>` drops it when you say so. Losing the file costs nothing, because a scan rebuilds it.
 
 `tolvi roots` is worth knowing early if you use more than one repo. Roots are declared once per machine in `~/.config/tolvi/roots.json` and never committed, so a repo commits only who it is and the machine decides where its docs live. With no `roots.json` everything stays in the repo's own `vault/`, which is the default and what a contributor wants.
 
