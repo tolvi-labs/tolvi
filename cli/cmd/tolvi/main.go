@@ -13,6 +13,7 @@ import (
 
 	clicmd "github.com/tolvi-labs/tolvi/cli/internal/cli"
 	"github.com/tolvi-labs/tolvi/cli/internal/config"
+	"github.com/tolvi-labs/tolvi/cli/internal/integrations"
 	"github.com/tolvi-labs/tolvi/cli/internal/llm"
 	"github.com/tolvi-labs/tolvi/cli/internal/registry"
 	"github.com/tolvi-labs/tolvi/cli/internal/vault"
@@ -684,12 +685,98 @@ var reposForgetCmd = &cobra.Command{
 	},
 }
 
+var (
+	integrationsForceFlag bool
+	integrationsHooksFlag bool
+)
+
+var integrationsCmd = &cobra.Command{
+	Use:   "integrations",
+	Short: "Install this repo's Claude Code integration from the binary",
+}
+
+var integrationsInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Write the Tolvi skill, slash commands, and optionally the session hooks",
+	Long: `install writes the Claude Code integration carried inside this binary:
+the Tolvi skill, the three slash commands, and with --with-hooks the session
+hooks and the read-only allow rules.
+
+The files ride inside the binary because the Homebrew cask ships exactly one
+artifact. A brew install therefore had no route to the integration at all: the
+only installer was skills/tolvi/install.sh, which needs a checkout.
+
+Only what this repo owns is installed. Stack skills live in their own product
+repos and are installed from there, so what is found on this machine is
+reported rather than wired up.
+
+Existing files are never overwritten without --force, and the hook merge is
+idempotent: running install twice changes nothing.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		res, err := integrations.Install(integrations.Opts{
+			Force:     integrationsForceFlag,
+			WithHooks: integrationsHooksFlag,
+		})
+		if err != nil {
+			return err
+		}
+		for _, w := range res.Written {
+			fmt.Printf("  wrote %s\n", w)
+		}
+		if res.HooksWired {
+			fmt.Printf("  hooks wired in %s\n", res.SettingsPath)
+			for _, rule := range res.AllowAdded {
+				fmt.Printf("  allowed %s\n", rule)
+			}
+			if len(res.AllowAdded) == 0 {
+				fmt.Println("  allow rules already present")
+			}
+		} else {
+			fmt.Println("\nRun with --with-hooks to wire recall and the pre-commit vault check.")
+		}
+		reportStackSkills()
+		return nil
+	},
+}
+
+// reportStackSkills names stack skills found in registered repos without
+// touching them. They are installed by their own product repos, per
+// vault/decisions/2026-09-12-stack-skills-live-in-their-product-repos.md, and
+// a binary cannot recreate a symlink into a checkout it does not own.
+func reportStackSkills() {
+	f, err := registry.Load(registry.ConfigPath())
+	if err != nil || len(f.Repos) == 0 {
+		return
+	}
+	var found []string
+	for _, e := range f.Repos {
+		if e.Repo == "tolvi" {
+			continue
+		}
+		matches, _ := filepath.Glob(filepath.Join(e.Path, "skills", "*", "SKILL.md"))
+		for _, m := range matches {
+			found = append(found, filepath.Base(filepath.Dir(m))+" in "+e.Path)
+		}
+	}
+	if len(found) == 0 {
+		return
+	}
+	fmt.Println("\nStack skills on this machine, installed from their own repos:")
+	for _, s := range found {
+		fmt.Printf("  %s\n", s)
+	}
+}
+
 func main() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
 	reposCmd.AddCommand(reposListCmd, reposScanCmd, reposForgetCmd)
 	reposListCmd.Flags().BoolVar(&reposJSONFlag, "json", false, "emit JSON against spec/schemas/repos-list.json")
 	rootCmd.AddCommand(reposCmd)
+	integrationsInstallCmd.Flags().BoolVar(&integrationsForceFlag, "force", false, "overwrite an existing install")
+	integrationsInstallCmd.Flags().BoolVar(&integrationsHooksFlag, "with-hooks", false, "also wire the session hooks and read-only allow rules")
+	integrationsCmd.AddCommand(integrationsInstallCmd)
+	rootCmd.AddCommand(integrationsCmd)
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(askCmd)
 	rootCmd.AddCommand(recallCmd)

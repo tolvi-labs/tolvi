@@ -42,7 +42,13 @@ tolvi repos list
 tolvi repos scan ~/src          # register ones that were never registered
 ```
 
-For Claude Code users, the skill at [`skills/tolvi/`](./skills/tolvi/) lets you do the same thing in natural language inside a Claude Code session (`/tolvi` slash command).
+For Claude Code users, the skill at [`skills/tolvi/`](./skills/tolvi/) lets you do the same thing in natural language inside a Claude Code session (`/tolvi` slash command). From a checkout, `bash skills/tolvi/install.sh --with-hooks` installs it. With no checkout, which is what `brew install` gives you, the binary carries the same files:
+
+```bash
+tolvi integrations install --with-hooks
+```
+
+It writes the skill and the three slash commands, wires the session hooks, and allowlists reads only: `tolvi sync` and `tolvi commit` stay a conscious per-call approval. Nothing is overwritten without `--force`, and running it twice changes nothing.
 
 `tolvi repos` keeps a machine-local index at `~/.config/tolvi/repos.json`, beside `roots.json` and never committed. `tolvi init` registers a repo as it provisions it, and `tolvi repos scan <dir>` picks up ones that predate the index. The index is a cache over each repo's own `.vault-meta.json`, so entries are verified when they are read: a repo you moved is listed as stale rather than trusted, and `tolvi repos forget <path>` drops it when you say so. Losing the file costs nothing, because a scan rebuilds it.
 

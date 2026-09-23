@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# SessionStart hook — surface vault context before the first message.
+# Uses `tolvi recall` if the CLI is available; falls back to a direct vault read.
+set -euo pipefail
+
+# Capture the hook payload once so we can branch on the SessionStart source.
+HOOK_INPUT="$(cat 2>/dev/null || true)"
+
+# Cursor sends cursor_version with every hook payload and composer_mode with
+# sessionStart; Claude Code sends neither. Cursor's sessionStart reads
+# additional_context, while Claude Code reads hookSpecificOutput.additionalContext,
+# so the answer's shape follows the caller.
+IS_CURSOR="$(printf '%s' "$HOOK_INPUT" | python3 -c 'import json,sys
+try:
+    d=json.load(sys.stdin)
+    print("1" if isinstance(d,dict) and ("cursor_version" in d or "composer_mode" in d) else "")
+except Exception:
+    print("")' 2>/dev/null || true)"
+
+# Re-emit a Claude Code hook-json blob in Cursor's shape, or print nothing.
+to_cursor() {
+  python3 -c 'import json,sys
+try:
+    ctx=json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"]
+except Exception:
+    sys.exit(0)
+if isinstance(ctx,str) and ctx:
+    print(json.dumps({"additional_context": ctx}))' 2>/dev/null || true
+}
+
+find_vault() {
+  local dir="${1:-$PWD}"
+  while [[ "$dir" != "/" ]]; do
+    [[ -f "$dir/vault/.vault-meta.json" ]] && echo "$dir/vault" && return
+    dir="$(dirname "$dir")"
+  done
+  return 1
+}
+
+# Cursor recall only reads the vault of the workspace Cursor reports. A
+# missing, empty, malformed or non-directory workspace root means no recall,
+# never a fallback to the hook's own working directory, which is not
+# documented and may be the plugin's own checkout rather than the user's repo.
+START_DIR="$PWD"
+if [[ -n "$IS_CURSOR" ]]; then
+  WORKSPACE_ROOT="$(printf '%s' "$HOOK_INPUT" | python3 -c 'import json,sys
+try:
+    r=json.load(sys.stdin).get("workspace_roots")
+    print(r[0] if isinstance(r,list) and r and isinstance(r[0],str) else "")
+except Exception:
+    print("")' 2>/dev/null || true)"
+  if [[ -z "$WORKSPACE_ROOT" || ! -d "$WORKSPACE_ROOT" ]]; then
+    exit 0
+  fi
+  START_DIR="$WORKSPACE_ROOT"
+fi
+
+VAULT="$(find_vault "$START_DIR" 2>/dev/null)" || exit 0
+
+# On /clear, don't emit a summary — direct Claude to run the full /tolvi-recall command,
+# so a cleared session gets the rich recall skill output rather than the lightweight digest.
+SESSION_SOURCE="$(printf '%s' "$HOOK_INPUT" | python3 -c 'import json,sys
+try:
+    print(json.load(sys.stdin).get("source",""))
+except Exception:
+    print("")' 2>/dev/null || true)"
+
+if [[ -z "$IS_CURSOR" && "$SESSION_SOURCE" == "clear" ]]; then
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"The conversation context was just cleared (/clear). Before anything else in your next response, run the /tolvi-recall command in full and present its complete RECALL SUMMARY, not a lightweight summary. If the next user message is already a task, run recall first, then continue with that task."}}'
+  exit 0
+fi
+
+# Resolve the tolvi binary. `command -v` alone is not enough: hooks run in a
+# non-interactive shell, which does not source ~/.zshrc or ~/.bashrc, so a
+# PATH export living there is invisible here even though it works in a
+# terminal. Falling back to the Go bin directory finds the binary that
+# `go install` actually produced.
+find_tolvi() {
+  if command -v tolvi >/dev/null 2>&1; then command -v tolvi; return 0; fi
+  for candidate in "${GOBIN:-}" "${GOPATH:-$HOME/go}/bin" "$HOME/go/bin" /usr/local/bin /opt/homebrew/bin; do
+    [ -n "$candidate" ] && [ -x "$candidate/tolvi" ] && { echo "$candidate/tolvi"; return 0; }
+  done
+  return 1
+}
+
+if TOLVI_BIN="$(find_tolvi)"; then
+  if [[ -z "$IS_CURSOR" ]]; then
+    exec "$TOLVI_BIN" recall --format hook-json --vault "$VAULT"
+  fi
+  { "$TOLVI_BIN" recall --format hook-json --vault "$VAULT" 2>/dev/null || true; } | to_cursor
+  exit 0
+fi
+
+# Fallback: build a minimal hook-json summary from raw vault files
+SESSIONS_DIR="$VAULT/sessions"
+DECISIONS_DIR="$VAULT/decisions"
+
+recent_sessions=""
+if [[ -d "$SESSIONS_DIR" ]]; then
+  recent_sessions="$(ls -1 "$SESSIONS_DIR"/*.md 2>/dev/null | sort -r | head -3 | while read -r f; do
+    echo "- $(basename "$f" .md)"
+  done)"
+fi
+
+active_decisions=""
+if [[ -d "$DECISIONS_DIR" ]]; then
+  active_decisions="$(ls -1 "$DECISIONS_DIR"/*.md 2>/dev/null | grep -v '.gitkeep' | sort -r | head -10 | while read -r f; do
+    title="$(grep -m1 '^# ' "$f" 2>/dev/null | sed 's/^# //' || basename "$f" .md)"
+    echo "- $title"
+  done)"
+fi
+
+context=""
+[[ -n "$recent_sessions" ]] && context="Recent sessions:\n$recent_sessions\n"
+[[ -n "$active_decisions" ]] && context="${context}Active decisions:\n$active_decisions\n"
+
+[[ -z "$context" ]] && exit 0
+
+emit_fallback() {
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}' \
+    "$(echo -e "$context" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])')"
+}
+
+if [[ -n "$IS_CURSOR" ]]; then
+  emit_fallback | to_cursor
+else
+  emit_fallback
+fi
