@@ -1,0 +1,37 @@
+{
+  "name": "data",
+  "status": "available",
+  "summary": "Templates for data scientists, analysts, and ML engineers working alone. Covers the decisions that a notebook records only as a number, plus a pattern template and session log. A run's output tells you what happened. The vault carries what you were testing, what the result ruled out, and what you excluded from the data on purpose.",
+  "verticals": [
+    "Experiments",
+    "datasets",
+    "model choices",
+    "reproducibility"
+  ],
+  "templates": [
+    {
+      "file": "decision-dataset.md",
+      "use": "Adopting, rebuilding, or retiring a dataset"
+    },
+    {
+      "file": "decision-experiment.md",
+      "use": "Running something whose result should change what you do next"
+    },
+    {
+      "file": "decision-model.md",
+      "use": "Choosing an approach, architecture, or serving shape"
+    },
+    {
+      "file": "decision.md",
+      "use": "Generic starting point for any data decision"
+    },
+    {
+      "file": "pattern.md",
+      "use": "A reusable method worth naming"
+    },
+    {
+      "file": "session.md",
+      "use": "What happened in a work session"
+    }
+  ]
+}

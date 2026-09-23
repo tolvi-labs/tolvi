@@ -3,6 +3,8 @@ package cli
 import (
 	"encoding/json"
 	"io"
+
+	"github.com/tolvi-labs/tolvi/cli/internal/packs"
 )
 
 // The --json forms of doctor and doctor vault-health. The shapes are published
@@ -124,6 +126,45 @@ func printReposListJSON(w io.Writer, version string, rows []repoSummary) error {
 			Status: r.Status, VaultPath: r.VaultPath, SessionNote: r.SessionNote,
 			Registered: r.Registered,
 		})
+	}
+	return encode(w, out)
+}
+
+// packs-list is the fourth published output shape.
+
+type packsListJSON struct {
+	TolviVersion string       `json:"tolvi_version"`
+	Packs        []packJSONed `json:"packs"`
+}
+
+type packJSONed struct {
+	Name      string           `json:"name"`
+	Status    string           `json:"status"`
+	Summary   string           `json:"summary"`
+	Verticals []string         `json:"verticals"`
+	Templates []packTemplateJS `json:"templates"`
+}
+
+type packTemplateJS struct {
+	File string `json:"file"`
+	Use  string `json:"use"`
+}
+
+func printPacksListJSON(w io.Writer, version string, all []packs.Pack) error {
+	out := packsListJSON{TolviVersion: version, Packs: make([]packJSONed, 0, len(all))}
+	for _, p := range all {
+		row := packJSONed{
+			Name: p.Name, Status: p.Status, Summary: p.Summary,
+			Verticals: p.Verticals,
+			Templates: make([]packTemplateJS, 0, len(p.Templates)),
+		}
+		if row.Verticals == nil {
+			row.Verticals = []string{}
+		}
+		for _, t := range p.Templates {
+			row.Templates = append(row.Templates, packTemplateJS{File: t.File, Use: t.Use})
+		}
+		out.Packs = append(out.Packs, row)
 	}
 	return encode(w, out)
 }

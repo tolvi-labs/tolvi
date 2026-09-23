@@ -1,0 +1,37 @@
+{
+  "name": "cpa",
+  "status": "available",
+  "summary": "Templates for accountants in solo or small practice. Covers the judgement calls that a workpaper records only as a number, plus a workflow pattern template and session log. The return shows the position you took. The vault carries why it was defensible, what else you considered, and what the client was told.",
+  "verticals": [
+    "Tax positions",
+    "engagements",
+    "compliance",
+    "workflow patterns"
+  ],
+  "templates": [
+    {
+      "file": "decision-compliance.md",
+      "use": "A filing, election, or reporting obligation"
+    },
+    {
+      "file": "decision-engagement.md",
+      "use": "Accepting, declining, rescoping, or withdrawing from work"
+    },
+    {
+      "file": "decision-position.md",
+      "use": "A tax or accounting treatment that required judgement"
+    },
+    {
+      "file": "decision.md",
+      "use": "Generic starting point for any client decision"
+    },
+    {
+      "file": "pattern.md",
+      "use": "A reusable workflow worth naming"
+    },
+    {
+      "file": "session.md",
+      "use": "What happened in a work session"
+    }
+  ]
+}

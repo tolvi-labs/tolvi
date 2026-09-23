@@ -42,6 +42,8 @@ tolvi repos list
 tolvi repos scan ~/src          # register ones that were never registered
 ```
 
+Role packs give a new vault templates tuned to a kind of work. `tolvi packs list` shows the six the binary carries, and `tolvi init --pack engineer` provisions with one. The packs are owned by [tolvi-solo](https://github.com/tolvi-labs/tolvi-solo) and vendored here, pinned byte-identical by a parity check, so a `brew install` can provision a pack with no sibling checkout and solo keeps ownership.
+
 For Claude Code users, the skill at [`skills/tolvi/`](./skills/tolvi/) lets you do the same thing in natural language inside a Claude Code session (`/tolvi` slash command). From a checkout, `bash skills/tolvi/install.sh --with-hooks` installs it. With no checkout, which is what `brew install` gives you, the binary carries the same files:
 
 ```bash

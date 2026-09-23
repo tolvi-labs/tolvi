@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tolvilabs.com/tolvi/spec/schemas/packs-list.json",
+  "title": "tolvi packs list --json output",
+  "description": "The role packs this binary carries. Packs are owned by tolvi-solo and vendored into the CLI, so this lists what the binary can provision with `tolvi init --pack <name>` rather than what happens to be on disk.",
+  "type": "object",
+  "required": [
+    "tolvi_version",
+    "packs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "tolvi_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The CLI that produced this output, as `tolvi version` reports it. 'dev' for an unreleased build."
+    },
+    "packs": {
+      "type": "array",
+      "description": "Vendored packs, sorted by name. Empty is never expected but encodes as [] rather than null.",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "summary",
+          "verticals",
+          "templates"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Pack name, as passed to `tolvi init --pack`."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "planned"
+            ],
+            "description": "Only 'available' packs are vendored; 'planned' is carried for parity with the pack's own manifest."
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One or two sentences on who the pack is for."
+          },
+          "verticals": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "The kinds of decision the pack covers."
+          },
+          "templates": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Every template the pack writes into vault/templates/.",
+            "items": {
+              "type": "object",
+              "required": [
+                "file",
+                "use"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "File name as written into vault/templates/."
+                },
+                "use": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "What to reach for this template for."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

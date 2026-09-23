@@ -46,6 +46,9 @@ var VaultHealthSchema []byte
 //go:embed schemas/repos-list.json
 var ReposListSchema []byte
 
+//go:embed schemas/packs-list.json
+var PacksListSchema []byte
+
 // ValidatorForDocType returns a compiled JSON Schema validator for one
 // of "decision" | "session" | "pattern". Unknown types return an error.
 func ValidatorForDocType(docType string) (*jsonschema.Schema, error) {

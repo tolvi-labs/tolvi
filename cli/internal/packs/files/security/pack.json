@@ -1,0 +1,36 @@
+{
+  "name": "security",
+  "status": "available",
+  "summary": "Templates for security engineers and solo practitioners. Covers the judgement calls that a scanner report and a closed ticket never capture, plus a pattern template and session log. A fixed finding shows what you changed. The vault carries why you rated it that way, what you decided not to defend against, and what a control does not cover.",
+  "verticals": [
+    "Threat models",
+    "vuln triage",
+    "controls"
+  ],
+  "templates": [
+    {
+      "file": "decision-control.md",
+      "use": "Adopting, replacing, or removing a control"
+    },
+    {
+      "file": "decision-threat-model.md",
+      "use": "Deciding what a system defends against, and what it does not"
+    },
+    {
+      "file": "decision-vuln.md",
+      "use": "Triaging a finding: fix, accept, or defer"
+    },
+    {
+      "file": "decision.md",
+      "use": "Generic starting point for any security decision"
+    },
+    {
+      "file": "pattern.md",
+      "use": "A reusable review approach worth naming"
+    },
+    {
+      "file": "session.md",
+      "use": "What happened in a work session"
+    }
+  ]
+}

@@ -18,6 +18,11 @@
     "node_modules/**",
     // Engineering-process artifacts (specs, plans) — same allowlist logic as the
     // brand-isolation guard. They follow informal conventions, not strict public-doc rules.
-    "docs/superpowers/**"
+    "docs/superpowers/**",
+    // Vendored copies, pinned byte-identical to their source by a parity check.
+    // Linting a copy here can only demand edits the parity check then rejects,
+    // and the source repo lints its own files under its own rules.
+    "cli/internal/packs/files/**",
+    "cli/internal/integrations/files/**"
   ]
 }

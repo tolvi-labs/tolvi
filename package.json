@@ -9,7 +9,7 @@
   "scripts": {
     "validate:schemas": "node .github/scripts/validate-schema.js",
     "validate:brand": ".github/scripts/brand-isolation-check.sh",
-    "validate": "npm run validate:schemas && npm run validate:schema-parity && npm run validate:integration-copy && npm run validate:spec-package && npm run validate:plugin-manifests && npm run validate:brand && npm run validate:installers && npm run validate:preflight && npm run validate:vault-health && npm run validate:prose && npm run validate:markdown",
+    "validate": "npm run validate:schemas && npm run validate:schema-parity && npm run validate:integration-copy && npm run validate:pack-copy && npm run validate:spec-package && npm run validate:plugin-manifests && npm run validate:brand && npm run validate:installers && npm run validate:preflight && npm run validate:vault-health && npm run validate:prose && npm run validate:markdown",
     "validate:installers": ".github/scripts/installer-remediation-check.sh",
     "validate:preflight": ".github/scripts/preflight-sync-check.sh",
     "validate:vault-health": ".github/scripts/vault-health-parity-check.sh",
@@ -18,7 +18,8 @@
     "validate:markdown": "markdownlint-cli2 \"**/*.md\"",
     "validate:spec-package": ".github/scripts/spec-package-check.sh",
     "validate:plugin-manifests": ".github/scripts/plugin-manifest-check.sh",
-    "validate:integration-copy": ".github/scripts/integration-copy-parity-check.sh"
+    "validate:integration-copy": ".github/scripts/integration-copy-parity-check.sh",
+    "validate:pack-copy": ".github/scripts/pack-copy-parity-check.sh"
   },
   "devDependencies": {
     "ajv": "^8.17.1",

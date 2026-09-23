@@ -33,7 +33,10 @@ For the format spec, see https://tolvilabs.com/tolvi/spec/.`,
 	SilenceErrors: true,
 }
 
-var initWorkspaceFlag string
+var (
+	initWorkspaceFlag string
+	initPackFlag      string
+)
 
 var initCmd = &cobra.Command{
 	Use:   "init",
@@ -46,6 +49,7 @@ var initCmd = &cobra.Command{
 		if err := clicmd.RunInit(clicmd.InitOpts{
 			Cwd:       cwd,
 			Workspace: initWorkspaceFlag,
+			Pack:      initPackFlag,
 			Stdout:    os.Stdout,
 		}); err != nil {
 			return err
@@ -439,6 +443,7 @@ func parseCSV(s string) []string {
 
 func init() {
 	initCmd.Flags().StringVar(&initWorkspaceFlag, "workspace", "", "workspace name (default: derived from git origin or cwd basename)")
+	initCmd.Flags().StringVar(&initPackFlag, "pack", "", "role pack whose templates to write into vault/templates/ (see `tolvi packs list`)")
 
 	syncCmd.Flags().StringVar(&syncSlugFlag, "slug", "", "override the auto-derived slug")
 	syncCmd.Flags().StringVar(&syncStatusFlag, "status", "", "frontmatter status (default: active)")
@@ -767,6 +772,28 @@ func reportStackSkills() {
 	}
 }
 
+var packsJSONFlag bool
+
+var packsCmd = &cobra.Command{
+	Use:   "packs",
+	Short: "The role packs this binary can provision a vault with",
+	Long: `Role packs are sets of vault templates tuned to a kind of work. They are
+owned by tolvi-solo and vendored into this binary, so ` + "`tolvi init --pack`" + `
+works with no sibling checkout.`,
+}
+
+var packsListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List the vendored role packs",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return clicmd.RunPacksList(clicmd.PacksOpts{
+			JSON:    packsJSONFlag,
+			Stdout:  os.Stdout,
+			Version: version,
+		})
+	},
+}
+
 func main() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
@@ -777,6 +804,9 @@ func main() {
 	integrationsInstallCmd.Flags().BoolVar(&integrationsHooksFlag, "with-hooks", false, "also wire the session hooks and read-only allow rules")
 	integrationsCmd.AddCommand(integrationsInstallCmd)
 	rootCmd.AddCommand(integrationsCmd)
+	packsListCmd.Flags().BoolVar(&packsJSONFlag, "json", false, "emit JSON against spec/schemas/packs-list.json")
+	packsCmd.AddCommand(packsListCmd)
+	rootCmd.AddCommand(packsCmd)
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(askCmd)
 	rootCmd.AddCommand(recallCmd)

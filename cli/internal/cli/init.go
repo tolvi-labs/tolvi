@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/tolvi-labs/tolvi/cli/internal/packs"
 	"github.com/tolvi-labs/tolvi/cli/internal/vault"
 )
 
@@ -16,6 +17,10 @@ type InitOpts struct {
 	Cwd       string
 	Workspace string
 	Stdout    io.Writer
+	// Pack names a role pack whose templates are written into
+	// vault/templates/. Empty provisions the vault with no templates, which
+	// is what init did before packs were vendored.
+	Pack string
 }
 
 // RunInit provisions <Cwd>/vault/ with the three subdirs and
@@ -57,6 +62,19 @@ func RunInit(opts InitOpts) error {
 	fmt.Fprintf(opts.Stdout, "✓ Created vault/ at %s\n", vaultDir)
 	fmt.Fprintf(opts.Stdout, "✓ Created vault/decisions/, vault/sessions/, vault/patterns/\n")
 	fmt.Fprintf(opts.Stdout, "✓ Wrote vault/.vault-meta.json (workspace: %s)\n", workspace)
+
+	if opts.Pack != "" {
+		written, err := packs.Install(opts.Pack, filepath.Join(vaultDir, "templates"))
+		if err != nil {
+			// The vault is provisioned by this point, so an unknown pack is
+			// reported rather than rolled back: deleting a vault someone may
+			// already be writing into would be the worse failure.
+			fmt.Fprintf(opts.Stdout, "✗ %v\n", err)
+			return err
+		}
+		fmt.Fprintf(opts.Stdout, "✓ Wrote vault/templates/ from the %s pack (%d templates)\n", opts.Pack, len(written))
+	}
+
 	fmt.Fprintln(opts.Stdout)
 	fmt.Fprintln(opts.Stdout, "Next steps:")
 	fmt.Fprintln(opts.Stdout, "  tolvi sync decision \"your first decision\"")

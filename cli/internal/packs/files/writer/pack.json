@@ -1,0 +1,37 @@
+{
+  "name": "writer",
+  "status": "available",
+  "summary": "Templates for writers: essayists, bloggers, authors, content and technical writers. Covers the decisions that shape a piece and a body of work, plus a pattern template and session log. The published draft carries what you said. The vault carries why you said it that way, what you cut, and what you chose not to claim.",
+  "verticals": [
+    "Projects",
+    "drafts",
+    "editorial decisions",
+    "source tracking"
+  ],
+  "templates": [
+    {
+      "file": "decision-editorial.md",
+      "use": "The angle, take, framing, or what to cut"
+    },
+    {
+      "file": "decision-project.md",
+      "use": "A piece's format, scope, venue, and where it stands"
+    },
+    {
+      "file": "decision-source.md",
+      "use": "Tracking a claim, figure, source, or permission"
+    },
+    {
+      "file": "decision.md",
+      "use": "Generic starting point for any writing decision"
+    },
+    {
+      "file": "pattern.md",
+      "use": "A reusable writing move worth naming"
+    },
+    {
+      "file": "session.md",
+      "use": "What happened in a writing session"
+    }
+  ]
+}

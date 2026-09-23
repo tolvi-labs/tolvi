@@ -1,0 +1,41 @@
+{
+  "name": "entrepreneur",
+  "status": "available",
+  "summary": "Templates for founders and solo operators. Covers the decisions that set a venture's direction and the ones that quietly consume its runway, plus a pattern template and session log. A venture's artifacts show what you did. The vault carries what you were betting on, what you refused to do, and the condition you set for calling it off.",
+  "verticals": [
+    "Bets",
+    "vendor decisions",
+    "hiring",
+    "strategy"
+  ],
+  "templates": [
+    {
+      "file": "decision-bet.md",
+      "use": "Committing resources to something that might not work"
+    },
+    {
+      "file": "decision-hire.md",
+      "use": "Hiring, contracting, or deliberately deferring a role"
+    },
+    {
+      "file": "decision-strategy.md",
+      "use": "Positioning, who you serve, and what you will not do"
+    },
+    {
+      "file": "decision-vendor.md",
+      "use": "Adopting, renewing, or dropping a paid service"
+    },
+    {
+      "file": "decision.md",
+      "use": "Generic starting point for any venture decision"
+    },
+    {
+      "file": "pattern.md",
+      "use": "A reusable play worth naming"
+    },
+    {
+      "file": "session.md",
+      "use": "What happened in a working session"
+    }
+  ]
+}

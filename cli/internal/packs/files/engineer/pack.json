@@ -1,0 +1,41 @@
+{
+  "name": "engineer",
+  "status": "available",
+  "summary": "Templates for software engineers. Covers the four decision categories that come up most often in day-to-day engineering work, plus a pattern template and session log.",
+  "verticals": [
+    "Tech choices",
+    "architecture",
+    "dependencies",
+    "process"
+  ],
+  "templates": [
+    {
+      "file": "decision-arch.md",
+      "use": "Structural / architectural choices"
+    },
+    {
+      "file": "decision-dep.md",
+      "use": "Adding, removing, or pinning a dependency"
+    },
+    {
+      "file": "decision-process.md",
+      "use": "CI/CD, branching strategy, testing approach, workflow"
+    },
+    {
+      "file": "decision-tech.md",
+      "use": "Choosing a language, framework, library, or tool"
+    },
+    {
+      "file": "decision.md",
+      "use": "Generic starting point for any decision"
+    },
+    {
+      "file": "pattern.md",
+      "use": "A reusable approach worth naming"
+    },
+    {
+      "file": "session.md",
+      "use": "What happened in a work session"
+    }
+  ]
+}
