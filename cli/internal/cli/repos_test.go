@@ -324,3 +324,47 @@ func TestReposListJSON_CountsFollowRecallsRoutingRule(t *testing.T) {
 		}
 	}
 }
+
+// A declared root is a repo's vault, so the repo holding it sits one level up
+// and the workspace its siblings share sits two levels up. Searching one level
+// up found only the root's host repo.
+func TestReposScan_DefaultSearchesTheWorkspaceEachRootSitsIn(t *testing.T) {
+	var out bytes.Buffer
+	opts, dir := reposOpts(t, &out)
+	ws := filepath.Join(dir, "ws")
+	host := reposRepo(t, ws, "host", "acme")
+	sibling := reposRepo(t, ws, "sibling", "acme")
+	declareRawRoots(t, `{"roots":[{"role":"org","workspace":"acme","path":"`+filepath.Join(host, "vault")+`"}]}`)
+
+	if err := RunReposScan(opts); err != nil {
+		t.Fatal(err)
+	}
+	f, err := registry.Load(opts.RegistryPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]bool{}
+	for _, e := range f.Repos {
+		got[filepath.Base(e.Path)] = true
+	}
+	for _, want := range []string{filepath.Base(host), filepath.Base(sibling)} {
+		if !got[want] {
+			t.Errorf("default scan missed %s; registered %v", want, got)
+		}
+	}
+}
+
+// Workspaces often nest: a product or client workspace inside an org's. A
+// search directory inside another is already covered, so it is not walked twice.
+func TestDeclaredRootDirs_DropsADirectoryAnotherAlreadyCovers(t *testing.T) {
+	var out bytes.Buffer
+	_, dir := reposOpts(t, &out)
+	outer := filepath.Join(dir, "org", "host", "vault")
+	inner := filepath.Join(dir, "org", "client", "client-vault", "vault")
+	declareRawRoots(t, `{"roots":[{"role":"org","workspace":"org","path":"`+outer+`"},{"role":"org","workspace":"client","path":"`+inner+`"}]}`)
+
+	got := declaredRootDirs()
+	if len(got) != 1 || got[0] != filepath.Join(dir, "org") {
+		t.Errorf("declaredRootDirs = %v, want only %s", got, filepath.Join(dir, "org"))
+	}
+}

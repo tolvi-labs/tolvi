@@ -229,9 +229,15 @@ func summarize(e registry.Entry, today string) repoSummary {
 	return s
 }
 
-// declaredRootDirs is the default search set: the roots this machine already
-// declares, plus nothing invented. A machine with no roots.json is told to
-// name a directory instead.
+// declaredRootDirs is the default search set: the workspace directory each
+// declared root sits in, plus nothing invented. A machine with no roots.json is
+// told to name a directory instead.
+//
+// A root is a repo's vault (`<workspace>/<repo>/vault`), so the repo holding it
+// is one level up and the workspace its sibling repos share is two. Searching
+// one level up found only the root's host repo. Workspaces also nest, a client
+// or product workspace inside an org's, so a directory inside another one in
+// the set is dropped rather than walked twice.
 func declaredRootDirs() []string {
 	roots, err := vault.LoadRoots(vault.RootsConfigPath())
 	if err != nil || !roots.Declared() {
@@ -240,16 +246,33 @@ func declaredRootDirs() []string {
 	var dirs []string
 	seen := map[string]bool{}
 	for _, r := range roots.All() {
-		// A root holds vaults; the repos that own them sit alongside it, so
-		// the search starts one level up.
-		dir := filepath.Dir(r.Path)
-		if dir == "" || seen[dir] {
+		dir := filepath.Dir(filepath.Dir(r.Path))
+		if dir == "" || dir == "." || seen[dir] {
 			continue
 		}
 		seen[dir] = true
 		dirs = append(dirs, dir)
 	}
-	return dirs
+	return withoutNested(dirs)
+}
+
+// withoutNested drops every directory that sits inside another in the list,
+// keeping the first-seen order of the rest.
+func withoutNested(dirs []string) []string {
+	var out []string
+	for _, d := range dirs {
+		covered := false
+		for _, other := range dirs {
+			if other != d && strings.HasPrefix(d, other+string(filepath.Separator)) {
+				covered = true
+				break
+			}
+		}
+		if !covered {
+			out = append(out, d)
+		}
+	}
+	return out
 }
 
 func reposDefaults(opts ReposOpts) ReposOpts {
