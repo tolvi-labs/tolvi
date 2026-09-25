@@ -245,3 +245,82 @@ func TestRegisterAfterInit_SuccessIsSilent(t *testing.T) {
 		t.Errorf("init did not register the repo: %v", f.Repos)
 	}
 }
+
+// The counts are read with recall's own sources and filters, so what `repos
+// list` reports about a repo's docs is exactly what recall would find.
+func TestReposListJSON_CountsFollowRecallsRoutingRule(t *testing.T) {
+	var out bytes.Buffer
+	opts, dir := reposOpts(t, &out)
+	repo := reposRepo(t, dir, "tolvi", "tolvi-labs")
+	empty := reposRepo(t, dir, "quiet", "tolvi-labs")
+	gone := reposRepo(t, dir, "moved", "tolvi-labs")
+	org := filepath.Join(dir, "org", "vault")
+	declareRawRoots(t, `{"roots":[{"role":"org","workspace":"tolvi-labs","path":"`+org+`"}]}`)
+
+	local := filepath.Join(repo, "vault")
+	// The repo's own vault: unsuffixed and self-suffixed notes are its own.
+	writeVaultFile(t, local, "sessions/2026-09-01.md", sessionDoc("local"))
+	writeVaultFile(t, local, "sessions/2026-09-02-tolvi.md", sessionDoc("local, suffixed"))
+	// The shared root: only notes suffixed with this repo count. A sibling's note
+	// and an unsuffixed note, which belongs to the root's host, do not.
+	writeVaultFile(t, org, "sessions/2026-09-20-tolvi.md", sessionDoc("routed"))
+	writeVaultFile(t, org, "sessions/2026-09-21-forge.md", sessionDoc("sibling"))
+	writeVaultFile(t, org, "sessions/2026-09-22.md", sessionDoc("host"))
+	// Decisions: every status counts; in the shared root only this repo's.
+	writeVaultFile(t, local, "decisions/2026-09-03-a.md", decisionDoc("tolvi", "active", "A"))
+	writeVaultFile(t, local, "decisions/2026-09-04-b.md", decisionDoc("tolvi", "superseded", "B"))
+	writeVaultFile(t, org, "decisions/2026-09-05-c.md", decisionDoc("tolvi", "active", "C"))
+	writeVaultFile(t, org, "decisions/2026-09-06-d.md", decisionDoc("forge", "active", "D"))
+	// Patterns carry no repo, so only the repo's own vault can be counted.
+	writeVaultFile(t, local, "patterns/one.md", "# One\n")
+	writeVaultFile(t, local, "patterns/two.md", "# Two\n")
+	writeVaultFile(t, org, "patterns/shared.md", "# Shared\n")
+
+	for _, p := range []string{repo, empty, gone} {
+		if err := registry.Add(opts.RegistryPath, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.RemoveAll(gone); err != nil {
+		t.Fatal(err)
+	}
+
+	opts.JSON = true
+	if err := RunReposList(opts); err != nil {
+		t.Fatal(err)
+	}
+	validateAgainst(t, format.ReposListSchema, "repos-list.json", out.Bytes())
+
+	var got struct {
+		Repos []map[string]any `json:"repos"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	byRepo := map[string]map[string]any{}
+	for _, r := range got.Repos {
+		byRepo[r["repo"].(string)] = r
+	}
+
+	want := map[string]any{"sessions": 3.0, "last_session": "2026-09-20", "decisions": 3.0, "patterns": 2.0}
+	for k, v := range want {
+		if byRepo["tolvi"][k] != v {
+			t.Errorf("tolvi %s = %v, want %v", k, byRepo["tolvi"][k], v)
+		}
+	}
+	// A repo with nothing yet reports real zeros, and no last session.
+	for _, k := range []string{"sessions", "decisions", "patterns"} {
+		if byRepo["quiet"][k] != 0.0 {
+			t.Errorf("quiet %s = %v, want 0", k, byRepo["quiet"][k])
+		}
+	}
+	if _, ok := byRepo["quiet"]["last_session"]; ok {
+		t.Error("a repo with no session notes must not report a last_session")
+	}
+	// A stale entry has no vault to count, so it reports nothing rather than zeros.
+	for _, k := range []string{"sessions", "last_session", "decisions", "patterns"} {
+		if _, ok := byRepo["moved"][k]; ok {
+			t.Errorf("stale entry reports %s; it has no vault to count", k)
+		}
+	}
+}

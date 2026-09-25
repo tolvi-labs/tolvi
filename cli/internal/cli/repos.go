@@ -5,8 +5,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/tolvi-labs/tolvi/cli/internal/format"
 	"github.com/tolvi-labs/tolvi/cli/internal/registry"
 	"github.com/tolvi-labs/tolvi/cli/internal/vault"
 )
@@ -127,6 +129,70 @@ type repoSummary struct {
 	VaultPath   string
 	SessionNote string
 	Registered  string
+	// Counts is nil when there is no readable vault to count, which a consumer
+	// must be able to tell apart from a vault with nothing in it yet.
+	Counts *repoCounts
+}
+
+// repoCounts is what `repos list` reports about a repo's docs. It is read from
+// recall's own sources with recall's own filters, so the numbers a panel shows
+// and what recall surfaces cannot disagree about which docs are this repo's.
+type repoCounts struct {
+	Decisions   int
+	Patterns    int
+	Sessions    int
+	LastSession string // YYYY-MM-DD of the newest session note, empty when there are none
+}
+
+func countRepoDocs(vaultPath string) repoCounts {
+	var c repoCounts
+	sessionSources, decisionSources := recallSources(vaultPath)
+	for _, src := range sessionSources {
+		for _, name := range markdownIn(src.dir) {
+			if !sessionBelongsTo(name, src.repo, src.shared) {
+				continue
+			}
+			c.Sessions++
+			date := name[:len("2006-01-02")]
+			if _, err := time.Parse("2006-01-02", date); err == nil && date > c.LastSession {
+				c.LastSession = date
+			}
+		}
+	}
+	for _, src := range decisionSources {
+		for _, name := range markdownIn(src.dir) {
+			data, err := os.ReadFile(filepath.Join(src.dir, name))
+			if err != nil {
+				continue
+			}
+			fm, _, err := format.ParseFrontmatter(data)
+			if err != nil {
+				continue // recall skips an unreadable decision too
+			}
+			if decisionBelongsTo(fm, src.repo) {
+				c.Decisions++ // every status: this is an inventory, not recall's relevance filter
+			}
+		}
+	}
+	// Patterns carry no repo field, so a shared root's patterns cannot honestly
+	// be attributed to one repo: only the repo's own vault is counted.
+	c.Patterns = len(markdownIn(filepath.Join(vaultPath, "patterns")))
+	return c
+}
+
+// markdownIn lists the .md files directly in dir, or nothing if it is absent.
+func markdownIn(dir string) []string {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var names []string
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".md") {
+			names = append(names, e.Name())
+		}
+	}
+	return names
 }
 
 func summarize(e registry.Entry, today string) repoSummary {
@@ -149,6 +215,8 @@ func summarize(e registry.Entry, today string) repoSummary {
 	if err != nil {
 		return s
 	}
+	counts := countRepoDocs(vaultPath)
+	s.Counts = &counts
 	chain, err := vault.ChainFor(meta, vaultPath)
 	if err != nil {
 		return s

@@ -116,16 +116,26 @@ type repoRowJSN struct {
 	VaultPath   string `json:"vault_path,omitempty"`
 	SessionNote string `json:"session_note,omitempty"`
 	Registered  string `json:"registered"`
+	// Pointers, so a real zero is printed and an entry with no vault omits them.
+	Decisions   *int   `json:"decisions,omitempty"`
+	Patterns    *int   `json:"patterns,omitempty"`
+	Sessions    *int   `json:"sessions,omitempty"`
+	LastSession string `json:"last_session,omitempty"`
 }
 
 func printReposListJSON(w io.Writer, version string, rows []repoSummary) error {
 	out := reposListJSON{TolviVersion: version, Repos: make([]repoRowJSN, 0, len(rows))}
 	for _, r := range rows {
-		out.Repos = append(out.Repos, repoRowJSN{
+		row := repoRowJSN{
 			Path: r.Path, Workspace: r.Workspace, Repo: r.Repo, Product: r.Product,
 			Status: r.Status, VaultPath: r.VaultPath, SessionNote: r.SessionNote,
 			Registered: r.Registered,
-		})
+		}
+		if c := r.Counts; c != nil {
+			row.Decisions, row.Patterns, row.Sessions = &c.Decisions, &c.Patterns, &c.Sessions
+			row.LastSession = c.LastSession
+		}
+		out.Repos = append(out.Repos, row)
 	}
 	return encode(w, out)
 }

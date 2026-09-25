@@ -118,6 +118,14 @@ func sessionBelongsTo(name, repo string, shared bool) bool {
 	}
 }
 
+// decisionBelongsTo reports whether a decision counts for repo. A source with no
+// repo is the repo's own vault, which owns everything in it; a shared root keeps
+// only decisions whose frontmatter names this repo. Recall and `repos list`
+// both filter with it, so the two can never disagree about a repo's decisions.
+func decisionBelongsTo(fm format.Frontmatter, repo string) bool {
+	return repo == "" || fm.String("repo") == repo
+}
+
 // recallDecisionSource is one directory recall reads decisions from. repo, when
 // set, keeps only decisions whose frontmatter `repo` matches it — the private
 // vault holds every repo's decisions, a repo's own vault only its own.
@@ -134,6 +142,8 @@ type recallDecisionSource struct {
 // this repo: sessions by their repo-suffixed filename, decisions by their
 // frontmatter. A doc in a shared root with no repo is container-scoped and
 // deliberately surfaces nowhere.
+//
+// `repos list` counts a repo's docs from these same sources.
 //
 // Meta is read softly: recall is a read-only path that runs as a SessionStart
 // hook, so a broken config degrades to local-only here rather than failing the
@@ -273,7 +283,7 @@ func recallLoadDecisions(sources []recallDecisionSource, maxCount int) ([]recall
 		if err != nil {
 			continue
 		}
-		if c.repo != "" && fm.String("repo") != c.repo {
+		if !decisionBelongsTo(fm, c.repo) {
 			continue // another repo's decision in the shared private vault
 		}
 		status := fm.String("status")
