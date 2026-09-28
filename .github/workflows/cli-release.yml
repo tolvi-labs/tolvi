@@ -39,3 +39,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      # The CLI is the Go module github.com/tolvi-labs/tolvi/cli, and Go resolves a module in a
+      # subdirectory from cli/vX.Y.Z tags only. The companion tag was pushed by hand for v0.1.0 and
+      # missed for every release after it, so go install ...@latest kept installing v0.1.0. It runs
+      # after GoReleaser so a failed release never publishes a Go module version, and it cannot
+      # re-trigger this workflow: the tag does not match v*, and GITHUB_TOKEN pushes start no runs.
+      - name: Tag the Go module
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          MODULE_TAG="cli/$TAG"
+          if git ls-remote --exit-code --tags origin "refs/tags/$MODULE_TAG" >/dev/null; then
+            echo "$MODULE_TAG already exists"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$MODULE_TAG" "$GITHUB_SHA" -m "tolvi CLI $TAG (Go module tag for go install)"
+          git push origin "refs/tags/$MODULE_TAG"
