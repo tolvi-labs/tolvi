@@ -14,7 +14,7 @@ Thanks for your interest. Tolvi is an open-source project under [Apache 2.0](./L
 
 All content in this repo is brand-neutral. The only exceptions are the [`NOTICE`](./NOTICE) file, which contains the project's attribution, and the copyright line in [`LICENSE`](./LICENSE).
 
-**Do not reference** parent organizations, sibling products, or specific deployments anywhere else — including code, docs, examples, sample content, code comments, commit messages, branch names, or PR descriptions.
+**Do not reference** parent organizations, sibling products, or specific deployments anywhere else, including code, docs, examples, sample content, code comments, commit messages, branch names, or PR descriptions.
 
 The CI guard at `.github/scripts/brand-isolation-check.sh` enforces this. PRs that introduce forbidden references will fail CI and be rejected. The same script runs as a pre-commit hook so you can catch leaks locally.
 
