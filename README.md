@@ -2,7 +2,7 @@
 
 Capture engineering decisions where they happen. Query them later in plain English.
 
-> **Status:** Pre-1.0 - `v0.1.1` released. The CLI, server, TypeScript SDK, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; Homebrew tap and npm SDK publish are in progress. See [`ROADMAP.md`](./ROADMAP.md).
+> **Status:** Pre-1.0 - `v0.2.0` released. The CLI (Homebrew, `go install` and release binaries), server, TypeScript SDK on npm, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; a Docker image is not published yet. See [`ROADMAP.md`](./ROADMAP.md).
 
 ## What Tolvi is
 
@@ -20,8 +20,9 @@ The vault format (`tolvi-format-v2`) is the contract between the two arms and th
 The "drop into a repo" wedge:
 
 ```bash
-# 1. Install the CLI (Go required; or grab a release binary)
-go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
+# 1. Install the CLI with Homebrew, Go, or a release binary
+brew install --cask tolvi-labs/tap/tolvi
+# or: go install github.com/tolvi-labs/tolvi/cli/cmd/tolvi@latest
 
 # 2. Set your Anthropic API key (or write ~/.config/tolvi/config.yaml)
 export ANTHROPIC_API_KEY=sk-ant-...
@@ -100,7 +101,7 @@ Rule of thumb: **mechanical for known, controlled capture; the skill for synthes
 
 ## What's coming
 
-- **Distribution channels** - Homebrew tap (token pending), npm SDK publish, Docker Hub image (Phase 6)
+- **Distribution channels** - a Docker Hub image (Phase 6). The Homebrew tap and the npm SDK are published.
 
 ## Repository layout
 

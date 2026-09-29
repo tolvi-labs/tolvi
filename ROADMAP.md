@@ -62,7 +62,9 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 - ✅ `v0.1.0` tagged release on GitHub — cross-platform CLI binaries (macOS / Linux / Windows) + checksums
 - ✅ Public repository (Apache 2.0)
 - ✅ Hosted docs site live at `tolvilabs.com/docs`
-- 📅 Homebrew tap, npm/PyPI publishes, Docker Hub image
+- ✅ Homebrew tap (`brew install --cask tolvi-labs/tap/tolvi`) and the npm SDK (`@tolvi-labs/sdk`)
+- ✅ `v0.2.0` release, and `go install ...@latest` resolves to it
+- 📅 Docker Hub image
 - 📅 A small invited cohort of early users
 - 📅 Daily metric tracking
 
