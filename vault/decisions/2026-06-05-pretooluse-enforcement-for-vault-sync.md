@@ -2,7 +2,8 @@
 tags: [decision, tolvi]
 date: 2026-06-05
 repo: tolvi
-status: active
+status: superseded
+superseded_by: [[2026-10-05-commit-hooks-check-their-own-command-and-speak-hookspecificoutput]]
 ticket: none
 user_impact: low
 product_area: Claude Code integration
@@ -31,3 +32,5 @@ The old `commit-sync-nudge` PostToolUse hook fired after the commit and only sug
 ## Outcome
 
 Every `git commit` made through Claude Code in a vaulted repo now auto-stages vault changes and blocks until a session note for today exists — vault and code are always committed together.
+
+> Superseded by [[2026-10-05-commit-hooks-check-their-own-command-and-speak-hookspecificoutput]]: its top-level decision output is unsupported for PreToolUse, and the hook relied on the if filter alone to scope itself to commits.

@@ -5,13 +5,29 @@
 #   1. Auto-stages any modified vault/ files so they land in this commit.
 #   2. Asks the CLI where today's session note belongs, so the gate and the
 #      write cannot disagree about which file counts.
-#   3. Allows the commit either way, adding context when the note is missing.
+#   3. Never decides the commit: it only adds context, so the normal permission
+#      flow applies either way. Output uses hookSpecificOutput; the top-level
+#      "decision" field is not supported for PreToolUse, and an "allow" would
+#      skip the user's permission prompt for git commit.
 #
 # Warn-only is deliberate. A missed vault entry is recoverable; a blocked
 # commit is not acceptable friction, and a hook that fails closed turns any bug
 # in it into an inability to commit at all. Fail-open here is the stated
 # precondition for ever promoting this back to blocking.
 set -euo pipefail
+
+# The settings entry carries an "if": "Bash(git commit*)" filter, but Claude
+# Code does not always honor it, and then this hook fires on every Bash call.
+# So the hook checks the command itself and stays silent for anything that is
+# not a git commit; otherwise it would stage vault/ on unrelated commands.
+HOOK_INPUT="$(cat 2>/dev/null || true)"
+IS_COMMIT="$(printf '%s' "$HOOK_INPUT" | python3 -c 'import json,re,sys
+try:
+    cmd = json.load(sys.stdin).get("tool_input", {}).get("command", "")
+except Exception:
+    cmd = ""
+print("yes" if re.search(r"(^|[;&|(]\s*)git(\s+-[cC]\s+\S+)*\s+commit(\s|$)", cmd) else "no")' 2>/dev/null || echo no)"
+[[ "$IS_COMMIT" == "yes" ]] || exit 0
 
 TODAY="$(date +%Y-%m-%d)"
 
@@ -62,9 +78,9 @@ fi
 json_escape() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
 if [[ ! -f "$SESSION_FILE" ]] || ! grep -q "^## " "$SESSION_FILE" 2>/dev/null; then
-  printf '{"decision":"allow","additionalContext":"No session note for %s at %s. The commit is proceeding; write the note with `tolvi sync session` or /tolvi-sync so the vault keeps pace with the code."}' \
+  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"No session note for %s at %s. The commit is proceeding; write the note with `tolvi sync session` or /tolvi-sync so the vault keeps pace with the code."}}' \
     "$TODAY" "$(json_escape "$SESSION_FILE")"
   exit 0
 fi
 
-printf '{"decision":"allow","additionalContext":"Vault synced for %s — session note present, vault changes staged."}' "$TODAY"
+printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"Vault synced for %s — session note present, vault changes staged."}}' "$TODAY"

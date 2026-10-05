@@ -31,6 +31,15 @@ func TestRecallExtractSessionHeading(t *testing.T) {
 	}
 }
 
+// Notes written under the no-em-dash rule use "Session:" instead, and recall
+// printed a blank title for every one of them.
+func TestRecallExtractSessionHeading_ColonSeparator(t *testing.T) {
+	content := []byte("## [09:00] Session — morning\n\nbody\n\n## [12:25] Session: PostHog now routes through the proxy\n\nbody\n")
+	if got := recallExtractSessionHeading(content); got != "PostHog now routes through the proxy" {
+		t.Errorf("got %q", got)
+	}
+}
+
 func TestRecallExtractSessionHeading_Empty(t *testing.T) {
 	if got := recallExtractSessionHeading([]byte("no headings here")); got != "" {
 		t.Errorf("expected empty, got %q", got)

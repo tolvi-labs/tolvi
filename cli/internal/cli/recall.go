@@ -315,10 +315,12 @@ func recallLoadDecisions(sources []recallDecisionSource, maxCount int) ([]recall
 	return out, filteredOut, nil
 }
 
-var sessionHeadingRe = regexp.MustCompile(`(?m)^## \[(\d{2}:\d{2})\] Session — (.+)$`)
+// The separator is an em dash or a colon: notes written under the no-em-dash
+// rule use "Session:", and matching only the dash gave them a blank title.
+var sessionHeadingRe = regexp.MustCompile(`(?m)^## \[(\d{2}:\d{2})\] Session(?: —|:) (.+)$`)
 
 // recallExtractSessionHeading returns the summary text from the last
-// "## [HH:MM] Session — <summary>" heading in the file. Multiple blocks
+// "## [HH:MM] Session — <summary>" (or "Session: <summary>") heading in the file. Multiple blocks
 // may be appended to a single session file; the last one is most recent.
 // Blocks are appended by concurrent sessions, so they are not necessarily in
 // chronological order in the file. The latest session is the one with the
