@@ -122,6 +122,20 @@ With no `roots.json` at all the vault runs in single-root mode: everything stays
 
 This is the one place the routing rule lives. The commit hook and the slash commands call it rather than deriving their own answer, so a hook and the CLI cannot disagree about where a note belongs.
 
+### `tolvi repos list`
+
+List every repo on this machine that has a vault, from the index at `~/.config/tolvi/repos.json`, verified against the disk. A repo that has moved is marked stale rather than dropped; `tolvi repos forget <path>` removes it.
+
+```bash
+tolvi repos list [--json]
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--json` | off | Emit JSON against [`spec/schemas/repos-list.json`](../spec/schemas/repos-list.json), for tools |
+
+The JSON adds what the plain listing leaves out: each repo's `decisions`, `patterns` and `sessions` counts and its `last_session` date (`YYYY-MM-DD`). Decisions and sessions are counted across the repo's resolved roots with the same filters `tolvi recall` uses; patterns are counted in the repo's own vault.
+
 ### `tolvi doctor`
 
 Check that the local setup is sound and print the command that fixes whatever is not: whether the binary is reachable as `tolvi` on PATH, whether a vault resolves from here, whether an Anthropic API key is set (via `ANTHROPIC_API_KEY` or `anthropic_api_key` in `~/.config/tolvi/config.yaml`), and whether the Claude Code allow rules are in place.
@@ -136,7 +150,7 @@ Exit codes differ by what is being asserted. A plain run exits non-zero when a s
 
 ### `tolvi version`
 
-Prints the binary version (baked at release time via `-ldflags`).
+Prints the binary version (baked at release time via `-ldflags`). Since 0.3.1 a `go install` build reports its module version; only a build from a local checkout says `dev`.
 
 ## See also
 

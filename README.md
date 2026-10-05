@@ -2,7 +2,7 @@
 
 Capture engineering decisions where they happen. Query them later in plain English.
 
-> **Status:** Pre-1.0 - `v0.2.0` released. The CLI (Homebrew, `go install` and release binaries), server, TypeScript SDK on npm, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; a Docker image is not published yet. See [`ROADMAP.md`](./ROADMAP.md).
+> **Status:** Pre-1.0 - `v0.3.1` released. The CLI (Homebrew, `go install` and release binaries), server, TypeScript SDK on npm, agent integrations, and the [docs site](https://tolvilabs.com/docs) are shipped; a Docker image is not published yet. See [`ROADMAP.md`](./ROADMAP.md).
 
 ## What Tolvi is
 
@@ -75,6 +75,10 @@ Every Tolvi tool installs from one marketplace:
 ```
 
 `tolvi` itself, and `tolvi-solo` for the server-free single-builder setup, install the same way. Each plugin also ships manifests for Codex, Cursor, Gemini, Devin and Hermes, so the skills work outside Claude Code too.
+
+[Forge](https://github.com/tolvi-labs/forge), which runs the plan on a local model, installs separately from PyPI: `pipx install tolvi-forge`, then `forge detect-hardware`. Magellan's `tasks.json` reaches it through `forge plan load <tasks.json> --path <repo>` and `forge agents run --apply --path <repo>`, which commits each approved task on a `forge/<feature>` branch.
+
+Tolvi Desktop is a macOS menu bar app that shows your vaults, setup checks and Forge's runtime at a glance; it is proprietary, and you can download it at [tolvilabs.com/desktop](https://tolvilabs.com/desktop).
 
 ## Two ways to capture
 
