@@ -124,7 +124,7 @@ This is the one place the routing rule lives. The commit hook and the slash comm
 
 ### `tolvi doctor`
 
-Check that the local setup is sound and print the command that fixes whatever is not: whether the binary is reachable as `tolvi` on PATH, whether a vault resolves from here, whether `ANTHROPIC_API_KEY` is set, and whether the Claude Code allow rules are in place.
+Check that the local setup is sound and print the command that fixes whatever is not: whether the binary is reachable as `tolvi` on PATH, whether a vault resolves from here, whether an Anthropic API key is set (via `ANTHROPIC_API_KEY` or `anthropic_api_key` in `~/.config/tolvi/config.yaml`), and whether the Claude Code allow rules are in place.
 
 ```bash
 tolvi doctor [vault-health]

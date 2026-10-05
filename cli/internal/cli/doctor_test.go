@@ -148,9 +148,64 @@ func TestRunDoctor_MissingAPIKeyOnlyFailsTheAskCheck(t *testing.T) {
 	if !strings.Contains(c.Fix, "ANTHROPIC_API_KEY") {
 		t.Errorf("remediation should name the variable, got %q", c.Fix)
 	}
+	// The config file is the other place `tolvi ask` reads the key from, so
+	// the remediation has to name it too.
+	if !strings.Contains(c.Fix, "anthropic_api_key") || !strings.Contains(c.Fix, "~/.config/tolvi/config.yaml") {
+		t.Errorf("remediation should name the config file option, got %q", c.Fix)
+	}
 	// The vault is still fine; a missing key must not cascade.
 	if v := findCheck(t, checks, "vault"); !v.OK {
 		t.Error("a missing API key should not fail the vault check")
+	}
+}
+
+// `tolvi ask` resolves the key through the config loader, which also reads
+// ~/.config/tolvi/config.yaml. A key set only there must pass the check, and
+// the report must say where it came from without echoing any of it.
+func TestRunDoctor_APIKeyFromConfigFilePasses(t *testing.T) {
+	var out bytes.Buffer
+	opts := healthyOpts(t, &out)
+	opts.Env = func(string) string { return "" }
+	const key = "sk-ant-from-config-file"
+	dir := filepath.Join(opts.HomeDir, ".config", "tolvi")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("anthropic_api_key: "+key+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	checks, err := RunDoctor(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := findCheck(t, checks, "ANTHROPIC_API_KEY")
+	if !c.OK {
+		t.Fatalf("a key in the config file should pass the check, got %q", c.Detail)
+	}
+	if !strings.Contains(c.Detail, "config file") {
+		t.Errorf("detail should name the config file as the source, got %q", c.Detail)
+	}
+	if strings.Contains(c.Detail, "sk-ant") || strings.Contains(out.String(), "sk-ant") {
+		t.Errorf("the key must never be printed, got detail %q", c.Detail)
+	}
+}
+
+func TestRunDoctor_APIKeyFromEnvNamesTheSource(t *testing.T) {
+	var out bytes.Buffer
+	checks, err := RunDoctor(healthyOpts(t, &out))
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := findCheck(t, checks, "ANTHROPIC_API_KEY")
+	if !c.OK {
+		t.Fatalf("expected the API key check to pass, got %q", c.Detail)
+	}
+	if !strings.Contains(c.Detail, "env") {
+		t.Errorf("detail should name the env var as the source, got %q", c.Detail)
+	}
+	if strings.Contains(out.String(), "sk-ant") {
+		t.Error("the key must never be printed")
 	}
 }
 

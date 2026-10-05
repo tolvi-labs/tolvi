@@ -541,8 +541,9 @@ var doctorCmd = &cobra.Command{
 	Short: "Check that the local tolvi setup is sound, and say how to fix what is not",
 	Long: `doctor inspects the things a working tolvi install depends on: whether the
 binary is reachable as ` + "`tolvi`" + ` on PATH, whether a vault resolves from here,
-whether ANTHROPIC_API_KEY is set, and whether the Claude Code allow rules are
-in place. Each failing check prints the command that fixes it.
+whether an API key is set (ANTHROPIC_API_KEY or anthropic_api_key in
+~/.config/tolvi/config.yaml), and whether the Claude Code allow rules are in
+place. Each failing check prints the command that fixes it.
 
 It then scans the vault's contents for the defects that stop a note being
 found: empty tags, unrecognized status values, duplicate titles, unfilled

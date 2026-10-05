@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/tolvi-labs/tolvi/cli/internal/config"
 	"github.com/tolvi-labs/tolvi/cli/internal/vault"
 )
 
@@ -186,14 +187,23 @@ func checkVault(opts DoctorOpts) Check {
 	return Check{Name: "vault", OK: true, Detail: path}
 }
 
+// checkAPIKey resolves the key through the same loader `tolvi ask` uses
+// (defaults, then config file, then env), so a key set only in config.yaml
+// passes here exactly when ask would find it. The key itself is never printed.
 func checkAPIKey(opts DoctorOpts) Check {
-	if key := strings.TrimSpace(opts.Env("ANTHROPIC_API_KEY")); key != "" {
-		return Check{Name: "ANTHROPIC_API_KEY", OK: true, Detail: "set"}
+	cfg := config.Load(config.LoadOpts{HomeDir: opts.HomeDir, Env: opts.Env})
+	if strings.TrimSpace(cfg.AnthropicAPIKey) != "" {
+		source := "config file"
+		if opts.Env("ANTHROPIC_API_KEY") != "" {
+			source = "env"
+		}
+		return Check{Name: "ANTHROPIC_API_KEY", OK: true, Detail: "set (" + source + ")"}
 	}
 	return Check{
 		Name:   "ANTHROPIC_API_KEY",
-		Detail: "unset; `tolvi ask` is unavailable (the vault itself still works)",
-		Fix:    `export ANTHROPIC_API_KEY=sk-ant-...   # add to ~/.zshrc or ~/.bashrc`,
+		Detail: "unset in env and config file; `tolvi ask` is unavailable (the vault itself still works)",
+		Fix: `export ANTHROPIC_API_KEY=sk-ant-...   # add to ~/.zshrc or ~/.bashrc
+     # or set anthropic_api_key: sk-ant-... in ~/.config/tolvi/config.yaml`,
 	}
 }
 
