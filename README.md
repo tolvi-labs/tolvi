@@ -94,7 +94,7 @@ Rule of thumb: **mechanical for known, controlled capture; the skill for synthes
 | Surface | Where | Status |
 |---|---|---|
 | **Format spec** `tolvi-format-v2` | [`spec/tolvi-format-v2.md`](./spec/tolvi-format-v2.md), [`spec/schemas/`](./spec/schemas/) | ✅ |
-| **CLI** (`init`, `sync`, `ask`, `recall`, `commit`, `precommit`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
+| **CLI** (`init`, `sync`, `ask`, `recall`, `commit`, `precommit`, `doctor`, `roots`, `repos`, `packs`, `integrations`, `version`) | [`cli/`](./cli/) | ✅ Phase 3 + 3.x |
 | **Server** (Fastify + Postgres + pgvector, multi-tenant, OpenAPI) | [`server/`](./server/), [`spec/openapi.json`](./spec/openapi.json) | ✅ Phase 2 |
 | **TypeScript SDK** `@tolvi-labs/sdk` (typed client over the server's HTTP API) | [`sdk/`](./sdk/) | ✅ Phase 5.A |
 | **Claude Code skill** (Tier 1 - `/tolvi` slash command) | [`skills/tolvi/`](./skills/tolvi/) | ✅ Phase 4 |

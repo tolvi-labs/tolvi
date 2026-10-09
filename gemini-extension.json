@@ -1,6 +1,6 @@
 {
   "name": "tolvi",
   "description": "Read, write, and ask questions of a Tolvi engineering vault",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "contextFileName": "GEMINI-EXTENSION.md"
 }

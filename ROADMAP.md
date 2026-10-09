@@ -35,7 +35,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 - `tolvi init`, `sync`, `ask`, `version`
 - CAG architecture for local use (whole vault → Anthropic context via prompt caching)
 - GoReleaser-driven distribution
-- `recall`, `doctor`, `unify`, `publish`, `status` were deferred from the original plan; the v1 CLI scope is locked to `init`, `sync`, `ask`, and `version`
+- `recall`, `doctor`, `unify`, `publish`, `status` were deferred from the original plan; the v1 CLI scope was locked to `init`, `sync`, `ask`, and `version`. `recall` and `doctor` have since shipped, along with `roots`, `repos`, `packs`, and `integrations` (see the README)
 
 ### Phase 3.x — CLI follow-ups
 
@@ -63,7 +63,7 @@ The public roadmap for Tolvi v1. Internal sequencing details are tracked private
 - ✅ Public repository (Apache 2.0)
 - ✅ Hosted docs site live at `tolvilabs.com/docs`
 - ✅ Homebrew tap (`brew install --cask tolvi-labs/tap/tolvi`) and the npm SDK (`@tolvi-labs/sdk`)
-- ✅ `v0.2.0` release, and `go install ...@latest` resolves to it
+- ✅ `v0.2.0` and `v0.3.x` releases, and `go install ...@latest` resolves to the latest one and reports its version
 - 📅 Docker Hub image
 - 📅 A small invited cohort of early users
 - 📅 Daily metric tracking
